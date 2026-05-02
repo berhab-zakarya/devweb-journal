@@ -3,8 +3,12 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Article;
+use App\Models\ReviewerAssignment;
+use App\Models\UserNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -47,5 +51,20 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function articles(): HasMany
+    {
+        return $this->hasMany(Article::class, 'author_id');
+    }
+
+    public function reviewerAssignments(): HasMany
+    {
+        return $this->hasMany(ReviewerAssignment::class, 'reviewer_id');
+    }
+
+    public function userNotifications(): HasMany
+    {
+        return $this->hasMany(UserNotification::class, 'user_id');
     }
 }

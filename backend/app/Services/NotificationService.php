@@ -2,8 +2,15 @@
 
 namespace App\Services;
 
+use App\Mail\AllReviewsSubmittedMail;
+use App\Mail\ArticlePublishedMail;
+use App\Mail\DecisionMadeMail;
+use App\Mail\ReviewerAssignedMail;
+use App\Mail\ReviewSubmittedMail;
+use App\Models\User;
 use App\Models\UserNotification;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Mail;
 
 class NotificationService
 {
@@ -41,7 +48,7 @@ class NotificationService
     ): ?UserNotification {
         $deadlineText = $dueDate ? $dueDate->format('d/m/Y H:i') : 'no deadline';
 
-        return $this->notify(
+        $notification = $this->notify(
             userId: $reviewerId,
             type: 'reviewer_assigned',
             title: 'New Review Assignment',
@@ -53,6 +60,15 @@ class NotificationService
             ],
             actorId: $actorId,
         );
+
+        $recipient = User::find($reviewerId);
+        if ($notification && $recipient) {
+            Mail::to($recipient->email)->queue(
+                new ReviewerAssignedMail($articleTitle, $dueDate?->format('d/m/Y H:i'))
+            );
+        }
+
+        return $notification;
     }
 
     public function notifyEditorReviewSubmitted(
@@ -62,7 +78,7 @@ class NotificationService
         int $assignmentId,
         ?int $actorId = null
     ): ?UserNotification {
-        return $this->notify(
+        $notification = $this->notify(
             userId: $editorId,
             type: 'review_submitted',
             title: 'Review Submitted',
@@ -74,6 +90,13 @@ class NotificationService
             ],
             actorId: $actorId,
         );
+
+        $recipient = User::find($editorId);
+        if ($notification && $recipient) {
+            Mail::to($recipient->email)->queue(new ReviewSubmittedMail($articleTitle));
+        }
+
+        return $notification;
     }
 
     public function notifyEditorAllReviewsSubmitted(
@@ -82,7 +105,7 @@ class NotificationService
         string $articleTitle,
         ?int $actorId = null
     ): ?UserNotification {
-        return $this->notify(
+        $notification = $this->notify(
             userId: $editorId,
             type: 'all_reviews_submitted',
             title: 'All Reviews Submitted',
@@ -93,6 +116,13 @@ class NotificationService
             ],
             actorId: $actorId,
         );
+
+        $recipient = User::find($editorId);
+        if ($notification && $recipient) {
+            Mail::to($recipient->email)->queue(new AllReviewsSubmittedMail($articleTitle));
+        }
+
+        return $notification;
     }
 
     public function notifyAuthorDecisionMade(
@@ -102,7 +132,7 @@ class NotificationService
         string $decision,
         ?int $actorId = null
     ): ?UserNotification {
-        return $this->notify(
+        $notification = $this->notify(
             userId: $authorId,
             type: 'decision_made',
             title: 'Editorial Decision Available',
@@ -114,6 +144,13 @@ class NotificationService
             ],
             actorId: $actorId,
         );
+
+        $recipient = User::find($authorId);
+        if ($notification && $recipient) {
+            Mail::to($recipient->email)->queue(new DecisionMadeMail($articleTitle, $decision));
+        }
+
+        return $notification;
     }
 
     public function notifyAuthorArticlePublished(
@@ -123,7 +160,7 @@ class NotificationService
         Carbon $publishedAt,
         ?int $actorId = null
     ): ?UserNotification {
-        return $this->notify(
+        $notification = $this->notify(
             userId: $authorId,
             type: 'article_published',
             title: 'Article Published',
@@ -135,5 +172,14 @@ class NotificationService
             ],
             actorId: $actorId,
         );
+
+        $recipient = User::find($authorId);
+        if ($notification && $recipient) {
+            Mail::to($recipient->email)->queue(
+                new ArticlePublishedMail($articleTitle, $publishedAt->toFormattedDateString())
+            );
+        }
+
+        return $notification;
     }
 }

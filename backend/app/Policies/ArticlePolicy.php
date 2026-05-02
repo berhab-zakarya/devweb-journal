@@ -8,6 +8,14 @@ use App\Models\User;
 class ArticlePolicy
 {
     /**
+     * Determine if user can list articles.
+     */
+    public function viewAny(User $user): bool
+    {
+        return $user->hasAnyRole(['admin', 'editor', 'author', 'reviewer']);
+    }
+
+    /**
      * Determine if user can view the article.
      */
     public function view(User $user, Article $article): bool

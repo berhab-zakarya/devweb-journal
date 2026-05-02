@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Session\Middleware\StartSession;
 
 Route::prefix('v1')->group(function () {
+    Route::get('publications/volumes', [PublicationController::class, 'volumes']);
     Route::get('publications', [PublicationController::class, 'index']);
     Route::get('publications/{publication}', [PublicationController::class, 'show']);
     Route::get('publications/{publication}/download', [PublicationController::class, 'download']);
@@ -95,7 +96,9 @@ Route::prefix('v1')->group(function () {
             Route::post('assignments/{assignment}/review', [ReviewController::class, 'store']);
         });
 
-        Route::get('assignments/{assignment}', [ReviewerAssignmentController::class, 'show']);
-        Route::get('assignments/{assignment}/review', [ReviewController::class, 'show']);
+        Route::middleware('role.any:admin,editor,reviewer')->group(function () {
+            Route::get('assignments/{assignment}', [ReviewerAssignmentController::class, 'show']);
+            Route::get('assignments/{assignment}/review', [ReviewController::class, 'show']);
+        });
     });
 });

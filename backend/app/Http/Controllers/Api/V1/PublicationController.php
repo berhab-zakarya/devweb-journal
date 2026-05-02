@@ -157,4 +157,32 @@ class PublicationController extends Controller
             ['Content-Type' => 'application/pdf']
         );
     }
+
+    /**
+     * Return distinct volumes/issues available for filtering.
+     *
+     * @OA\Get(
+     *     path="/publications/volumes",
+     *     tags={"Publications"},
+     *     summary="List available volumes and issues (public)",
+     *     @OA\Response(response=200, description="List of volumes/issues")
+     * )
+     */
+    public function volumes(): JsonResponse
+    {
+        $volumes = DB::table('publications')
+            ->select([
+                'volume',
+                'issue',
+                DB::raw('YEAR(published_at) as year'),
+            ])
+            ->whereNotNull('volume')
+            ->distinct()
+            ->orderByDesc('year')
+            ->orderBy('volume')
+            ->orderBy('issue')
+            ->get();
+
+        return response()->json(['data' => $volumes]);
+    }
 }
