@@ -1,0 +1,58 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*.tmp
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Environment files
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Node / frontend
+**/node_modules/
+**/dist/
+**/.vite/
+**/coverage/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+
+# PHP / Laravel
+**/vendor/
+**/.phpunit.result.cache
+**/storage/logs/*.log
+**/storage/framework/cache/data/*
+**/storage/framework/sessions/*
+**/storage/framework/testing/*
+**/storage/framework/views/*
+**/bootstrap/cache/*.php
+
+# Databases and local runtime artifacts
+**/*.sqlite
+**/*.sqlite-journal
+
+# Project-specific local artifacts
+frontend/frontend_test_output.txt
+backend_custom_backup_*/
+
+# Secondary backend copies (keep only primary backend/ tracked)
+backend_scaffold/
+
+# Nested git metadata from embedded repositories
+backend/.git/
+backend_scaffold/.git/
+backend_custom_backup_*/.git/
+
+# Nested GitHub workflow/config folders (root-level .github is the one used by GitHub)
+backend/.github/
+backend_scaffold/.github/
+backend_custom_backup_*/.github/

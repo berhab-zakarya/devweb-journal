@@ -1,0 +1,50 @@
+﻿[
+    {
+        "Check":  "GET /api/v1/publications",
+        "Expected":  "200",
+        "Actual":  "200",
+        "Notes":  "Public endpoint"
+    },
+    {
+        "Check":  "GET /api/v1/auth/me (guest)",
+        "Expected":  "401",
+        "Actual":  "401",
+        "Notes":  "Auth required (JSON and plain requests)"
+    },
+    {
+        "Check":  "POST /api/v1/auth/register",
+        "Expected":  "201",
+        "Actual":  "201",
+        "Notes":  "Prior smoke run succeeded"
+    },
+    {
+        "Check":  "POST /api/v1/auth/login (lecteur)",
+        "Expected":  "200",
+        "Actual":  "200",
+        "Notes":  "Session login"
+    },
+    {
+        "Check":  "GET /api/v1/auth/me (lecteur)",
+        "Expected":  "200",
+        "Actual":  "200",
+        "Notes":  "Authenticated"
+    },
+    {
+        "Check":  "GET /api/v1/users (lecteur)",
+        "Expected":  "403",
+        "Actual":  "403",
+        "Notes":  "Admin-only"
+    },
+    {
+        "Check":  "POST /api/v1/auth/login (admin)",
+        "Expected":  "200",
+        "Actual":  "200",
+        "Notes":  "Demo admin"
+    },
+    {
+        "Check":  "GET /api/v1/users (admin)",
+        "Expected":  "200",
+        "Actual":  "200",
+        "Notes":  "Admin access"
+    }
+]
