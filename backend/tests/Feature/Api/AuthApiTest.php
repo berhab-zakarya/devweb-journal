@@ -33,7 +33,7 @@ class AuthApiTest extends TestCase
         ]);
 
         $user = User::query()->where('email', 'lecteur.test@example.com')->firstOrFail();
-        $this->assertTrue($user->hasRole('lecteur'));
+        $this->assertTrue($user->hasRole('reader'));
     }
 
     public function test_login_returns_user_payload_with_roles(): void
@@ -41,7 +41,7 @@ class AuthApiTest extends TestCase
         $user = User::factory()->create([
             'password' => Hash::make('Password@123'),
         ]);
-        $user->assignRole('auteur');
+        $user->assignRole('author');
 
         $this->postJson('/api/v1/auth/login', [
             'email' => $user->email,
@@ -49,7 +49,7 @@ class AuthApiTest extends TestCase
         ])
             ->assertOk()
             ->assertJsonFragment(['email' => $user->email])
-            ->assertJsonPath('data.roles.0', 'auteur');
+            ->assertJsonPath('data.roles.0', 'author');
     }
 
     public function test_login_with_invalid_credentials_returns_validation_error(): void
@@ -57,7 +57,7 @@ class AuthApiTest extends TestCase
         $user = User::factory()->create([
             'password' => Hash::make('Password@123'),
         ]);
-        $user->assignRole('auteur');
+        $user->assignRole('author');
 
         $this->postJson('/api/v1/auth/login', [
             'email' => $user->email,
@@ -73,7 +73,7 @@ class AuthApiTest extends TestCase
     public function test_me_returns_authenticated_user(): void
     {
         $user = User::factory()->create();
-        $user->assignRole('editeur');
+        $user->assignRole('editor');
 
         $this->actingAs($user)
             ->getJson('/api/v1/auth/me')
@@ -87,7 +87,7 @@ class AuthApiTest extends TestCase
     public function test_logout_endpoint_is_accessible_for_authenticated_user(): void
     {
         $user = User::factory()->create();
-        $user->assignRole('lecteur');
+        $user->assignRole('reader');
 
         $this->actingAs($user)
             ->postJson('/api/v1/auth/logout')
@@ -97,7 +97,7 @@ class AuthApiTest extends TestCase
     public function test_forgot_password_accepts_valid_email_payload(): void
     {
         $user = User::factory()->create();
-        $user->assignRole('lecteur');
+        $user->assignRole('reader');
 
         $this->postJson('/api/v1/auth/forgot-password', [
             'email' => $user->email,
@@ -107,7 +107,7 @@ class AuthApiTest extends TestCase
     public function test_reset_password_with_invalid_token_returns_validation_error(): void
     {
         $user = User::factory()->create();
-        $user->assignRole('lecteur');
+        $user->assignRole('reader');
 
         $this->postJson('/api/v1/auth/reset-password', [
             'token' => 'invalid-token',

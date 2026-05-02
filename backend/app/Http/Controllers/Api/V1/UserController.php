@@ -15,6 +15,23 @@ class UserController extends Controller
 {
     /**
      * Create a user and assign their primary role.
+     *
+     * @OA\Post(
+     *     path="/users",
+     *     tags={"Users"},
+     *     summary="Create a new user and assign a role (admin only)",
+     *     security={{"sanctum":{}}},
+     *     @OA\RequestBody(required=true,
+     *         @OA\JsonContent(required={"name","email","password","role"},
+     *             @OA\Property(property="name", type="string"),
+     *             @OA\Property(property="email", type="string", format="email"),
+     *             @OA\Property(property="password", type="string"),
+     *             @OA\Property(property="role", type="string", enum={"admin","editor","reviewer","author","reader"})
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="User created"),
+     *     @OA\Response(response=403, description="Access denied")
+     * )
      */
     public function store(StoreUserRequest $request): JsonResponse
     {
@@ -41,6 +58,19 @@ class UserController extends Controller
 
     /**
      * List users (admin), with simple search filter.
+     *
+     * @OA\Get(
+     *     path="/users",
+     *     tags={"Users"},
+     *     summary="List all users with optional search/filter (admin only)",
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="search", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Parameter(name="role", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Parameter(name="sort_by", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Parameter(name="sort_direction", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="Paginated user list"),
+     *     @OA\Response(response=403, description="Access denied")
+     * )
      */
     public function index(Request $request): JsonResponse
     {
@@ -88,6 +118,16 @@ class UserController extends Controller
 
     /**
      * Show user details.
+     *
+     * @OA\Get(
+     *     path="/users/{user}",
+     *     tags={"Users"},
+     *     summary="Get user details (admin or own profile)",
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="user", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="User details"),
+     *     @OA\Response(response=403, description="Access denied")
+     * )
      */
     public function show(User $user): JsonResponse
     {
@@ -103,6 +143,20 @@ class UserController extends Controller
 
     /**
      * Update basic user information.
+     *
+     * @OA\Put(
+     *     path="/users/{user}",
+     *     tags={"Users"},
+     *     summary="Update user information (admin or own profile)",
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="user", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(required=true, @OA\JsonContent(
+     *         @OA\Property(property="name", type="string"),
+     *         @OA\Property(property="email", type="string")
+     *     )),
+     *     @OA\Response(response=200, description="User updated"),
+     *     @OA\Response(response=403, description="Access denied")
+     * )
      */
     public function update(UpdateUserRequest $request, User $user): JsonResponse
     {
@@ -123,6 +177,16 @@ class UserController extends Controller
 
     /**
      * Soft-delete a user.
+     *
+     * @OA\Delete(
+     *     path="/users/{user}",
+     *     tags={"Users"},
+     *     summary="Soft-delete a user (admin only)",
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="user", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="User deleted"),
+     *     @OA\Response(response=403, description="Access denied")
+     * )
      */
     public function destroy(Request $request, User $user): JsonResponse
     {
@@ -140,6 +204,21 @@ class UserController extends Controller
 
     /**
      * Assign a primary role to a user.
+     *
+     * @OA\Post(
+     *     path="/users/{user}/role",
+     *     tags={"Users"},
+     *     summary="Assign a role to a user (admin only)",
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="user", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(required=true,
+     *         @OA\JsonContent(required={"role"},
+     *             @OA\Property(property="role", type="string", enum={"admin","editor","reviewer","author","reader"})
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Role assigned"),
+     *     @OA\Response(response=403, description="Access denied")
+     * )
      */
     public function assignRole(AssignUserRoleRequest $request, User $user): JsonResponse
     {

@@ -23,9 +23,9 @@ class ArticleResource extends JsonResource
         $initialDate = $this->submitted_at ?? $this->created_at;
         if ($initialDate) {
             $history->push([
-                'status' => 'soumis',
+                'status' => 'submitted',
                 'changed_at' => $initialDate,
-                'note' => 'Soumission initiale',
+                'note' => 'Initial submission',
             ]);
         }
 
@@ -37,9 +37,9 @@ class ArticleResource extends JsonResource
                     $versionNumber = (int) ($version->version_number ?? 0);
 
                     return [
-                        'status' => 'en_revision',
+                        'status' => 'under_review',
                         'changed_at' => $version->submitted_at,
-                        'note' => (string) ($version->change_summary ?: ('Version ' . $versionNumber . ' soumise')),
+                        'note' => (string) ($version->change_summary ?: ('Version ' . $versionNumber . ' submitted')),
                     ];
                 });
 
@@ -63,9 +63,9 @@ class ArticleResource extends JsonResource
 
         if ($this->relationLoaded('publication') && $this->publication?->published_at) {
             $history->push([
-                'status' => 'publie',
+                'status' => 'published',
                 'changed_at' => $this->publication->published_at,
-                'note' => 'Article publie',
+                'note' => 'Article published',
             ]);
         }
 
@@ -91,7 +91,7 @@ class ArticleResource extends JsonResource
             return [[
                 'status' => (string) $this->status,
                 'changed_at' => (string) ($this->submitted_at ?? $this->created_at ?? $this->updated_at),
-                'note' => 'Statut actuel de l article',
+                'note' => 'Current article status',
             ]];
         }
 
@@ -100,7 +100,7 @@ class ArticleResource extends JsonResource
             $normalizedHistory->push([
                 'status' => (string) $this->status,
                 'changed_at' => (string) ($this->updated_at ?? $this->created_at),
-                'note' => 'Statut actuel de l article',
+                'note' => 'Current article status',
             ]);
         }
 
@@ -128,7 +128,7 @@ class ArticleResource extends JsonResource
             'status_history' => $this->buildStatusHistory(),
             'current_version_id' => $this->current_version_id,
             'submitted_at' => $this->submitted_at,
-            'is_published' => $this->status === 'publie',
+            'is_published' => $this->status === 'published',
             'published_at' => $this->publication?->published_at,
             'author' => $this->whenLoaded('author'),
             'category' => $this->whenLoaded('category'),

@@ -27,7 +27,7 @@ class DashboardApiTest extends TestCase
     public function test_author_dashboard_summary_returns_actionable_counts(): void
     {
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
         $categoryId = DB::table('categories')->insertGetId([
             'name' => 'Science',
@@ -44,7 +44,7 @@ class DashboardApiTest extends TestCase
                 'title' => 'Article revision',
                 'abstract' => 'A',
                 'keywords' => 'k1',
-                'status' => 'revision_requise',
+                'status' => 'revision_required',
                 'current_version_id' => null,
                 'submitted_at' => Carbon::now(),
                 'created_at' => Carbon::now(),
@@ -57,7 +57,7 @@ class DashboardApiTest extends TestCase
                 'title' => 'Article en revision',
                 'abstract' => 'B',
                 'keywords' => 'k2',
-                'status' => 'en_revision',
+                'status' => 'under_review',
                 'current_version_id' => null,
                 'submitted_at' => Carbon::now(),
                 'created_at' => Carbon::now(),
@@ -70,7 +70,7 @@ class DashboardApiTest extends TestCase
             ->getJson('/api/v1/dashboard/summary')
             ->assertOk();
 
-        $this->assertSame('auteur', $response->json('data.role'));
+        $this->assertSame('author', $response->json('data.role'));
         $this->assertSame(1, $response->json('data.requires_attention.0.count'));
         $this->assertSame(1, $response->json('data.pending.0.count'));
     }
@@ -81,10 +81,10 @@ class DashboardApiTest extends TestCase
         $admin->assignRole('admin');
 
         $editor = User::factory()->create();
-        $editor->assignRole('editeur');
+        $editor->assignRole('editor');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
         $categoryId = DB::table('categories')->insertGetId([
             'name' => 'Medecine',
@@ -100,7 +100,7 @@ class DashboardApiTest extends TestCase
             'title' => 'Article a valider',
             'abstract' => 'A',
             'keywords' => 'k',
-            'status' => 'en_revision',
+            'status' => 'under_review',
             'current_version_id' => null,
             'submitted_at' => Carbon::now(),
             'created_at' => Carbon::now(),
@@ -111,7 +111,7 @@ class DashboardApiTest extends TestCase
         DB::table('editorial_decisions')->insert([
             'article_id' => $articleInReviewId,
             'editor_id' => $editor->id,
-            'decision' => 'accepte',
+            'decision' => 'accepted',
             'stage' => 'proposition',
             'comments' => 'Proposition envoyee.',
             'decided_at' => Carbon::now(),
@@ -125,7 +125,7 @@ class DashboardApiTest extends TestCase
             'title' => 'Article accepte',
             'abstract' => 'B',
             'keywords' => 'k2',
-            'status' => 'accepte',
+            'status' => 'accepted',
             'current_version_id' => null,
             'submitted_at' => Carbon::now(),
             'created_at' => Carbon::now(),

@@ -22,10 +22,10 @@ class NotificationApiTest extends TestCase
     public function test_user_sees_only_own_notifications(): void
     {
         $user = User::factory()->create();
-        $user->assignRole('auteur');
+        $user->assignRole('author');
 
         $other = User::factory()->create();
-        $other->assignRole('lecteur');
+        $other->assignRole('reader');
 
         UserNotification::query()->create([
             'user_id' => $user->id,
@@ -59,7 +59,7 @@ class NotificationApiTest extends TestCase
     public function test_notifications_index_only_unread_filter_works(): void
     {
         $user = User::factory()->create();
-        $user->assignRole('auteur');
+        $user->assignRole('author');
 
         UserNotification::query()->create([
             'user_id' => $user->id,
@@ -87,7 +87,7 @@ class NotificationApiTest extends TestCase
     public function test_user_can_mark_single_notification_as_read(): void
     {
         $user = User::factory()->create();
-        $user->assignRole('auteur');
+        $user->assignRole('author');
 
         $notification = UserNotification::query()->create([
             'user_id' => $user->id,
@@ -108,10 +108,10 @@ class NotificationApiTest extends TestCase
     public function test_user_cannot_mark_other_user_notification_as_read(): void
     {
         $user = User::factory()->create();
-        $user->assignRole('auteur');
+        $user->assignRole('author');
 
         $other = User::factory()->create();
-        $other->assignRole('lecteur');
+        $other->assignRole('reader');
 
         $notification = UserNotification::query()->create([
             'user_id' => $other->id,
@@ -131,7 +131,7 @@ class NotificationApiTest extends TestCase
     public function test_mark_all_read_returns_updated_count_and_updates_unread_count(): void
     {
         $user = User::factory()->create();
-        $user->assignRole('auteur');
+        $user->assignRole('author');
 
         UserNotification::query()->create([
             'user_id' => $user->id,
@@ -163,10 +163,10 @@ class NotificationApiTest extends TestCase
     public function test_unread_count_returns_only_current_user_unread_notifications(): void
     {
         $user = User::factory()->create();
-        $user->assignRole('auteur');
+        $user->assignRole('author');
 
         $other = User::factory()->create();
-        $other->assignRole('lecteur');
+        $other->assignRole('reader');
 
         UserNotification::query()->create([
             'user_id' => $user->id,

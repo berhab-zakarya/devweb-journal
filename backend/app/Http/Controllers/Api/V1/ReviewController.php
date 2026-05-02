@@ -77,7 +77,7 @@ class ReviewController extends Controller
         $justSubmitted = false;
         $reviewWasCreated = false;
 
-        $review = DB::transaction(function () use ($assignment, $article, $comments, $isDraft, &$justSubmitted, &$reviewWasCreated): Review {
+        $review = DB::transaction(function () use ($assignment, $article, $validated, $comments, $isDraft, &$justSubmitted, &$reviewWasCreated): Review {
             $review = Review::query()->firstOrNew([
                 'assignment_id' => $assignment->id,
             ]);
@@ -85,15 +85,13 @@ class ReviewController extends Controller
 
             $review->fill([
                 'article_version_id' => $article->current_version_id,
-                // Les champs de scoring restent remplis pour compatibilite schema/API.
-                // Scoring fields are kept for schema/API compatibility.
-                'originality_score' => 5,
-                'methodology_score' => 5,
-                'clarity_score' => 5,
-                'overall_score' => 5,
+                'originality_score' => $validated['originality_score'] ?? null,
+                'methodology_score' => $validated['methodology_score'] ?? null,
+                'clarity_score' => $validated['clarity_score'] ?? null,
+                'overall_score' => $validated['overall_score'] ?? null,
                 'comments' => $comments,
-                'decision_suggestion' => 'minor_revision',
-                'submitted_at' => Carbon::now(),
+                'decision_suggestion' => $validated['recommendation'] ?? null,
+                'submitted_at' => $isDraft ? null : Carbon::now(),
             ]);
             $review->save();
 

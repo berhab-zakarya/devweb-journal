@@ -25,10 +25,10 @@ class ArticleApiTest extends TestCase
     public function test_auteur_index_returns_only_own_articles(): void
     {
         $auteurA = User::factory()->create();
-        $auteurA->assignRole('auteur');
+        $auteurA->assignRole('author');
 
         $auteurB = User::factory()->create();
-        $auteurB->assignRole('auteur');
+        $auteurB->assignRole('author');
 
         $this->createArticleFixture($auteurA, 'Article A1');
         $this->createArticleFixture($auteurB, 'Article B1');
@@ -51,7 +51,7 @@ class ArticleApiTest extends TestCase
         $admin->assignRole('admin');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
         $this->createArticleFixture($author, 'Article pagine A');
         $this->createArticleFixture($author, 'Article pagine B');
@@ -78,7 +78,7 @@ class ArticleApiTest extends TestCase
     public function test_auteur_can_submit_article_with_pdf(): void
     {
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
         $categoryId = $this->createCategory('soumission');
 
@@ -97,7 +97,7 @@ class ArticleApiTest extends TestCase
         $this->assertDatabaseHas('articles', [
             'id' => $articleId,
             'author_id' => $author->id,
-            'status' => 'soumis',
+            'status' => 'submitted',
         ]);
 
         $versionPath = DB::table('article_versions')
@@ -111,7 +111,7 @@ class ArticleApiTest extends TestCase
     public function test_editeur_can_submit_article_with_pdf(): void
     {
         $editor = User::factory()->create();
-        $editor->assignRole('editeur');
+        $editor->assignRole('editor');
 
         $categoryId = $this->createCategory('soumission-editeur');
 
@@ -130,7 +130,7 @@ class ArticleApiTest extends TestCase
         $this->assertDatabaseHas('articles', [
             'id' => $articleId,
             'author_id' => $editor->id,
-            'status' => 'soumis',
+            'status' => 'submitted',
         ]);
 
         $versionPath = DB::table('article_versions')
@@ -144,7 +144,7 @@ class ArticleApiTest extends TestCase
     public function test_lecteur_cannot_submit_article(): void
     {
         $reader = User::factory()->create();
-        $reader->assignRole('lecteur');
+        $reader->assignRole('reader');
 
         $categoryId = $this->createCategory('interdit');
 
@@ -162,7 +162,7 @@ class ArticleApiTest extends TestCase
     public function test_article_submission_requires_pdf(): void
     {
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
         $categoryId = $this->createCategory('validation');
 
@@ -183,10 +183,10 @@ class ArticleApiTest extends TestCase
         $admin->assignRole('admin');
 
         $auteurA = User::factory()->create();
-        $auteurA->assignRole('auteur');
+        $auteurA->assignRole('author');
 
         $auteurB = User::factory()->create();
-        $auteurB->assignRole('auteur');
+        $auteurB->assignRole('author');
 
         $this->createArticleFixture($auteurA, 'Article Admin A');
         $this->createArticleFixture($auteurB, 'Article Admin B');
@@ -201,10 +201,10 @@ class ArticleApiTest extends TestCase
     public function test_auteur_cannot_view_other_author_article_detail(): void
     {
         $auteurA = User::factory()->create();
-        $auteurA->assignRole('auteur');
+        $auteurA->assignRole('author');
 
         $auteurB = User::factory()->create();
-        $auteurB->assignRole('auteur');
+        $auteurB->assignRole('author');
 
         $fixtureB = $this->createArticleFixture($auteurB, 'Article prive B');
 
@@ -216,10 +216,10 @@ class ArticleApiTest extends TestCase
     public function test_auteur_can_update_own_article_but_not_other_article(): void
     {
         $auteurA = User::factory()->create();
-        $auteurA->assignRole('auteur');
+        $auteurA->assignRole('author');
 
         $auteurB = User::factory()->create();
-        $auteurB->assignRole('auteur');
+        $auteurB->assignRole('author');
 
         $fixtureA = $this->createArticleFixture($auteurA, 'Ancien titre A');
         $fixtureB = $this->createArticleFixture($auteurB, 'Ancien titre B');
@@ -245,7 +245,7 @@ class ArticleApiTest extends TestCase
     public function test_auteur_delete_own_article_soft_deletes_record(): void
     {
         $auteur = User::factory()->create();
-        $auteur->assignRole('auteur');
+        $auteur->assignRole('author');
 
         $fixture = $this->createArticleFixture($auteur, 'Article a supprimer');
 
@@ -261,10 +261,10 @@ class ArticleApiTest extends TestCase
     public function test_auteur_cannot_download_other_author_article(): void
     {
         $auteurA = User::factory()->create();
-        $auteurA->assignRole('auteur');
+        $auteurA->assignRole('author');
 
         $auteurB = User::factory()->create();
-        $auteurB->assignRole('auteur');
+        $auteurB->assignRole('author');
 
         $fixtureB = $this->createArticleFixture($auteurB, 'Article PDF B', true);
 
@@ -276,7 +276,7 @@ class ArticleApiTest extends TestCase
     public function test_auteur_download_returns_not_found_when_file_is_missing(): void
     {
         $auteur = User::factory()->create();
-        $auteur->assignRole('auteur');
+        $auteur->assignRole('author');
 
         $fixture = $this->createArticleFixture($auteur, 'Article sans fichier', false);
 
@@ -288,7 +288,7 @@ class ArticleApiTest extends TestCase
     public function test_article_download_returns_not_found_when_current_version_is_missing(): void
     {
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
         $categoryId = $this->createCategory('no-version');
 
@@ -298,7 +298,7 @@ class ArticleApiTest extends TestCase
             'title' => 'Article sans version',
             'abstract' => 'Resume',
             'keywords' => 'test',
-            'status' => 'soumis',
+            'status' => 'submitted',
             'current_version_id' => null,
             'submitted_at' => Carbon::now(),
             'created_at' => Carbon::now(),
@@ -341,7 +341,7 @@ class ArticleApiTest extends TestCase
             'title' => $title,
             'abstract' => 'Resume article test',
             'keywords' => 'test,article',
-            'status' => 'soumis',
+            'status' => 'submitted',
             'current_version_id' => null,
             'submitted_at' => Carbon::now(),
             'created_at' => Carbon::now(),

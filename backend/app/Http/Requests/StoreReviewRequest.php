@@ -22,12 +22,47 @@ class StoreReviewRequest extends FormRequest
      */
     public function rules(): array
     {
+        $isDraft = $this->boolean('is_draft');
+
         return [
             'is_draft' => ['nullable', 'boolean'],
             'comments' => [
-                Rule::requiredIf(!$this->boolean('is_draft')),
+                Rule::requiredIf(!$isDraft),
                 'nullable',
                 'string',
+            ],
+            'originality_score' => [
+                Rule::requiredIf(!$isDraft),
+                'nullable',
+                'integer',
+                'min:0',
+                'max:10',
+            ],
+            'methodology_score' => [
+                Rule::requiredIf(!$isDraft),
+                'nullable',
+                'integer',
+                'min:0',
+                'max:10',
+            ],
+            'clarity_score' => [
+                Rule::requiredIf(!$isDraft),
+                'nullable',
+                'integer',
+                'min:0',
+                'max:10',
+            ],
+            'overall_score' => [
+                Rule::requiredIf(!$isDraft),
+                'nullable',
+                'integer',
+                'min:0',
+                'max:10',
+            ],
+            'recommendation' => [
+                Rule::requiredIf(!$isDraft),
+                'nullable',
+                Rule::in(['accept', 'reject', 'minor_revision', 'major_revision']),
             ],
         ];
     }

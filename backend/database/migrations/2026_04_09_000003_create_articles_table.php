@@ -22,13 +22,13 @@ return new class extends Migration {
             $table->text('abstract');
             $table->text('keywords');
             $table->enum('status', [
-                'soumis',
-                'en_revision',
-                'accepte',
-                'rejete',
-                'revision_requise',
-                'publie',
-            ])->default('soumis');
+                'submitted',
+                'under_review',
+                'accepted',
+                'rejected',
+                'revision_required',
+                'published',
+            ])->default('submitted');
             $table->foreignId('current_version_id')->nullable();
             $table->dateTime('submitted_at')->nullable();
             $table->timestamps();

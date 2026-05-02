@@ -25,9 +25,9 @@ class ArticleVersionApiTest extends TestCase
     public function test_author_can_list_own_article_versions(): void
     {
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $fixture = $this->createArticleFixture($author, 'revision_requise');
+        $fixture = $this->createArticleFixture($author, 'revision_required');
 
         DB::table('article_versions')->insert([
             'article_id' => $fixture['article_id'],
@@ -51,12 +51,12 @@ class ArticleVersionApiTest extends TestCase
     public function test_reader_cannot_list_article_versions(): void
     {
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
         $reader = User::factory()->create();
-        $reader->assignRole('lecteur');
+        $reader->assignRole('reader');
 
-        $fixture = $this->createArticleFixture($author, 'soumis');
+        $fixture = $this->createArticleFixture($author, 'submitted');
 
         $this->actingAs($reader)
             ->getJson('/api/v1/articles/' . $fixture['article_id'] . '/versions')
@@ -66,12 +66,12 @@ class ArticleVersionApiTest extends TestCase
     public function test_author_cannot_list_other_author_versions(): void
     {
         $authorA = User::factory()->create();
-        $authorA->assignRole('auteur');
+        $authorA->assignRole('author');
 
         $authorB = User::factory()->create();
-        $authorB->assignRole('auteur');
+        $authorB->assignRole('author');
 
-        $fixtureB = $this->createArticleFixture($authorB, 'soumis');
+        $fixtureB = $this->createArticleFixture($authorB, 'submitted');
 
         $this->actingAs($authorA)
             ->getJson('/api/v1/articles/' . $fixtureB['article_id'] . '/versions')
@@ -81,9 +81,9 @@ class ArticleVersionApiTest extends TestCase
     public function test_author_resubmission_requires_pdf_file(): void
     {
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $fixture = $this->createArticleFixture($author, 'revision_requise');
+        $fixture = $this->createArticleFixture($author, 'revision_required');
 
         $this->actingAs($author)
             ->postJson('/api/v1/articles/' . $fixture['article_id'] . '/versions', [
@@ -96,9 +96,9 @@ class ArticleVersionApiTest extends TestCase
     public function test_author_resubmission_rejects_non_pdf_file(): void
     {
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $fixture = $this->createArticleFixture($author, 'revision_requise');
+        $fixture = $this->createArticleFixture($author, 'revision_required');
 
         $this->actingAs($author)
             ->postJson('/api/v1/articles/' . $fixture['article_id'] . '/versions', [
@@ -112,9 +112,9 @@ class ArticleVersionApiTest extends TestCase
     public function test_author_resubmission_returns_conflict_for_invalid_status_transition(): void
     {
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $fixture = $this->createArticleFixture($author, 'rejete');
+        $fixture = $this->createArticleFixture($author, 'rejected');
 
         $initialCount = DB::table('article_versions')
             ->where('article_id', $fixture['article_id'])
@@ -136,12 +136,12 @@ class ArticleVersionApiTest extends TestCase
     public function test_reader_cannot_download_article_version(): void
     {
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
         $reader = User::factory()->create();
-        $reader->assignRole('lecteur');
+        $reader->assignRole('reader');
 
-        $fixture = $this->createArticleFixture($author, 'soumis');
+        $fixture = $this->createArticleFixture($author, 'submitted');
 
         $this->actingAs($reader)
             ->get('/api/v1/articles/' . $fixture['article_id'] . '/versions/' . $fixture['version_id'] . '/download')
@@ -151,9 +151,9 @@ class ArticleVersionApiTest extends TestCase
     public function test_author_can_download_own_article_version(): void
     {
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $fixture = $this->createArticleFixture($author, 'soumis');
+        $fixture = $this->createArticleFixture($author, 'submitted');
 
         $this->actingAs($author)
             ->get('/api/v1/articles/' . $fixture['article_id'] . '/versions/' . $fixture['version_id'] . '/download')
@@ -164,12 +164,12 @@ class ArticleVersionApiTest extends TestCase
     public function test_author_cannot_resubmit_version_for_other_author_article(): void
     {
         $authorA = User::factory()->create();
-        $authorA->assignRole('auteur');
+        $authorA->assignRole('author');
 
         $authorB = User::factory()->create();
-        $authorB->assignRole('auteur');
+        $authorB->assignRole('author');
 
-        $fixtureB = $this->createArticleFixture($authorB, 'revision_requise');
+        $fixtureB = $this->createArticleFixture($authorB, 'revision_required');
 
         $this->actingAs($authorA)
             ->postJson('/api/v1/articles/' . $fixtureB['article_id'] . '/versions', [
@@ -182,9 +182,9 @@ class ArticleVersionApiTest extends TestCase
     public function test_download_returns_not_found_when_article_version_file_is_missing(): void
     {
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $fixture = $this->createArticleFixture($author, 'soumis');
+        $fixture = $this->createArticleFixture($author, 'submitted');
 
         Storage::disk('local')->delete('private/articles/' . $fixture['article_id'] . '/version-1.pdf');
 

@@ -27,7 +27,7 @@ class CategoryApiTest extends TestCase
     public function test_authenticated_user_can_list_categories(): void
     {
         $reader = User::factory()->create();
-        $reader->assignRole('lecteur');
+        $reader->assignRole('reader');
 
         DB::table('categories')->insert([
             [
@@ -56,7 +56,7 @@ class CategoryApiTest extends TestCase
     public function test_non_admin_or_editor_cannot_create_category(): void
     {
         $auteur = User::factory()->create();
-        $auteur->assignRole('auteur');
+        $auteur->assignRole('author');
 
         $this->actingAs($auteur)
             ->postJson('/api/v1/categories', [
@@ -70,7 +70,7 @@ class CategoryApiTest extends TestCase
     public function test_editor_can_create_category(): void
     {
         $editor = User::factory()->create();
-        $editor->assignRole('editeur');
+        $editor->assignRole('editor');
 
         $this->actingAs($editor)
             ->postJson('/api/v1/categories', [
@@ -89,7 +89,7 @@ class CategoryApiTest extends TestCase
     public function test_editor_cannot_create_category_with_duplicate_slug(): void
     {
         $editor = User::factory()->create();
-        $editor->assignRole('editeur');
+        $editor->assignRole('editor');
 
         DB::table('categories')->insert([
             'name' => 'Physique 1',
@@ -169,7 +169,7 @@ class CategoryApiTest extends TestCase
     public function test_non_admin_or_editor_cannot_update_or_delete_category(): void
     {
         $auteur = User::factory()->create();
-        $auteur->assignRole('auteur');
+        $auteur->assignRole('author');
 
         $categoryId = DB::table('categories')->insertGetId([
             'name' => 'Astronomie',
@@ -193,7 +193,7 @@ class CategoryApiTest extends TestCase
     public function test_editor_can_delete_category(): void
     {
         $editor = User::factory()->create();
-        $editor->assignRole('editeur');
+        $editor->assignRole('editor');
 
         $categoryId = DB::table('categories')->insertGetId([
             'name' => 'Chimie',

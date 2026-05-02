@@ -25,18 +25,18 @@ class WorkflowApiTest extends TestCase
     public function test_editor_assigns_only_reviewers_to_article(): void
     {
         $editor = User::factory()->create();
-        $editor->assignRole('editeur');
+        $editor->assignRole('editor');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
         $reviewer = User::factory()->create();
-        $reviewer->assignRole('relecteur');
+        $reviewer->assignRole('reviewer');
 
         $nonReviewer = User::factory()->create();
-        $nonReviewer->assignRole('lecteur');
+        $nonReviewer->assignRole('reader');
 
-        $articleId = $this->createArticleWithVersion($author, 'soumis')['article_id'];
+        $articleId = $this->createArticleWithVersion($author, 'submitted')['article_id'];
 
         $this->actingAs($editor);
 
@@ -64,37 +64,37 @@ class WorkflowApiTest extends TestCase
     public function test_editor_can_search_reviewers_by_partial_email_for_assignment(): void
     {
         $editor = User::factory()->create();
-        $editor->assignRole('editeur');
+        $editor->assignRole('editor');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
         $reviewerMatch = User::factory()->create([
             'name' => 'Ali Reviewer',
             'email' => 'ali.reviewer@gmail.com',
         ]);
-        $reviewerMatch->assignRole('relecteur');
+        $reviewerMatch->assignRole('reviewer');
 
         $alreadyAssignedReviewer = User::factory()->create([
             'name' => 'Already Assigned',
             'email' => 'already.assigned@gmail.com',
         ]);
-        $alreadyAssignedReviewer->assignRole('relecteur');
+        $alreadyAssignedReviewer->assignRole('reviewer');
 
         $nonReviewer = User::factory()->create([
             'name' => 'Reader Gmail',
             'email' => 'reader.gmail@example.com',
         ]);
-        $nonReviewer->assignRole('lecteur');
+        $nonReviewer->assignRole('reader');
 
-        $articleId = $this->createArticleWithVersion($author, 'soumis')['article_id'];
+        $articleId = $this->createArticleWithVersion($author, 'submitted')['article_id'];
 
         DB::table('reviewer_assignments')->insert([
             'article_id' => $articleId,
             'reviewer_id' => $alreadyAssignedReviewer->id,
             'assigned_by' => $editor->id,
             'assigned_at' => Carbon::now(),
-            'status' => 'en_attente',
+            'status' => 'pending',
             'due_date' => null,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
@@ -112,12 +112,12 @@ class WorkflowApiTest extends TestCase
     public function test_editor_reviewer_search_requires_minimum_query_length(): void
     {
         $editor = User::factory()->create();
-        $editor->assignRole('editeur');
+        $editor->assignRole('editor');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $articleId = $this->createArticleWithVersion($author, 'soumis')['article_id'];
+        $articleId = $this->createArticleWithVersion($author, 'submitted')['article_id'];
 
         $this->actingAs($editor)
             ->getJson("/api/v1/articles/{$articleId}/reviewers/search?q=a")
@@ -128,23 +128,23 @@ class WorkflowApiTest extends TestCase
     public function test_reviewer_can_only_access_assigned_articles(): void
     {
         $editor = User::factory()->create();
-        $editor->assignRole('editeur');
+        $editor->assignRole('editor');
 
         $reviewer = User::factory()->create();
-        $reviewer->assignRole('relecteur');
+        $reviewer->assignRole('reviewer');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $assignedArticle = $this->createArticleWithVersion($author, 'en_revision');
-        $unassignedArticle = $this->createArticleWithVersion($author, 'en_revision');
+        $assignedArticle = $this->createArticleWithVersion($author, 'under_review');
+        $unassignedArticle = $this->createArticleWithVersion($author, 'under_review');
 
         DB::table('reviewer_assignments')->insert([
             'article_id' => $assignedArticle['article_id'],
             'reviewer_id' => $reviewer->id,
             'assigned_by' => $editor->id,
             'assigned_at' => Carbon::now(),
-            'status' => 'accepte',
+            'status' => 'accepted',
             'due_date' => null,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
@@ -176,22 +176,22 @@ class WorkflowApiTest extends TestCase
     public function test_only_owner_reviewer_can_respond_to_assignment(): void
     {
         $reviewer = User::factory()->create();
-        $reviewer->assignRole('relecteur');
+        $reviewer->assignRole('reviewer');
 
         $otherReviewer = User::factory()->create();
-        $otherReviewer->assignRole('relecteur');
+        $otherReviewer->assignRole('reviewer');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $articleId = $this->createArticleWithVersion($author, 'soumis')['article_id'];
+        $articleId = $this->createArticleWithVersion($author, 'submitted')['article_id'];
 
         $assignmentId = DB::table('reviewer_assignments')->insertGetId([
             'article_id' => $articleId,
             'reviewer_id' => $reviewer->id,
             'assigned_by' => $author->id,
             'assigned_at' => Carbon::now(),
-            'status' => 'en_attente',
+            'status' => 'pending',
             'due_date' => null,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
@@ -199,36 +199,36 @@ class WorkflowApiTest extends TestCase
 
         $this->actingAs($otherReviewer);
         $this->patchJson("/api/v1/assignments/{$assignmentId}/respond", [
-            'response' => 'accepte',
+            'response' => 'accepted',
         ])->assertForbidden();
 
         $this->actingAs($reviewer);
         $this->patchJson("/api/v1/assignments/{$assignmentId}/respond", [
-            'response' => 'accepte',
+            'response' => 'accepted',
         ])->assertOk();
 
         $this->assertDatabaseHas('reviewer_assignments', [
             'id' => $assignmentId,
-            'status' => 'accepte',
+            'status' => 'accepted',
         ]);
     }
 
     public function test_reviewer_cannot_respond_to_already_processed_assignment(): void
     {
         $reviewer = User::factory()->create();
-        $reviewer->assignRole('relecteur');
+        $reviewer->assignRole('reviewer');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $articleId = $this->createArticleWithVersion($author, 'soumis')['article_id'];
+        $articleId = $this->createArticleWithVersion($author, 'submitted')['article_id'];
 
         $assignmentId = DB::table('reviewer_assignments')->insertGetId([
             'article_id' => $articleId,
             'reviewer_id' => $reviewer->id,
             'assigned_by' => $author->id,
             'assigned_at' => Carbon::now(),
-            'status' => 'accepte',
+            'status' => 'accepted',
             'due_date' => null,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
@@ -244,22 +244,22 @@ class WorkflowApiTest extends TestCase
     public function test_reviewer_can_submit_review_for_accepted_assignment(): void
     {
         $editor = User::factory()->create();
-        $editor->assignRole('editeur');
+        $editor->assignRole('editor');
 
         $reviewer = User::factory()->create();
-        $reviewer->assignRole('relecteur');
+        $reviewer->assignRole('reviewer');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $fixture = $this->createArticleWithVersion($author, 'en_revision');
+        $fixture = $this->createArticleWithVersion($author, 'under_review');
 
         $assignmentId = DB::table('reviewer_assignments')->insertGetId([
             'article_id' => $fixture['article_id'],
             'reviewer_id' => $reviewer->id,
             'assigned_by' => $editor->id,
             'assigned_at' => Carbon::now(),
-            'status' => 'accepte',
+            'status' => 'accepted',
             'due_date' => null,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
@@ -290,22 +290,22 @@ class WorkflowApiTest extends TestCase
     public function test_reviewer_can_save_draft_before_final_submission(): void
     {
         $editor = User::factory()->create();
-        $editor->assignRole('editeur');
+        $editor->assignRole('editor');
 
         $reviewer = User::factory()->create();
-        $reviewer->assignRole('relecteur');
+        $reviewer->assignRole('reviewer');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $fixture = $this->createArticleWithVersion($author, 'en_revision');
+        $fixture = $this->createArticleWithVersion($author, 'under_review');
 
         $assignmentId = DB::table('reviewer_assignments')->insertGetId([
             'article_id' => $fixture['article_id'],
             'reviewer_id' => $reviewer->id,
             'assigned_by' => $editor->id,
             'assigned_at' => Carbon::now(),
-            'status' => 'accepte',
+            'status' => 'accepted',
             'due_date' => null,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
@@ -325,7 +325,7 @@ class WorkflowApiTest extends TestCase
 
         $this->assertDatabaseHas('reviewer_assignments', [
             'id' => $assignmentId,
-            'status' => 'accepte',
+            'status' => 'accepted',
         ]);
 
         $this->assertDatabaseMissing('notifications', [
@@ -359,19 +359,19 @@ class WorkflowApiTest extends TestCase
     public function test_reviewer_cannot_submit_review_when_assignment_is_not_accepted(): void
     {
         $reviewer = User::factory()->create();
-        $reviewer->assignRole('relecteur');
+        $reviewer->assignRole('reviewer');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $fixture = $this->createArticleWithVersion($author, 'en_revision');
+        $fixture = $this->createArticleWithVersion($author, 'under_review');
 
         $assignmentId = DB::table('reviewer_assignments')->insertGetId([
             'article_id' => $fixture['article_id'],
             'reviewer_id' => $reviewer->id,
             'assigned_by' => $author->id,
             'assigned_at' => Carbon::now(),
-            'status' => 'en_attente',
+            'status' => 'pending',
             'due_date' => null,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
@@ -387,19 +387,19 @@ class WorkflowApiTest extends TestCase
     public function test_reviewer_cannot_edit_review_after_final_submission(): void
     {
         $reviewer = User::factory()->create();
-        $reviewer->assignRole('relecteur');
+        $reviewer->assignRole('reviewer');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $fixture = $this->createArticleWithVersion($author, 'en_revision');
+        $fixture = $this->createArticleWithVersion($author, 'under_review');
 
         $assignmentId = DB::table('reviewer_assignments')->insertGetId([
             'article_id' => $fixture['article_id'],
             'reviewer_id' => $reviewer->id,
             'assigned_by' => $author->id,
             'assigned_at' => Carbon::now(),
-            'status' => 'accepte',
+            'status' => 'accepted',
             'due_date' => null,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
@@ -413,7 +413,7 @@ class WorkflowApiTest extends TestCase
             'clarity_score' => 7,
             'overall_score' => 7,
             'comments' => 'Relecture finale deja soumise',
-            'decision_suggestion' => 'accepter',
+            'decision_suggestion' => 'accept',
             'submitted_at' => Carbon::now(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
@@ -436,29 +436,29 @@ class WorkflowApiTest extends TestCase
     public function test_editor_final_decision_updates_status_and_notifies_author(): void
     {
         $editor = User::factory()->create();
-        $editor->assignRole('editeur');
+        $editor->assignRole('editor');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $fixture = $this->createArticleWithVersion($author, 'en_revision');
+        $fixture = $this->createArticleWithVersion($author, 'under_review');
 
         $this->actingAs($editor);
 
         $this->postJson("/api/v1/articles/{$fixture['article_id']}/decision", [
-            'decision' => 'accepte',
+            'decision' => 'accepted',
             'comments' => 'Article valide pour publication.',
         ])->assertCreated();
 
         $this->assertDatabaseHas('articles', [
             'id' => $fixture['article_id'],
-            'status' => 'accepte',
+            'status' => 'accepted',
         ]);
 
         $this->assertDatabaseHas('editorial_decisions', [
             'article_id' => $fixture['article_id'],
             'editor_id' => $editor->id,
-            'decision' => 'accepte',
+            'decision' => 'accepted',
             'stage' => 'finale',
         ]);
 
@@ -471,36 +471,36 @@ class WorkflowApiTest extends TestCase
     public function test_editor_can_edit_final_decision_with_single_record_per_article(): void
     {
         $editor = User::factory()->create();
-        $editor->assignRole('editeur');
+        $editor->assignRole('editor');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $fixture = $this->createArticleWithVersion($author, 'en_revision');
+        $fixture = $this->createArticleWithVersion($author, 'under_review');
 
         $this->actingAs($editor)
             ->postJson("/api/v1/articles/{$fixture['article_id']}/decision", [
-                'decision' => 'revision_requise',
+                'decision' => 'revision_required',
                 'comments' => 'Premiere decision finale.',
             ])
             ->assertCreated();
 
         $this->actingAs($editor)
             ->postJson("/api/v1/articles/{$fixture['article_id']}/decision", [
-                'decision' => 'rejete',
+                'decision' => 'rejected',
                 'comments' => 'Decision finale mise a jour.',
             ])
             ->assertCreated();
 
         $this->assertDatabaseHas('articles', [
             'id' => $fixture['article_id'],
-            'status' => 'rejete',
+            'status' => 'rejected',
         ]);
 
         $this->assertDatabaseHas('editorial_decisions', [
             'article_id' => $fixture['article_id'],
             'editor_id' => $editor->id,
-            'decision' => 'rejete',
+            'decision' => 'rejected',
             'stage' => 'finale',
         ]);
 
@@ -516,23 +516,23 @@ class WorkflowApiTest extends TestCase
     public function test_editor_decision_returns_conflict_for_invalid_transition(): void
     {
         $editor = User::factory()->create();
-        $editor->assignRole('editeur');
+        $editor->assignRole('editor');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $fixture = $this->createArticleWithVersion($author, 'soumis');
+        $fixture = $this->createArticleWithVersion($author, 'submitted');
 
         $this->actingAs($editor);
 
         $this->postJson("/api/v1/articles/{$fixture['article_id']}/decision", [
-            'decision' => 'accepte',
+            'decision' => 'accepted',
             'comments' => 'Tentative prematuree.',
         ])->assertStatus(409);
 
         $this->assertDatabaseHas('articles', [
             'id' => $fixture['article_id'],
-            'status' => 'soumis',
+            'status' => 'submitted',
         ]);
     }
 
@@ -542,13 +542,13 @@ class WorkflowApiTest extends TestCase
         $admin->assignRole('admin');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $fixture = $this->createArticleWithVersion($author, 'en_revision');
+        $fixture = $this->createArticleWithVersion($author, 'under_review');
 
         $this->actingAs($admin)
             ->postJson("/api/v1/articles/{$fixture['article_id']}/decision", [
-                'decision' => 'accepte',
+                'decision' => 'accepted',
                 'comments' => 'Tentative admin.',
             ])
             ->assertForbidden();
@@ -557,16 +557,16 @@ class WorkflowApiTest extends TestCase
     public function test_editor_decision_requires_comments(): void
     {
         $editor = User::factory()->create();
-        $editor->assignRole('editeur');
+        $editor->assignRole('editor');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $fixture = $this->createArticleWithVersion($author, 'en_revision');
+        $fixture = $this->createArticleWithVersion($author, 'under_review');
 
         $this->actingAs($editor)
             ->postJson("/api/v1/articles/{$fixture['article_id']}/decision", [
-                'decision' => 'accepte',
+                'decision' => 'accepted',
             ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['comments']);
@@ -578,9 +578,9 @@ class WorkflowApiTest extends TestCase
         $admin->assignRole('admin');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $fixture = $this->createArticleWithVersion($author, 'accepte');
+        $fixture = $this->createArticleWithVersion($author, 'accepted');
 
         $this->actingAs($admin)
             ->postJson("/api/v1/articles/{$fixture['article_id']}/publish", [
@@ -591,7 +591,7 @@ class WorkflowApiTest extends TestCase
 
         $this->assertDatabaseHas('articles', [
             'id' => $fixture['article_id'],
-            'status' => 'publie',
+            'status' => 'published',
         ]);
 
         $this->assertDatabaseHas('publications', [
@@ -608,12 +608,12 @@ class WorkflowApiTest extends TestCase
     public function test_editor_can_publish_only_accepted_article_and_notify_author(): void
     {
         $editor = User::factory()->create();
-        $editor->assignRole('editeur');
+        $editor->assignRole('editor');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $fixture = $this->createArticleWithVersion($author, 'accepte');
+        $fixture = $this->createArticleWithVersion($author, 'accepted');
 
         $this->actingAs($editor)
             ->postJson("/api/v1/articles/{$fixture['article_id']}/publish", [
@@ -624,7 +624,7 @@ class WorkflowApiTest extends TestCase
 
         $this->assertDatabaseHas('articles', [
             'id' => $fixture['article_id'],
-            'status' => 'publie',
+            'status' => 'published',
         ]);
 
         $this->assertDatabaseHas('publications', [
@@ -644,9 +644,9 @@ class WorkflowApiTest extends TestCase
         $admin->assignRole('admin');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $fixture = $this->createArticleWithVersion($author, 'rejete');
+        $fixture = $this->createArticleWithVersion($author, 'rejected');
 
         $this->actingAs($admin)
             ->postJson("/api/v1/articles/{$fixture['article_id']}/publish")
@@ -660,12 +660,12 @@ class WorkflowApiTest extends TestCase
     public function test_editor_cannot_delete_completed_assignment(): void
     {
         $editor = User::factory()->create();
-        $editor->assignRole('editeur');
+        $editor->assignRole('editor');
 
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $articleId = $this->createArticleWithVersion($author, 'en_revision')['article_id'];
+        $articleId = $this->createArticleWithVersion($author, 'under_review')['article_id'];
 
         $assignmentId = DB::table('reviewer_assignments')->insertGetId([
             'article_id' => $articleId,
@@ -686,20 +686,20 @@ class WorkflowApiTest extends TestCase
     public function test_author_cannot_view_decision_of_another_author_article(): void
     {
         $editor = User::factory()->create();
-        $editor->assignRole('editeur');
+        $editor->assignRole('editor');
 
         $ownerAuthor = User::factory()->create();
-        $ownerAuthor->assignRole('auteur');
+        $ownerAuthor->assignRole('author');
 
         $otherAuthor = User::factory()->create();
-        $otherAuthor->assignRole('auteur');
+        $otherAuthor->assignRole('author');
 
-        $fixture = $this->createArticleWithVersion($ownerAuthor, 'en_revision');
+        $fixture = $this->createArticleWithVersion($ownerAuthor, 'under_review');
 
         DB::table('editorial_decisions')->insert([
             'article_id' => $fixture['article_id'],
             'editor_id' => $editor->id,
-            'decision' => 'revision_requise',
+            'decision' => 'revision_required',
             'comments' => 'Merci de corriger les sections 2 et 3.',
             'decided_at' => Carbon::now(),
             'created_at' => Carbon::now(),
@@ -714,9 +714,9 @@ class WorkflowApiTest extends TestCase
     public function test_author_resubmission_creates_new_version_and_returns_en_revision_status(): void
     {
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
-        $fixture = $this->createArticleWithVersion($author, 'revision_requise');
+        $fixture = $this->createArticleWithVersion($author, 'revision_required');
 
         $this->actingAs($author);
 
@@ -727,7 +727,7 @@ class WorkflowApiTest extends TestCase
 
         $this->assertDatabaseHas('articles', [
             'id' => $fixture['article_id'],
-            'status' => 'en_revision',
+            'status' => 'under_review',
         ]);
 
         $this->assertEquals(

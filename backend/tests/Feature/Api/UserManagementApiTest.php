@@ -23,7 +23,7 @@ class UserManagementApiTest extends TestCase
         $admin->assignRole('admin');
 
         $target = User::factory()->create();
-        $target->assignRole('auteur');
+        $target->assignRole('author');
 
         $this->actingAs($admin);
 
@@ -39,7 +39,7 @@ class UserManagementApiTest extends TestCase
     public function test_non_admin_cannot_list_users(): void
     {
         $author = User::factory()->create();
-        $author->assignRole('auteur');
+        $author->assignRole('author');
 
         $this->actingAs($author);
 
@@ -52,15 +52,15 @@ class UserManagementApiTest extends TestCase
         $admin->assignRole('admin');
 
         $user = User::factory()->create();
-        $user->assignRole('lecteur');
+        $user->assignRole('reader');
 
         $this->actingAs($admin);
 
         $this->postJson("/api/v1/users/{$user->id}/assign-role", [
-            'role' => 'editeur',
+            'role' => 'editor',
         ])->assertOk();
 
-        $this->assertTrue($user->fresh()->hasRole('editeur'));
+        $this->assertTrue($user->fresh()->hasRole('editor'));
     }
 
     public function test_admin_can_create_user_with_role(): void
@@ -74,7 +74,7 @@ class UserManagementApiTest extends TestCase
                 'email' => 'nouveau.utilisateur@example.test',
                 'password' => 'SecretPass123',
                 'password_confirmation' => 'SecretPass123',
-                'role' => 'auteur',
+                'role' => 'author',
             ])
             ->assertCreated()
             ->assertJsonFragment([
@@ -86,7 +86,7 @@ class UserManagementApiTest extends TestCase
         ]);
 
         $created = User::query()->where('email', 'nouveau.utilisateur@example.test')->firstOrFail();
-        $this->assertTrue($created->hasRole('auteur'));
+        $this->assertTrue($created->hasRole('author'));
     }
 
     public function test_admin_cannot_delete_its_own_account(): void

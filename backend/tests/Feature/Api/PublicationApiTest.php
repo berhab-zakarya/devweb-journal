@@ -21,7 +21,7 @@ class PublicationApiTest extends TestCase
 
     public function test_public_publications_index_returns_published_articles(): void
     {
-        $publicationId = $this->createPublicationFixture('Article Publie', 'publie');
+        $publicationId = $this->createPublicationFixture('Article Publie', 'published');
 
         $this->getJson('/api/v1/publications')
             ->assertOk()
@@ -33,7 +33,7 @@ class PublicationApiTest extends TestCase
 
     public function test_publications_index_returns_paginated_structure(): void
     {
-        $this->createPublicationFixture('Article Page 1', 'publie');
+        $this->createPublicationFixture('Article Page 1', 'published');
 
         $this->getJson('/api/v1/publications')
             ->assertOk()
@@ -49,7 +49,7 @@ class PublicationApiTest extends TestCase
 
     public function test_publication_detail_returns_not_found_for_unpublished_article(): void
     {
-        $publicationId = $this->createPublicationFixture('Article Non Publie', 'soumis');
+        $publicationId = $this->createPublicationFixture('Article Non Publie', 'submitted');
 
         $this->getJson("/api/v1/publications/{$publicationId}")
             ->assertNotFound();
@@ -57,7 +57,7 @@ class PublicationApiTest extends TestCase
 
     public function test_publication_detail_returns_data_for_published_article(): void
     {
-        $publicationId = $this->createPublicationFixture('Article Visible', 'publie');
+        $publicationId = $this->createPublicationFixture('Article Visible', 'published');
 
         $this->getJson('/api/v1/publications/' . $publicationId)
             ->assertOk()
@@ -70,8 +70,8 @@ class PublicationApiTest extends TestCase
 
     public function test_public_publications_index_excludes_unpublished_articles(): void
     {
-        $publishedId = $this->createPublicationFixture('Article Publie 2', 'publie');
-        $unpublishedId = $this->createPublicationFixture('Article Non Publie 2', 'soumis', categorySlug: 'medecine');
+        $publishedId = $this->createPublicationFixture('Article Publie 2', 'published');
+        $unpublishedId = $this->createPublicationFixture('Article Non Publie 2', 'submitted', categorySlug: 'medecine');
 
         $this->getJson('/api/v1/publications')
             ->assertOk()
@@ -83,7 +83,7 @@ class PublicationApiTest extends TestCase
     {
         $this->createPublicationFixture(
             title: 'Reseaux neuronaux explainables',
-            articleStatus: 'publie',
+            articleStatus: 'published',
             categorySlug: 'intelligence-artificielle',
             volume: '2026',
             issue: '2'
@@ -91,7 +91,7 @@ class PublicationApiTest extends TestCase
 
         $otherPublicationId = $this->createPublicationFixture(
             title: 'Systemes distribues resilients',
-            articleStatus: 'publie',
+            articleStatus: 'published',
             categorySlug: 'systemes-distribues',
             volume: '2025',
             issue: '1'
@@ -107,14 +107,14 @@ class PublicationApiTest extends TestCase
     {
         $olderPublicationId = $this->createPublicationFixture(
             title: 'Article ancien',
-            articleStatus: 'publie',
+            articleStatus: 'published',
             categorySlug: 'archives',
             publishedAt: Carbon::now()->subDays(2)
         );
 
         $latestPublicationId = $this->createPublicationFixture(
             title: 'Article recent',
-            articleStatus: 'publie',
+            articleStatus: 'published',
             categorySlug: 'actualites',
             publishedAt: Carbon::now()
         );
@@ -130,7 +130,7 @@ class PublicationApiTest extends TestCase
 
     public function test_publication_download_returns_file_when_published_and_file_exists(): void
     {
-        $publicationId = $this->createPublicationFixture('Article telechargeable', 'publie');
+        $publicationId = $this->createPublicationFixture('Article telechargeable', 'published');
 
         $this->get('/api/v1/publications/' . $publicationId . '/download')
             ->assertOk()
@@ -139,7 +139,7 @@ class PublicationApiTest extends TestCase
 
     public function test_publication_download_returns_not_found_for_unpublished_article(): void
     {
-        $publicationId = $this->createPublicationFixture('Article non telechargeable', 'soumis');
+        $publicationId = $this->createPublicationFixture('Article non telechargeable', 'submitted');
 
         $this->get('/api/v1/publications/' . $publicationId . '/download')
             ->assertNotFound();
@@ -147,7 +147,7 @@ class PublicationApiTest extends TestCase
 
     public function test_publication_download_returns_not_found_when_file_missing(): void
     {
-        $publicationId = $this->createPublicationFixture('Article sans fichier', 'publie', withFile: false);
+        $publicationId = $this->createPublicationFixture('Article sans fichier', 'published', withFile: false);
 
         $this->get('/api/v1/publications/' . $publicationId . '/download')
             ->assertNotFound();

@@ -39,13 +39,13 @@ class NotificationService
         ?Carbon $dueDate = null,
         ?int $actorId = null
     ): ?UserNotification {
-        $deadlineText = $dueDate ? $dueDate->format('d/m/Y H:i') : 'sans date limite';
+        $deadlineText = $dueDate ? $dueDate->format('d/m/Y H:i') : 'no deadline';
 
         return $this->notify(
             userId: $reviewerId,
             type: 'reviewer_assigned',
-            title: 'Nouvelle assignation de relecture',
-            body: sprintf('Vous avez ete assigne a l article "%s" (%s).', $articleTitle, $deadlineText),
+            title: 'New Review Assignment',
+            body: sprintf('You have been assigned to article "%s" (due: %s).', $articleTitle, $deadlineText),
             data: [
                 'article_id' => $articleId,
                 'article_title' => $articleTitle,
@@ -65,8 +65,8 @@ class NotificationService
         return $this->notify(
             userId: $editorId,
             type: 'review_submitted',
-            title: 'Relecture soumise',
-            body: sprintf('Une relecture a ete soumise pour l article "%s".', $articleTitle),
+            title: 'Review Submitted',
+            body: sprintf('A review has been submitted for article "%s".', $articleTitle),
             data: [
                 'article_id' => $articleId,
                 'article_title' => $articleTitle,
@@ -85,8 +85,8 @@ class NotificationService
         return $this->notify(
             userId: $editorId,
             type: 'all_reviews_submitted',
-            title: 'Toutes les relectures sont disponibles',
-            body: sprintf('Toutes les relectures sont soumises pour l article "%s".', $articleTitle),
+            title: 'All Reviews Submitted',
+            body: sprintf('All reviews have been submitted for article "%s".', $articleTitle),
             data: [
                 'article_id' => $articleId,
                 'article_title' => $articleTitle,
@@ -105,8 +105,8 @@ class NotificationService
         return $this->notify(
             userId: $authorId,
             type: 'decision_made',
-            title: 'Decision finale disponible',
-            body: sprintf('Une decision finale (%s) a ete prise pour "%s".', $decision, $articleTitle),
+            title: 'Editorial Decision Available',
+            body: sprintf('A final decision (%s) has been made for "%s".', $decision, $articleTitle),
             data: [
                 'article_id' => $articleId,
                 'article_title' => $articleTitle,
@@ -126,8 +126,8 @@ class NotificationService
         return $this->notify(
             userId: $authorId,
             type: 'article_published',
-            title: 'Article publie',
-            body: sprintf('Votre article "%s" est maintenant publie.', $articleTitle),
+            title: 'Article Published',
+            body: sprintf('Your article "%s" is now published.', $articleTitle),
             data: [
                 'article_id' => $articleId,
                 'article_title' => $articleTitle,

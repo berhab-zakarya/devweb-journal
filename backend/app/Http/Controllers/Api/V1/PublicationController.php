@@ -43,7 +43,7 @@ class PublicationController extends Controller
                 'categories.name as category_name',
                 'categories.slug as category_slug',
             ])
-            ->where('articles.status', 'publie')
+            ->where('articles.status', 'published')
             ->orderByDesc('publications.published_at');
 
         if ($search = trim((string) $request->query('search', ''))) {

@@ -20,7 +20,7 @@ return new class extends Migration {
             $table->foreignId('reviewer_id')->constrained('users')->restrictOnDelete();
             $table->foreignId('assigned_by')->constrained('users')->restrictOnDelete();
             $table->dateTime('assigned_at');
-            $table->enum('status', ['en_attente', 'accepte', 'decline', 'complete'])->default('en_attente');
+            $table->enum('status', ['pending', 'accepted', 'decline', 'complete'])->default('pending');
             $table->dateTime('due_date')->nullable();
             $table->timestamps();
 
@@ -42,8 +42,8 @@ return new class extends Migration {
             $table->unsignedTinyInteger('clarity_score');
             $table->unsignedTinyInteger('overall_score');
             $table->text('comments');
-            $table->enum('decision_suggestion', ['accepter', 'rejeter', 'revision_mineure', 'revision_majeure']);
-            $table->dateTime('submitted_at');
+            $table->enum('decision_suggestion', ['accept', 'reject', 'minor_revision', 'major_revision'])->nullable();
+            $table->dateTime('submitted_at')->nullable();
             $table->timestamps();
 
             $table->unique('assignment_id');
@@ -59,7 +59,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('article_id')->constrained('articles')->cascadeOnDelete();
             $table->foreignId('editor_id')->constrained('users')->restrictOnDelete();
-            $table->enum('decision', ['accepte', 'rejete', 'revision_requise']);
+            $table->enum('decision', ['accepted', 'rejected', 'revision_required']);
             $table->text('comments');
             $table->dateTime('decided_at');
             $table->timestamps();

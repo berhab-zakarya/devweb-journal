@@ -16,7 +16,7 @@ class DatabaseSeederTest extends TestCase
     {
         $this->seed();
 
-        foreach (['admin', 'editeur', 'relecteur', 'auteur', 'lecteur'] as $roleName) {
+        foreach (['admin', 'editor', 'reviewer', 'author', 'reader'] as $roleName) {
             $this->assertNotNull(Role::query()->where('name', $roleName)->first(), "Missing role: {$roleName}");
         }
 
@@ -35,9 +35,9 @@ class DatabaseSeederTest extends TestCase
         $this->assertNotNull($reader);
 
         $this->assertTrue($admin->hasRole('admin'));
-        $this->assertTrue($editor->hasRole('editeur'));
-        $this->assertTrue($reviewer->hasRole('relecteur'));
-        $this->assertTrue($author->hasRole('auteur'));
-        $this->assertTrue($reader->hasRole('lecteur'));
+        $this->assertTrue($editor->hasRole('editor'));
+        $this->assertTrue($reviewer->hasRole('reviewer'));
+        $this->assertTrue($author->hasRole('author'));
+        $this->assertTrue($reader->hasRole('reader'));
     }
 }
