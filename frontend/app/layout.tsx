@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { QueryProvider } from '@/shared/tanstack/providers';
-import { primaryFont, academicFont, monoFont } from '@/shared/fonts/fonts';
+import { primaryFont } from '@/shared/fonts/fonts';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -15,9 +15,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body
-        className={`${primaryFont.variable} ${academicFont.variable} ${monoFont.variable} font-primary`}
-      >
+      <body className={`${primaryFont.variable} font-primary`}>
         <QueryProvider>{children}</QueryProvider>
       </body>
     </html>

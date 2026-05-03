@@ -1,12 +1,28 @@
 @import "tailwindcss";
 
 /* ─── Font families ──────────────────────────────────────────────────────── */
-/* Resolves --font-inter / --font-source-serif / --font-jetbrains set by
-   next/font/local on <html> into Tailwind font-* utility classes.           */
 @theme {
   --font-primary: var(--font-inter);
-  --font-academic: var(--font-source-serif);
-  --font-mono: var(--font-jetbrains);
+}
+
+/* ─── Font weight shorthands ─────────────────────────────────────────────── */
+@layer utilities {
+  .font-primary-regular {
+    font-family: var(--font-primary);
+    font-weight: 400;
+  }
+  .font-primary-medium {
+    font-family: var(--font-primary);
+    font-weight: 500;
+  }
+  .font-primary-semibold {
+    font-family: var(--font-primary);
+    font-weight: 600;
+  }
+  .font-primary-bold {
+    font-family: var(--font-primary);
+    font-weight: 700;
+  }
 }
 
 /* ─── Color tokens ───────────────────────────────────────────────────────── */
@@ -56,14 +72,16 @@
 /* ─── Semantic split: bg-muted ≠ text-muted ─────────────────────────────── */
 /* bg-muted (#F1F5F9) and text-muted (#64748B) are intentionally different   */
 /* values, so they cannot share a single @theme color token.                 */
-@utility bg-muted {
-  background-color: #F1F5F9;
-}
-@utility text-muted {
-  color: #64748B;
-}
-@utility border-muted {
-  border-color: #F1F5F9;
+@layer utilities {
+  .bg-muted {
+    background-color: #F1F5F9;
+  }
+  .text-muted {
+    color: #64748B;
+  }
+  .border-muted {
+    border-color: #F1F5F9;
+  }
 }
 
 /* ─── Base resets ────────────────────────────────────────────────────────── */
