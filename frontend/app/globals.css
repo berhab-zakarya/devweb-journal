@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+/* ─── Font families ──────────────────────────────────────────────────────── */
+/* Resolves --font-inter / --font-source-serif / --font-jetbrains set by
+   next/font/local on <html> into Tailwind font-* utility classes.           */
+@theme {
+  --font-primary: var(--font-inter);
+  --font-academic: var(--font-source-serif);
+  --font-mono: var(--font-jetbrains);
+}
+
+/* ─── Color tokens ───────────────────────────────────────────────────────── */
+@theme {
+  /* Brand */
+  --color-brand-950: #0B1220;
+  --color-brand-900: #111827;
+  --color-brand-800: #1E293B;
+  --color-brand-700: #1D4ED8;
+  --color-brand-600: #2563EB;
+  --color-brand-500: #3B82F6;
+
+  /* Accent */
+  --color-accent-700: #0F766E;
+  --color-accent-600: #0D9488;
+  --color-accent-500: #14B8A6;
+
+  /* Backgrounds */
+  --color-app: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-soft-blue: #EFF6FF;
+  --color-soft-teal: #F0FDFA;
+
+  /* Text / general */
+  --color-primary: #0F172A;
+  --color-secondary: #475569;
+  --color-inverse: #FFFFFF;
+
+  /* Borders */
+  --color-subtle: #E2E8F0;
+  --color-strong: #CBD5E1;
+
+  /* Status */
+  --color-success: #16A34A;
+  --color-warning: #D97706;
+  --color-danger: #DC2626;
+  --color-info: #2563EB;
+
+  /* Roles */
+  --color-role-admin: #7C3AED;
+  --color-role-editor: #2563EB;
+  --color-role-reviewer: #0D9488;
+  --color-role-author: #EA580C;
+  --color-role-reader: #64748B;
+}
+
+/* ─── Semantic split: bg-muted ≠ text-muted ─────────────────────────────── */
+/* bg-muted (#F1F5F9) and text-muted (#64748B) are intentionally different   */
+/* values, so they cannot share a single @theme color token.                 */
+@utility bg-muted {
+  background-color: #F1F5F9;
+}
+@utility text-muted {
+  color: #64748B;
+}
+@utility border-muted {
+  border-color: #F1F5F9;
+}
+
+/* ─── Base resets ────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--color-app);
+  color: var(--color-primary);
+  font-family: var(--font-primary), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
