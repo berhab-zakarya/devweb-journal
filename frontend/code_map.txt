@@ -1,0 +1,637 @@
+================================================================
+  CODE MAP
+  Root   : /c/Users/Lenovo/Desktop/devweb-journal/frontend/src
+  Created: 2026-05-03 19:14:26
+================================================================
+
+----------------------------------------------------------------
+FILE: features/articles/hooks/useArticle.ts
+----------------------------------------------------------------
+/**
+ * useArticle hook
+ *
+ * Fetches a single article by ID.
+ */
+
+import { useQuery } from '@tanstack/react-query';
+import { articlesDetailQueryOptions } from '../queries/articles.queries';
+
+export function useArticle(id: string) {
+  return useQuery(articlesDetailQueryOptions(id));
+}
+
+
+----------------------------------------------------------------
+FILE: features/articles/hooks/useArticles.ts
+----------------------------------------------------------------
+/**
+ * useArticles hook
+ *
+ * Composes query options + useQuery for listing articles.
+ * This is what components import — never useQuery directly.
+ */
+
+import { useQuery } from '@tanstack/react-query';
+import { articlesListQueryOptions } from '../queries/articles.queries';
+import type { ArticleFilters } from '../types/Article.types';
+
+export function useArticles(filters?: ArticleFilters) {
+  return useQuery(articlesListQueryOptions(filters));
+}
+
+
+----------------------------------------------------------------
+FILE: features/articles/index.ts
+----------------------------------------------------------------
+/**
+ * Article Feature — Public API
+ *
+ * Only export what consumers of this feature need.
+ * Internal implementation details remain private.
+ */
+
+// Types
+export type {
+  Article,
+  ArticleDraft,
+  ArticleUpdatePayload,
+  ArticleFilters,
+  ArticlesResponse,
+} from './types/Article.types';
+
+// Hooks (primary interface for components)
+export { useArticles } from './hooks/useArticles';
+export { useArticle } from './hooks/useArticle';
+
+// Mutations
+export {
+  useCreateArticleMutation,
+  useUpdateArticleMutation,
+  useDeleteArticleMutation,
+} from './mutations/articles.mutations';
+
+// Query options (for prefetching in loaders/server components)
+export {
+  articlesListQueryOptions,
+  articlesDetailQueryOptions,
+} from './queries/articles.queries';
+
+// Query keys (for targeted invalidation from other features via shared/)
+export { articlesKeys } from './queries/articles.keys';
+
+
+----------------------------------------------------------------
+FILE: features/articles/mutations/articles.mutations.ts
+----------------------------------------------------------------
+/**
+ * Article Mutations
+ *
+ * TanStack Query mutation factories.
+ * Each mutation handles cache invalidation automatically.
+ */
+
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { articlesService } from '../services/articles.service';
+import { articlesKeys } from '../queries/articles.keys';
+import type {
+  ArticleDraft,
+  ArticleUpdatePayload,
+} from '../types/Article.types';
+
+/**
+ * Create a new article.
+ */
+export function useCreateArticleMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: ArticleDraft) => articlesService.create(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: articlesKeys.lists() });
+    },
+  });
+}
+
+/**
+ * Update an existing article.
+ */
+export function useUpdateArticleMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: ArticleUpdatePayload) => articlesService.update(payload),
+    onSuccess: (updated) => {
+      queryClient.invalidateQueries({ queryKey: articlesKeys.lists() });
+      queryClient.setQueryData(articlesKeys.detail(updated.id), updated);
+    },
+  });
+}
+
+/**
+ * Delete a article.
+ */
+export function useDeleteArticleMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => articlesService.delete(id),
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: articlesKeys.lists() });
+      queryClient.removeQueries({ queryKey: articlesKeys.detail(id) });
+    },
+  });
+}
+
+
+----------------------------------------------------------------
+FILE: features/articles/queries/articles.keys.ts
+----------------------------------------------------------------
+/**
+ * Article Query Keys
+ *
+ * Centralized, typed query key factory for TanStack Query.
+ * All articles queries/mutations reference keys from here.
+ */
+
+import type { ArticleFilters } from '../types/Article.types';
+
+export const articlesKeys = {
+  /** Base key for all articles queries */
+  all: ['articles'] as const,
+
+  /** All list variants */
+  lists: () => [...articlesKeys.all, 'list'] as const,
+
+  /** Specific list with filters */
+  list: (filters?: ArticleFilters) =>
+    [...articlesKeys.lists(), { filters }] as const,
+
+  /** All detail variants */
+  details: () => [...articlesKeys.all, 'detail'] as const,
+
+  /** Single item detail */
+  detail: (id: string) => [...articlesKeys.details(), id] as const,
+} as const;
+
+
+----------------------------------------------------------------
+FILE: features/articles/queries/articles.queries.ts
+----------------------------------------------------------------
+/**
+ * Article Query Options
+ *
+ * TanStack Query queryOptions factories.
+ * Compose these inside hooks — never call useQuery directly in components.
+ */
+
+import { queryOptions, infiniteQueryOptions } from '@tanstack/react-query';
+import { articlesService } from '../services/articles.service';
+import { articlesKeys } from './articles.keys';
+import type { ArticleFilters } from '../types/Article.types';
+
+/**
+ * Query options for fetching a paginated list of articles.
+ */
+export const articlesListQueryOptions = (filters?: ArticleFilters) =>
+  queryOptions({
+    queryKey: articlesKeys.list(filters),
+    queryFn: () => articlesService.getAll(filters),
+    staleTime: 60_000,
+  });
+
+/**
+ * Query options for fetching a single article by ID.
+ */
+export const articlesDetailQueryOptions = (id: string) =>
+  queryOptions({
+    queryKey: articlesKeys.detail(id),
+    queryFn: () => articlesService.getById(id),
+    enabled: Boolean(id),
+    staleTime: 60_000,
+  });
+
+
+----------------------------------------------------------------
+FILE: features/articles/services/articles.service.ts
+----------------------------------------------------------------
+/**
+ * Article Service
+ *
+ * This is the ONLY place where API calls for the articles feature are made.
+ * Uses the shared Axios client — never instantiate Axios directly here.
+ */
+
+import { apiClient } from '@/shared/api/client';
+import { ENDPOINTS } from '@/shared/api/endpoints.constants';
+import type {
+  Article,
+  ArticleDraft,
+  ArticleUpdatePayload,
+  ArticleFilters,
+  ArticlesResponse,
+} from '../types/Article.types';
+
+const BASE = ENDPOINTS.ARTICLES_BASE;
+
+export const articlesService = {
+  /**
+   * Fetch a paginated list of articles.
+   */
+  getAll: async (filters?: ArticleFilters): Promise<ArticlesResponse> => {
+    const { data } = await apiClient.get<ArticlesResponse>(BASE, { params: filters });
+    return data;
+  },
+
+  /**
+   * Fetch a single article by ID.
+   */
+  getById: async (id: string): Promise<Article> => {
+    const { data } = await apiClient.get<Article>(`${BASE}/${id}`);
+    return data;
+  },
+
+  /**
+   * Create a new article.
+   */
+  create: async (payload: ArticleDraft): Promise<Article> => {
+    const { data } = await apiClient.post<Article>(BASE, payload);
+    return data;
+  },
+
+  /**
+   * Update an existing article.
+   */
+  update: async ({ id, ...payload }: ArticleUpdatePayload): Promise<Article> => {
+    const { data } = await apiClient.patch<Article>(`${BASE}/${id}`, payload);
+    return data;
+  },
+
+  /**
+   * Delete a article by ID.
+   */
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`${BASE}/${id}`);
+  },
+} as const;
+
+
+----------------------------------------------------------------
+FILE: features/articles/types/Article.types.ts
+----------------------------------------------------------------
+/**
+ * Article Domain Types
+ *
+ * All types for the articles feature live here.
+ * Do NOT import types from other features — use shared/types if needed.
+ */
+
+export interface Article {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  // TODO: add your Article-specific fields here
+}
+
+export interface ArticleDraft {
+  // TODO: fields required to create a new Article
+}
+
+export interface ArticleUpdatePayload {
+  id: string;
+  // TODO: fields allowed to update
+}
+
+export interface ArticleFilters {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: keyof Article;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface ArticlesResponse {
+  data: Article[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+
+----------------------------------------------------------------
+FILE: features/assignments/hooks/useAssignment.ts
+----------------------------------------------------------------
+/**
+ * useAssignment hook
+ *
+ * Fetches a single assignment by ID.
+ */
+
+import { useQuery } from '@tanstack/react-query';
+import { assignmentsDetailQueryOptions } from '../queries/assignments.queries';
+
+export function useAssignment(id: string) {
+  return useQuery(assignmentsDetailQueryOptions(id));
+}
+
+
+----------------------------------------------------------------
+FILE: features/assignments/hooks/useAssignments.ts
+----------------------------------------------------------------
+/**
+ * useAssignments hook
+ *
+ * Composes query options + useQuery for listing assignments.
+ * This is what components import — never useQuery directly.
+ */
+
+import { useQuery } from '@tanstack/react-query';
+import { assignmentsListQueryOptions } from '../queries/assignments.queries';
+import type { AssignmentFilters } from '../types/Assignment.types';
+
+export function useAssignments(filters?: AssignmentFilters) {
+  return useQuery(assignmentsListQueryOptions(filters));
+}
+
+
+----------------------------------------------------------------
+FILE: features/assignments/index.ts
+----------------------------------------------------------------
+/**
+ * Assignment Feature — Public API
+ *
+ * Only export what consumers of this feature need.
+ * Internal implementation details remain private.
+ */
+
+// Types
+export type {
+  Assignment,
+  AssignmentDraft,
+  AssignmentUpdatePayload,
+  AssignmentFilters,
+  AssignmentsResponse,
+} from './types/Assignment.types';
+
+// Hooks (primary interface for components)
+export { useAssignments } from './hooks/useAssignments';
+export { useAssignment } from './hooks/useAssignment';
+
+// Mutations
+export {
+  useCreateAssignmentMutation,
+  useUpdateAssignmentMutation,
+  useDeleteAssignmentMutation,
+} from './mutations/assignments.mutations';
+
+// Query options (for prefetching in loaders/server components)
+export {
+  assignmentsListQueryOptions,
+  assignmentsDetailQueryOptions,
+} from './queries/assignments.queries';
+
+// Query keys (for targeted invalidation from other features via shared/)
+export { assignmentsKeys } from './queries/assignments.keys';
+
+
+----------------------------------------------------------------
+FILE: features/assignments/mutations/assignments.mutations.ts
+----------------------------------------------------------------
+/**
+ * Assignment Mutations
+ *
+ * TanStack Query mutation factories.
+ * Each mutation handles cache invalidation automatically.
+ */
+
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { assignmentsService } from '../services/assignments.service';
+import { assignmentsKeys } from '../queries/assignments.keys';
+import type {
+  AssignmentDraft,
+  AssignmentUpdatePayload,
+} from '../types/Assignment.types';
+
+/**
+ * Create a new assignment.
+ */
+export function useCreateAssignmentMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: AssignmentDraft) => assignmentsService.create(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: assignmentsKeys.lists() });
+    },
+  });
+}
+
+/**
+ * Update an existing assignment.
+ */
+export function useUpdateAssignmentMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: AssignmentUpdatePayload) => assignmentsService.update(payload),
+    onSuccess: (updated) => {
+      queryClient.invalidateQueries({ queryKey: assignmentsKeys.lists() });
+      queryClient.setQueryData(assignmentsKeys.detail(updated.id), updated);
+    },
+  });
+}
+
+/**
+ * Delete a assignment.
+ */
+export function useDeleteAssignmentMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => assignmentsService.delete(id),
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: assignmentsKeys.lists() });
+      queryClient.removeQueries({ queryKey: assignmentsKeys.detail(id) });
+    },
+  });
+}
+
+
+----------------------------------------------------------------
+FILE: features/assignments/queries/assignments.keys.ts
+----------------------------------------------------------------
+/**
+ * Assignment Query Keys
+ *
+ * Centralized, typed query key factory for TanStack Query.
+ * All assignments queries/mutations reference keys from here.
+ */
+
+import type { AssignmentFilters } from '../types/Assignment.types';
+
+export const assignmentsKeys = {
+  /** Base key for all assignments queries */
+  all: ['assignments'] as const,
+
+  /** All list variants */
+  lists: () => [...assignmentsKeys.all, 'list'] as const,
+
+  /** Specific list with filters */
+  list: (filters?: AssignmentFilters) =>
+    [...assignmentsKeys.lists(), { filters }] as const,
+
+  /** All detail variants */
+  details: () => [...assignmentsKeys.all, 'detail'] as const,
+
+  /** Single item detail */
+  detail: (id: string) => [...assignmentsKeys.details(), id] as const,
+} as const;
+
+
+----------------------------------------------------------------
+FILE: features/assignments/queries/assignments.queries.ts
+----------------------------------------------------------------
+/**
+ * Assignment Query Options
+ *
+ * TanStack Query queryOptions factories.
+ * Compose these inside hooks — never call useQuery directly in components.
+ */
+
+import { queryOptions, infiniteQueryOptions } from '@tanstack/react-query';
+import { assignmentsService } from '../services/assignments.service';
+import { assignmentsKeys } from './assignments.keys';
+import type { AssignmentFilters } from '../types/Assignment.types';
+
+/**
+ * Query options for fetching a paginated list of assignments.
+ */
+export const assignmentsListQueryOptions = (filters?: AssignmentFilters) =>
+  queryOptions({
+    queryKey: assignmentsKeys.list(filters),
+    queryFn: () => assignmentsService.getAll(filters),
+    staleTime: 60_000,
+  });
+
+/**
+ * Query options for fetching a single assignment by ID.
+ */
+export const assignmentsDetailQueryOptions = (id: string) =>
+  queryOptions({
+    queryKey: assignmentsKeys.detail(id),
+    queryFn: () => assignmentsService.getById(id),
+    enabled: Boolean(id),
+    staleTime: 60_000,
+  });
+
+
+----------------------------------------------------------------
+FILE: features/assignments/services/assignments.service.ts
+----------------------------------------------------------------
+/**
+ * Assignment Service
+ *
+ * This is the ONLY place where API calls for the assignments feature are made.
+ * Uses the shared Axios client — never instantiate Axios directly here.
+ */
+
+import { apiClient } from '@/shared/api/client';
+import { ENDPOINTS } from '@/shared/api/endpoints.constants';
+import type {
+  Assignment,
+  AssignmentDraft,
+  AssignmentUpdatePayload,
+  AssignmentFilters,
+  AssignmentsResponse,
+} from '../types/Assignment.types';
+
+const BASE = ENDPOINTS.ASSIGNMENTS_BASE;
+
+export const assignmentsService = {
+  /**
+   * Fetch a paginated list of assignments.
+   */
+  getAll: async (filters?: AssignmentFilters): Promise<AssignmentsResponse> => {
+    const { data } = await apiClient.get<AssignmentsResponse>(BASE, { params: filters });
+    return data;
+  },
+
+  /**
+   * Fetch a single assignment by ID.
+   */
+  getById: async (id: string): Promise<Assignment> => {
+    const { data } = await apiClient.get<Assignment>(`${BASE}/${id}`);
+    return data;
+  },
+
+  /**
+   * Create a new assignment.
+   */
+  create: async (payload: AssignmentDraft): Promise<Assignment> => {
+    const { data } = await apiClient.post<Assignment>(BASE, payload);
+    return data;
+  },
+
+  /**
+   * Update an existing assignment.
+   */
+  update: async ({ id, ...payload }: AssignmentUpdatePayload): Promise<Assignment> => {
+    const { data } = await apiClient.patch<Assignment>(`${BASE}/${id}`, payload);
+    return data;
+  },
+
+  /**
+   * Delete a assignment by ID.
+   */
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`${BASE}/${id}`);
+  },
+} as const;
+
+
+----------------------------------------------------------------
+FILE: features/assignments/types/Assignment.types.ts
+----------------------------------------------------------------
+/**
+ * Assignment Domain Types
+ *
+ * All types for the assignments feature live here.
+ * Do NOT import types from other features — use shared/types if needed.
+ */
+
+export interface Assignment {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  // TODO: add your Assignment-specific fields here
+}
+
+export interface AssignmentDraft {
+  // TODO: fields required to create a new Assignment
+}
+
+export interface AssignmentUpdatePayload {
+  id: string;
+  // TODO: fields allowed to update
+}
+
+export interface AssignmentFilters {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: keyof Assignment;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface AssignmentsResponse {
+  data: Assignment[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+
+----------------------------------------------------------------
+FILE: features/auth/hooks/useAuth.ts
+----------------------------------------------------------------
