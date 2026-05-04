@@ -14,6 +14,7 @@ const BASE = ENDPOINTS.AUTH_BASE;
 
 export const authService = {
   login: async (payload: LoginPayload): Promise<LoginResponse> => {
+    await apiClient.get('/sanctum/csrf-cookie');
     const { data } = await apiClient.post<LoginResponse>(`${BASE}/login`, payload);
     return data;
   },

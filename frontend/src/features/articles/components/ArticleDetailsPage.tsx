@@ -30,7 +30,7 @@ function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-function DecisionBadge({ decision }: { decision: EditorialDecision['decision'] }) {
+function DecisionBadge({ decision }: Readonly<{ decision: EditorialDecision['decision'] }>) {
   const map = {
     accepted:          'bg-green-100 text-green-700',
     rejected:          'bg-red-100 text-red-700',
@@ -46,7 +46,7 @@ function DecisionBadge({ decision }: { decision: EditorialDecision['decision'] }
   );
 }
 
-export function ArticleDetailsPage({ id }: { id: number }) {
+export function ArticleDetailsPage({ id }: Readonly<{ id: number }>) {
   const articleQuery = useArticle(id);
   const versionsQuery = useArticleVersions(id);
   const assignmentsQuery = useArticleAssignments(id);
@@ -213,7 +213,7 @@ export function ArticleDetailsPage({ id }: { id: number }) {
                       <p className="text-xs text-muted">{v.change_summary}</p>
                     )}
                   </div>
-                  <span className="text-xs text-muted">{new Date(v.created_at).toLocaleDateString()}</span>
+                  <span className="text-xs text-muted">{new Date(v.submitted_at).toLocaleDateString()}</span>
                 </li>
               ))}
             </ul>

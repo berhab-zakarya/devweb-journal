@@ -40,9 +40,14 @@ export interface ArticleVersion {
   id: number;
   article_id: number;
   version_number: number;
-  change_summary: string;
-  pdf_path?: string;
-  created_at: string;
+  pdf_original_name: string;
+  pdf_size: number;
+  change_summary: string | null;
+  submitted_at: string;
+}
+
+export interface ArticleVersionsResponse {
+  data: ArticleVersion[];
 }
 
 export interface ArticleAssignment {
@@ -109,7 +114,7 @@ export interface UpdateArticlePayload {
 
 export interface CreateVersionPayload {
   pdf: File;
-  change_summary: string;
+  change_summary?: string;
 }
 
 export interface CreateDecisionPayload {

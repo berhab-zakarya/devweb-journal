@@ -9,6 +9,6 @@ import { useQuery } from '@tanstack/react-query';
 import { reviewsListQueryOptions } from '../queries/reviews.queries';
 import type { ReviewFilters } from '../types/Review.types';
 
-export function useReviews(filters?: ReviewFilters) {
+export function useReviews(filters: ReviewFilters) {
   return useQuery(reviewsListQueryOptions(filters));
 }

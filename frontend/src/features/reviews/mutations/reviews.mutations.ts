@@ -37,22 +37,7 @@ export function useUpdateReviewMutation() {
     mutationFn: (payload: ReviewUpdatePayload) => reviewsService.update(payload),
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: reviewsKeys.lists() });
-      queryClient.setQueryData(reviewsKeys.detail(updated.id), updated);
-    },
-  });
-}
-
-/**
- * Delete a review.
- */
-export function useDeleteReviewMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => reviewsService.delete(id),
-    onSuccess: (_data, id) => {
-      queryClient.invalidateQueries({ queryKey: reviewsKeys.lists() });
-      queryClient.removeQueries({ queryKey: reviewsKeys.detail(id) });
+      queryClient.setQueryData(reviewsKeys.detail(updated.assignment_id), updated);
     },
   });
 }

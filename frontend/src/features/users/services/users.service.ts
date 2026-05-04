@@ -37,7 +37,7 @@ export const usersService = {
   },
 
   assignRole: async (id: number, payload: AssignRolePayload): Promise<User> => {
-    const { data } = await apiClient.post<User>(`${BASE}/${id}/role`, payload);
+    const { data } = await apiClient.post<User>(`${BASE}/${id}/assign-role`, payload);
     return data;
   },
 } as const;

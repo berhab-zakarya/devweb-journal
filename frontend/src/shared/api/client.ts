@@ -5,7 +5,7 @@
  * ALL features must use this — never instantiate Axios directly.
  *
  * Interceptors:
- *  - Request: attaches Authorization header (if token present in storage)
+ *  - Request: reserved for shared request shaping
  *  - Response: normalizes errors through AppError
  */
 
@@ -14,6 +14,7 @@ import { AppError } from '../errors/app.error';
 
 export const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api/v1',
+  withCredentials: true,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -25,13 +26,6 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // [zakarya:inject:request-interceptor]
-    const token =
-      typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
     return config;
   },
   (error: unknown) => Promise.reject(error)
@@ -47,15 +41,12 @@ apiClient.interceptors.response.use(
     // [zakarya:inject:response-interceptor]
 
     if (status === 401) {
-      // Token expired — clear storage and redirect to login
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('access_token');
-        window.location.href = '/login';
+      // Session expired — redirect to login
+      if (globalThis.window !== undefined) {
+        globalThis.window.location.href = '/login';
       }
     }
 
-    return Promise.reject(
-      new AppError(serverMessage, status, error.response?.data?.errors)
-    );
+    throw new AppError(serverMessage, status, error.response?.data?.errors);
   }
 );
