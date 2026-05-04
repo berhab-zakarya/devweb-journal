@@ -17,7 +17,7 @@ namespace App\Http\Controllers;
  *     type="apiKey",
  *     in="cookie",
  *     name="laravel_session",
- *     description="Laravel Sanctum stateful cookie authentication. Call /api/v1/auth/login first."
+ *     description="Laravel Sanctum stateful cookie authentication. Call /sanctum/csrf-cookie before /api/v1/auth/login and send credentials with cookies."
  * )
  *
  * @OA\Tag(name="Auth", description="Authentication endpoints")

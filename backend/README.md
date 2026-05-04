@@ -107,6 +107,10 @@ php artisan test
 
 ## Depannage courant
 - Erreur SQL : verifier MySQL XAMPP actif et valeurs DB dans `.env`.
-- Erreur 419 Sanctum : verifier `/sanctum/csrf-cookie` et domaines stateful.
+- Erreur 419 Sanctum :
+   1. Utiliser le meme host partout (tout en `localhost` ou tout en `127.0.0.1`, ne pas melanger).
+   2. Appeler `GET /sanctum/csrf-cookie` avant `POST /api/v1/auth/login`.
+   3. Envoyer les requetes avec credentials (`withCredentials: true`).
+   4. Verifier `SANCTUM_STATEFUL_DOMAINS` et `CORS_ALLOWED_ORIGINS` dans `.env`.
 - Erreur role 403 : verifier les roles Spatie en base et middleware `role.any`.
 - Erreur queue : verifier `jobs`/`failed_jobs` migres et worker actif.
