@@ -2,7 +2,7 @@ export interface Category {
   id: number;
   name: string;
   slug: string;
-  description?: string;
+  description: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -10,22 +10,11 @@ export interface Category {
 export interface CreateCategoryPayload {
   name: string;
   slug: string;
-  description?: string;
+  description?: string | null;
 }
 
-export interface UpdateCategoryPayload extends CreateCategoryPayload {
-  id: number;
-}
-
-export interface CategoryFilters {
-  search?: string;
-  page?: number;
-}
-
-export interface PaginatedCategories {
-  data: Category[];
-  current_page: number;
-  last_page: number;
-  per_page: number;
-  total: number;
+export interface UpdateCategoryPayload {
+  name?: string;
+  slug?: string;
+  description?: string | null;
 }

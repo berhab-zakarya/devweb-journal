@@ -116,7 +116,7 @@ function CategoryRow({ category, onDeleted }: { category: Category; onDeleted: (
           <div role="alert" className="mb-3 px-3 py-2 rounded bg-red-50 border border-red-200 text-sm text-danger">{error}</div>
         )}
         <CategoryForm
-          defaultValues={{ name: category.name, slug: category.slug, description: category.description }}
+          defaultValues={{ name: category.name, slug: category.slug, description: category.description ?? undefined }}
           onSubmit={handleUpdate}
           onCancel={() => setEditing(false)}
           isPending={update.isPending}

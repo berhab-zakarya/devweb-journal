@@ -1,19 +1,38 @@
+export interface PaginatorLinks {
+  first: string | null;
+  last: string | null;
+  prev: string | null;
+  next: string | null;
+}
+
+export interface PaginatorMeta {
+  current_page: number;
+  from: number | null;
+  last_page: number;
+  path: string;
+  per_page: number;
+  to: number | null;
+  total: number;
+}
+
 export interface Notification {
   id: number;
+  user_id: number;
   type: string;
   title: string;
-  message: string;
+  body: string;
+  data: Record<string, unknown> | null;
   read_at: string | null;
   created_at: string;
-  data?: Record<string, unknown>;
+  updated_at: string;
 }
 
 export interface PaginatedNotifications {
-  data: Notification[];
-  current_page: number;
-  last_page: number;
-  per_page: number;
-  total: number;
+  data: {
+    data: Notification[];
+    links: PaginatorLinks;
+    meta: PaginatorMeta;
+  };
 }
 
 export interface NotificationFilters {
@@ -21,6 +40,9 @@ export interface NotificationFilters {
   page?: number;
 }
 
-export interface UnreadCount {
-  count: number;
+export interface UnreadCountResponse {
+  data: {
+    unread_count: number;
+  };
+  unread_count: number;
 }

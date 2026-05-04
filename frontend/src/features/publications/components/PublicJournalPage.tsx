@@ -19,10 +19,10 @@ export function PublicJournalPage() {
 
   const { data, isLoading, isError, refetch } = usePublications({ search: search || undefined, page });
 
-  const publications = data?.data ?? [];
-  const total = data?.total ?? 0;
-  const lastPage = data?.last_page ?? 1;
-  const perPage = data?.per_page ?? 15;
+  const publications = data?.data?.data ?? [];
+  const total = data?.data?.meta?.total ?? 0;
+  const lastPage = data?.data?.meta?.last_page ?? 1;
+  const perPage = data?.data?.meta?.per_page ?? 15;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
@@ -70,25 +70,19 @@ export function PublicJournalPage() {
                       href={`/journal/${pub.id}`}
                       className="text-lg font-semibold text-primary hover:text-brand-600 transition-colors leading-snug"
                     >
-                      {pub.article?.title ?? `Publication #${pub.id}`}
+                      {pub.title ?? `Publication #${pub.id}`}
                     </Link>
 
-                    {pub.article?.author && (
-                      <p className="text-sm text-muted mt-1">
-                        {pub.article.author.name}
-                      </p>
-                    )}
-
-                    {pub.article?.abstract && (
+                    {pub.abstract && (
                       <p className="text-sm text-secondary mt-2 line-clamp-2">
-                        {pub.article.abstract}
+                        {pub.abstract}
                       </p>
                     )}
 
                     <div className="flex flex-wrap items-center gap-3 mt-3">
-                      {pub.article?.category && (
+                      {pub.category_name && (
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-brand-50 text-brand-700">
-                          {pub.article.category.name}
+                          {pub.category_name}
                         </span>
                       )}
                       {pub.doi && (

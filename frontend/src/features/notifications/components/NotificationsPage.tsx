@@ -23,10 +23,10 @@ export function NotificationsPage() {
   const markRead = useMarkReadMutation();
   const markAllRead = useMarkAllReadMutation();
 
-  const notifications = data?.data ?? [];
-  const total = data?.total ?? 0;
-  const lastPage = data?.last_page ?? 1;
-  const perPage = data?.per_page ?? 15;
+  const notifications = data?.data?.data ?? [];
+  const total = data?.data?.meta?.total ?? 0;
+  const lastPage = data?.data?.meta?.last_page ?? 1;
+  const perPage = data?.data?.meta?.per_page ?? 15;
   const hasUnread = notifications.some((n) => !n.read_at);
 
   return (
@@ -111,8 +111,8 @@ export function NotificationsPage() {
                   <p className={cn('text-sm', n.read_at ? 'text-secondary' : 'text-primary font-medium')}>
                     {n.title}
                   </p>
-                  {n.message && (
-                    <p className="text-xs text-muted mt-0.5">{n.message}</p>
+                  {n.body && (
+                    <p className="text-xs text-muted mt-0.5">{n.body}</p>
                   )}
                   <p className="text-xs text-muted mt-1">
                     {new Date(n.created_at).toLocaleString()}

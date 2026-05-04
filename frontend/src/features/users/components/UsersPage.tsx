@@ -34,10 +34,11 @@ import type { User, UserRole } from '../types/User.types';
 const ROLES: UserRole[] = ['admin', 'editor', 'reviewer', 'author', 'reader'];
 
 const createSchema = z.object({
-  name:     z.string().min(2, 'Name must be at least 2 characters'),
-  email:    z.string().email('Enter a valid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  role:     z.enum(['admin', 'editor', 'reviewer', 'author', 'reader']),
+  name:                 z.string().min(2, 'Name must be at least 2 characters'),
+  email:                z.string().email('Enter a valid email address'),
+  password:             z.string().min(8, 'Password must be at least 8 characters'),
+  password_confirmation: z.string().min(8, 'Please confirm the password'),
+  role:                 z.enum(['admin', 'editor', 'reviewer', 'author', 'reader']),
 });
 type CreateFormData = z.infer<typeof createSchema>;
 
@@ -95,6 +96,16 @@ function CreateUserModal({ onClose }: { onClose: () => void }) {
             <Input id="password" type="password" placeholder="••••••••" error={!!errors.password} {...register('password')} />
           </FormField>
 
+          <FormField id="password_confirmation" label="Confirm password" required error={errors.password_confirmation?.message}>
+            <Input
+              id="password_confirmation"
+              type="password"
+              placeholder="••••••••"
+              error={!!errors.password_confirmation}
+              {...register('password_confirmation')}
+            />
+          </FormField>
+
           <FormField id="role" label="Role" required error={errors.role?.message}>
             <Select id="role" error={!!errors.role} {...register('role')}>
               <option value="">Select a role…</option>
@@ -147,10 +158,10 @@ export function UsersPage() {
   });
   const deleteUser = useDeleteUserMutation();
 
-  const users = data?.data ?? [];
-  const total = data?.total ?? 0;
-  const lastPage = data?.last_page ?? 1;
-  const perPage = data?.per_page ?? 15;
+  const users = data?.data?.data ?? [];
+  const total = data?.data?.meta?.total ?? 0;
+  const lastPage = data?.data?.meta?.last_page ?? 1;
+  const perPage = data?.data?.meta?.per_page ?? 15;
 
   return (
     <div>

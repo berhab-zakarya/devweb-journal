@@ -16,13 +16,14 @@ import type {
 /**
  * Create a new review.
  */
-export function useCreateReviewMutation() {
+export function useCreateReviewMutation(assignmentId: number) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: ReviewDraft) => reviewsService.create(payload),
-    onSuccess: () => {
+    mutationFn: (payload: ReviewDraft) => reviewsService.create(assignmentId, payload),
+    onSuccess: (created) => {
       queryClient.invalidateQueries({ queryKey: reviewsKeys.lists() });
+      queryClient.setQueryData(reviewsKeys.detail(created.assignment_id), created);
     },
   });
 }
@@ -30,11 +31,11 @@ export function useCreateReviewMutation() {
 /**
  * Update an existing review.
  */
-export function useUpdateReviewMutation() {
+export function useUpdateReviewMutation(assignmentId: number) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: ReviewUpdatePayload) => reviewsService.update(payload),
+    mutationFn: (payload: ReviewUpdatePayload) => reviewsService.update(assignmentId, payload),
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: reviewsKeys.lists() });
       queryClient.setQueryData(reviewsKeys.detail(updated.assignment_id), updated);

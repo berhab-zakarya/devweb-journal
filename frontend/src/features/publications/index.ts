@@ -1,5 +1,5 @@
 export type {
-  Publication,
+  PublicationDetail,
   PublicationFilters,
   PaginatedPublications,
   PublishArticlePayload,

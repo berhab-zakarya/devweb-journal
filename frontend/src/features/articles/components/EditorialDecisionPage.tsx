@@ -46,7 +46,7 @@ const DECISION_OPTIONS: { value: DecisionType; label: string }[] = [
   { value: 'revision_required', label: 'Request Revision' },
 ];
 
-export function EditorialDecisionPage({ id }: { id: number }) {
+export function EditorialDecisionPage({ id }: Readonly<{ id: number }>) {
   const router = useRouter();
   const articleQuery = useArticle(id);
   const assignmentsQuery = useArticleAssignments(id);
@@ -80,7 +80,7 @@ export function EditorialDecisionPage({ id }: { id: number }) {
 
   function toggleReviewer(r: ReviewerSearchResult) {
     setSelectedReviewers((prev) =>
-      prev.find((x) => x.id === r.id) ? prev.filter((x) => x.id !== r.id) : [...prev, r]
+      prev.some((x) => x.id === r.id) ? prev.filter((x) => x.id !== r.id) : [...prev, r]
     );
   }
 
@@ -155,7 +155,7 @@ export function EditorialDecisionPage({ id }: { id: number }) {
                 <li key={a.id} className="py-3 flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-primary">{a.reviewer?.name ?? `Reviewer #${a.reviewer_id}`}</p>
-                    <p className="text-xs text-muted">Due: {new Date(a.due_date).toLocaleDateString()}</p>
+                    {a.due_date && <p className="text-xs text-muted">Due: {new Date(a.due_date).toLocaleDateString()}</p>}
                   </div>
                   <div className="flex items-center gap-2">
                     <AssignmentStatusBadge status={a.status} />
@@ -198,7 +198,7 @@ export function EditorialDecisionPage({ id }: { id: number }) {
             {searchResults.length > 0 && (
               <ul className="border border-subtle rounded-lg divide-y divide-subtle max-h-48 overflow-y-auto">
                 {searchResults.map((r) => {
-                  const selected = !!selectedReviewers.find((x) => x.id === r.id);
+                  const selected = selectedReviewers.some((x) => x.id === r.id);
                   return (
                     <li key={r.id}>
                       <button
@@ -259,10 +259,10 @@ export function EditorialDecisionPage({ id }: { id: number }) {
               <p className="text-sm text-muted">A decision has already been recorded for this article.</p>
               <p className="text-sm text-secondary">
                 <span className="font-medium">Decision:</span>{' '}
-                {DECISION_OPTIONS.find((o) => o.value === decision.decision)?.label ?? decision.decision}
+                {DECISION_OPTIONS.find((o) => o.value === decision.latest?.decision)?.label ?? decision.latest?.decision}
               </p>
-              {decision.comments && (
-                <p className="text-sm text-secondary whitespace-pre-wrap">{decision.comments}</p>
+              {decision.latest?.comments && (
+                <p className="text-sm text-secondary whitespace-pre-wrap">{decision.latest.comments}</p>
               )}
             </div>
           ) : (

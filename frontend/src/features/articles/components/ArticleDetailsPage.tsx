@@ -116,7 +116,7 @@ export function ArticleDetailsPage({ id }: Readonly<{ id: number }>) {
             </div>
             <div>
               <dt className="text-muted font-medium">Submitted</dt>
-              <dd className="mt-1 text-primary">{new Date(article.created_at).toLocaleDateString()}</dd>
+              <dd className="mt-1 text-primary">{new Date(article.submitted_at).toLocaleDateString()}</dd>
             </div>
             <div className="sm:col-span-2">
               <dt className="text-muted font-medium">Keywords</dt>
@@ -134,18 +134,18 @@ export function ArticleDetailsPage({ id }: Readonly<{ id: number }>) {
         </Card>
 
         {/* Editorial Decision */}
-        {decision && (
+        {decision?.latest && (
           <Card>
             <CardHeader><h2 className="text-lg font-semibold text-primary">Editorial Decision</h2></CardHeader>
             <div className="mt-3 space-y-2">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted font-medium">Decision:</span>
-                <DecisionBadge decision={decision.decision} />
+                <DecisionBadge decision={decision.latest.decision} />
               </div>
-              {decision.comments && (
-                <p className="text-sm text-secondary whitespace-pre-wrap">{decision.comments}</p>
+              {decision.latest.comments && (
+                <p className="text-sm text-secondary whitespace-pre-wrap">{decision.latest.comments}</p>
               )}
-              <p className="text-xs text-muted">{new Date(decision.created_at).toLocaleDateString()}</p>
+              <p className="text-xs text-muted">{new Date(decision.latest.decided_at).toLocaleDateString()}</p>
             </div>
           </Card>
         )}
@@ -179,7 +179,7 @@ export function ArticleDetailsPage({ id }: Readonly<{ id: number }>) {
                 <li key={a.id} className="py-3 flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-primary">{a.reviewer?.name ?? `Reviewer #${a.reviewer_id}`}</p>
-                    <p className="text-xs text-muted">Due: {new Date(a.due_date).toLocaleDateString()}</p>
+                    {a.due_date && <p className="text-xs text-muted">Due: {new Date(a.due_date).toLocaleDateString()}</p>}
                   </div>
                   <AssignmentStatusBadge status={a.status} />
                 </li>

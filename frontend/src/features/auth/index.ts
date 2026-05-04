@@ -2,7 +2,6 @@
 export type {
   User,
   LoginPayload,
-  LoginResponse,
   RegisterPayload,
   ForgotPasswordPayload,
   ResetPasswordPayload,

@@ -21,10 +21,16 @@ export interface RegisterPayload {
   password_confirmation: string;
 }
 
-export interface LoginResponse {
+/**
+ * Backend response wrappers matching Swagger
+ */
+export interface AuthMessageResponse {
+  message: string;
+}
+
+export interface AuthDataResponse<T = User> {
   message?: string;
-  user?: User;
-  [key: string]: unknown;
+  data: T;
 }
 
 export interface ForgotPasswordPayload {

@@ -41,18 +41,16 @@ export const reviewsService = {
   /**
    * Submit (or save draft) review for an assignment.
    */
-  create: async (payload: ReviewDraft): Promise<Review> => {
-    const { assignment_id, ...body } = payload;
-    const { data } = await apiClient.post<Review>(`${ASSIGNMENTS}/${assignment_id}/review`, body);
+  create: async (assignmentId: number, payload: ReviewDraft): Promise<Review> => {
+    const { data } = await apiClient.post<Review>(`${ASSIGNMENTS}/${assignmentId}/review`, payload);
     return data;
   },
 
   /**
    * Submit updated review content for an assignment.
    */
-  update: async (payload: ReviewUpdatePayload): Promise<Review> => {
-    const { assignment_id, ...body } = payload;
-    const { data } = await apiClient.post<Review>(`${ASSIGNMENTS}/${assignment_id}/review`, body);
+  update: async (assignmentId: number, payload: ReviewUpdatePayload): Promise<Review> => {
+    const { data } = await apiClient.post<Review>(`${ASSIGNMENTS}/${assignmentId}/review`, payload);
     return data;
   },
 } as const;

@@ -2,8 +2,6 @@ export type {
   Category,
   CreateCategoryPayload,
   UpdateCategoryPayload,
-  CategoryFilters,
-  PaginatedCategories,
 } from './types/Category.types';
 
 export { useCategories } from './hooks/useCategories';

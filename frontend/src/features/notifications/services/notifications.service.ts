@@ -1,6 +1,11 @@
 import { apiClient } from '@/shared/api/client';
 import { ENDPOINTS } from '@/shared/api/endpoints.constants';
-import type { Notification, PaginatedNotifications, NotificationFilters, UnreadCount } from '../types/Notification.types';
+import type {
+  Notification,
+  PaginatedNotifications,
+  NotificationFilters,
+  UnreadCountResponse,
+} from '../types/Notification.types';
 
 const BASE = ENDPOINTS.NOTIFICATIONS_BASE;
 
@@ -10,17 +15,20 @@ export const notificationsService = {
     return data;
   },
 
-  getUnreadCount: async (): Promise<UnreadCount> => {
-    const { data } = await apiClient.get<UnreadCount>(`${BASE}/unread-count`);
-    return data;
+  getUnreadCount: async (): Promise<number> => {
+    const { data } = await apiClient.get<UnreadCountResponse>(`${BASE}/unread-count`);
+    return data.unread_count;
   },
 
   markRead: async (id: number): Promise<Notification> => {
-    const { data } = await apiClient.patch<Notification>(`${BASE}/${id}/read`);
-    return data;
+    const { data } = await apiClient.patch<{ message: string; data: Notification }>(`${BASE}/${id}/read`);
+    return data.data;
   },
 
-  markAllRead: async (): Promise<void> => {
-    await apiClient.post(`${BASE}/read-all`);
+  markAllRead: async (): Promise<number> => {
+    const { data } = await apiClient.post<{ message: string; data: { updated: number } }>(
+      `${BASE}/read-all`
+    );
+    return data.data.updated;
   },
 } as const;

@@ -2,7 +2,7 @@ export type {
   Notification,
   NotificationFilters,
   PaginatedNotifications,
-  UnreadCount,
+  UnreadCountResponse,
 } from './types/Notification.types';
 
 export { useNotifications } from './hooks/useNotifications';

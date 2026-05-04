@@ -5,28 +5,44 @@
  * Do NOT import types from other features — use shared/types if needed.
  */
 
+export type ReviewRecommendation = 'accept' | 'reject' | 'minor_revision' | 'major_revision';
+
 export interface Review {
   id: number;
   assignment_id: number;
+  article_version_id: number;
+  originality_score?: number | null;
+  methodology_score?: number | null;
+  clarity_score?: number | null;
+  overall_score?: number | null;
   comments: string;
-  recommendation: string;
+  recommendation?: ReviewRecommendation;
   is_draft: boolean;
+  is_submitted: boolean;
+  submitted_at?: string | null;
   created_at: string;
-  updated_at?: string;
+  updated_at: string;
 }
 
 export interface ReviewDraft {
   assignment_id: number;
-  comments: string;
-  recommendation: string;
   is_draft: boolean;
+  comments?: string;
+  originality_score?: number;
+  methodology_score?: number;
+  clarity_score?: number;
+  overall_score?: number;
+  recommendation?: ReviewRecommendation;
 }
 
 export interface ReviewUpdatePayload {
-  assignment_id: number;
-  comments: string;
-  recommendation: string;
-  is_draft: boolean;
+  is_draft?: boolean | null;
+  comments?: string;
+  originality_score?: number;
+  methodology_score?: number;
+  clarity_score?: number;
+  overall_score?: number;
+  recommendation?: ReviewRecommendation;
 }
 
 export interface ReviewFilters {

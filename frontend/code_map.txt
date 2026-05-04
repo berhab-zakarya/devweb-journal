@@ -1,419 +1,10 @@
 ================================================================
   CODE MAP
   Roots  :
-    - /c/Users/Lenovo/Desktop/devweb-journal/frontend/app
     - /c/Users/Lenovo/Desktop/devweb-journal/frontend/src
-  Created: 2026-05-04 16:01:06
+    - /c/Users/Lenovo/Desktop/devweb-journal/frontend/app
+  Created: 2026-05-04 20:08:45
 ================================================================
-
-################################################################
-  FOLDER: /c/Users/Lenovo/Desktop/devweb-journal/frontend/app
-################################################################
-
-----------------------------------------------------------------
-FILE: (auth)/forgot-password/page.tsx
-----------------------------------------------------------------
-import { ForgotPasswordPage } from '@/features/auth/components/ForgotPasswordPage';
-
-export default function Page() {
-  return <ForgotPasswordPage />;
-}
-
-
-----------------------------------------------------------------
-FILE: (auth)/layout.tsx
-----------------------------------------------------------------
-import { AuthShell } from '@/shared/components/layout';
-
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
-  return <AuthShell>{children}</AuthShell>;
-}
-
-
-----------------------------------------------------------------
-FILE: (auth)/login/page.tsx
-----------------------------------------------------------------
-import { LoginPage } from '@/features/auth/components/LoginPage';
-
-export default function Page() {
-  return <LoginPage />;
-}
-
-
-----------------------------------------------------------------
-FILE: (auth)/register/page.tsx
-----------------------------------------------------------------
-import { RegisterPage } from '@/features/auth/components/RegisterPage';
-
-export default function Page() {
-  return <RegisterPage />;
-}
-
-
-----------------------------------------------------------------
-FILE: (auth)/reset-password/page.tsx
-----------------------------------------------------------------
-import { ResetPasswordPage } from '@/features/auth/components/ResetPasswordPage';
-
-export default function Page() {
-  return <ResetPasswordPage />;
-}
-
-
-----------------------------------------------------------------
-FILE: (dashboard)/articles/[id]/decision/page.tsx
-----------------------------------------------------------------
-import { EditorialDecisionPage } from '@/features/articles/components/EditorialDecisionPage';
-
-export default async function Page({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
-  const { id } = await params;
-  return <EditorialDecisionPage id={Number(id)} />;
-}
-
-
-----------------------------------------------------------------
-FILE: (dashboard)/articles/[id]/page.tsx
-----------------------------------------------------------------
-import { ArticleDetailsPage } from '@/features/articles/components/ArticleDetailsPage';
-
-export default async function Page({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
-  const { id } = await params;
-  return <ArticleDetailsPage id={Number(id)} />;
-}
-
-
-----------------------------------------------------------------
-FILE: (dashboard)/articles/[id]/versions/page.tsx
-----------------------------------------------------------------
-import { ArticleVersionsPage } from '@/features/articles/components/ArticleVersionsPage';
-
-export default async function Page({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
-  const { id } = await params;
-  return <ArticleVersionsPage id={Number(id)} />;
-}
-
-
-----------------------------------------------------------------
-FILE: (dashboard)/articles/new/page.tsx
-----------------------------------------------------------------
-import { SubmitArticlePage } from '@/features/articles/components/SubmitArticlePage';
-
-export default function Page() {
-  return <SubmitArticlePage />;
-}
-
-
-----------------------------------------------------------------
-FILE: (dashboard)/articles/page.tsx
-----------------------------------------------------------------
-import { ArticlesPage } from '@/features/articles/components/ArticlesPage';
-
-export default function Page() {
-  return <ArticlesPage />;
-}
-
-
-----------------------------------------------------------------
-FILE: (dashboard)/assignments/[id]/page.tsx
-----------------------------------------------------------------
-import { AssignmentDetailsPage } from '@/features/assignments/components/AssignmentDetailsPage';
-
-export default async function Page({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
-  const { id } = await params;
-  return <AssignmentDetailsPage id={Number(id)} />;
-}
-
-
-----------------------------------------------------------------
-FILE: (dashboard)/assignments/[id]/review/page.tsx
-----------------------------------------------------------------
-import { ReviewFormPage } from '@/features/assignments/components/ReviewFormPage';
-
-export default async function Page({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
-  const { id } = await params;
-  return <ReviewFormPage assignmentId={Number(id)} />;
-}
-
-
-----------------------------------------------------------------
-FILE: (dashboard)/assignments/page.tsx
-----------------------------------------------------------------
-import { AssignmentsPage } from '@/features/assignments/components/AssignmentsPage';
-
-export default function Page() {
-  return <AssignmentsPage />;
-}
-
-
-----------------------------------------------------------------
-FILE: (dashboard)/categories/page.tsx
-----------------------------------------------------------------
-import { CategoriesPage } from '@/features/categories/components/CategoriesPage';
-
-export default function Page() {
-  return <CategoriesPage />;
-}
-
-
-----------------------------------------------------------------
-FILE: (dashboard)/dashboard/page.tsx
-----------------------------------------------------------------
-import { DashboardPage } from '@/features/dashboard/components/DashboardPage';
-
-export default function Page() {
-  return <DashboardPage />;
-}
-
-
-----------------------------------------------------------------
-FILE: (dashboard)/layout.tsx
-----------------------------------------------------------------
-import { DashboardLayout } from '@/shared/components/layout';
-
-export default function Layout({ children }: { children: React.ReactNode }) {
-  return <DashboardLayout>{children}</DashboardLayout>;
-}
-
-
-----------------------------------------------------------------
-FILE: (dashboard)/notifications/page.tsx
-----------------------------------------------------------------
-import { NotificationsPage } from '@/features/notifications/components/NotificationsPage';
-
-export default function Page() {
-  return <NotificationsPage />;
-}
-
-
-----------------------------------------------------------------
-FILE: (dashboard)/profile/page.tsx
-----------------------------------------------------------------
-import { ProfilePage } from '@/features/auth/components/ProfilePage';
-
-export default function Page() {
-  return <ProfilePage />;
-}
-
-
-----------------------------------------------------------------
-FILE: (dashboard)/reviews/page.tsx
-----------------------------------------------------------------
-import { ReviewsPage } from '@/features/reviews/components/ReviewsPage';
-
-export default function Page() {
-  return <ReviewsPage />;
-}
-
-
-----------------------------------------------------------------
-FILE: (dashboard)/users/page.tsx
-----------------------------------------------------------------
-import { UsersPage } from '@/features/users/components/UsersPage';
-
-export default function Page() {
-  return <UsersPage />;
-}
-
-
-----------------------------------------------------------------
-FILE: (public)/journal/[id]/page.tsx
-----------------------------------------------------------------
-import { PublicationDetailPage } from '@/features/publications/components/PublicationDetailPage';
-
-export default async function Page({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
-  const { id } = await params;
-  return <PublicationDetailPage id={Number(id)} />;
-}
-
-
-----------------------------------------------------------------
-FILE: (public)/journal/page.tsx
-----------------------------------------------------------------
-import { PublicJournalPage } from '@/features/publications/components/PublicJournalPage';
-
-export default function Page() {
-  return <PublicJournalPage />;
-}
-
-
-----------------------------------------------------------------
-FILE: (public)/layout.tsx
-----------------------------------------------------------------
-import { PublicShell } from '@/shared/components/layout';
-
-export default function PublicLayout({ children }: { children: React.ReactNode }) {
-  return <PublicShell>{children}</PublicShell>;
-}
-
-
-----------------------------------------------------------------
-FILE: globals.css
-----------------------------------------------------------------
-@import "tailwindcss";
-
-/* ─── Font families ──────────────────────────────────────────────────────── */
-@theme {
-  --font-primary: var(--font-inter);
-}
-
-/* ─── Font weight shorthands ─────────────────────────────────────────────── */
-@layer utilities {
-  .font-primary-regular {
-    font-family: var(--font-primary);
-    font-weight: 400;
-  }
-  .font-primary-medium {
-    font-family: var(--font-primary);
-    font-weight: 500;
-  }
-  .font-primary-semibold {
-    font-family: var(--font-primary);
-    font-weight: 600;
-  }
-  .font-primary-bold {
-    font-family: var(--font-primary);
-    font-weight: 700;
-  }
-}
-
-/* ─── Border radius scale (design system values) ────────────────────────── */
-@theme {
-  --radius-sm: 6px;
-  --radius:    8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-}
-
-/* ─── Shadow tokens ──────────────────────────────────────────────────────── */
-@theme {
-  --shadow-card:   0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
-  --shadow-panel:  0 4px 12px 0 rgb(0 0 0 / 0.08);
-  --shadow-dialog: 0 8px 32px 0 rgb(0 0 0 / 0.12);
-}
-
-/* ─── Color tokens ───────────────────────────────────────────────────────── */
-@theme {
-  /* Brand */
-  --color-brand-950: #0B1220;
-  --color-brand-900: #111827;
-  --color-brand-800: #1E293B;
-  --color-brand-700: #1D4ED8;
-  --color-brand-600: #2563EB;
-  --color-brand-500: #3B82F6;
-
-  /* Accent */
-  --color-accent-700: #0F766E;
-  --color-accent-600: #0D9488;
-  --color-accent-500: #14B8A6;
-
-  /* Backgrounds */
-  --color-app: #F8FAFC;
-  --color-surface: #FFFFFF;
-  --color-soft-blue: #EFF6FF;
-  --color-soft-teal: #F0FDFA;
-
-  /* Text / general */
-  --color-primary: #0F172A;
-  --color-secondary: #475569;
-  --color-inverse: #FFFFFF;
-
-  /* Borders */
-  --color-subtle: #E2E8F0;
-  --color-strong: #CBD5E1;
-
-  /* Status */
-  --color-success: #16A34A;
-  --color-warning: #D97706;
-  --color-danger: #DC2626;
-  --color-info: #2563EB;
-
-  /* Roles */
-  --color-role-admin: #7C3AED;
-  --color-role-editor: #2563EB;
-  --color-role-reviewer: #0D9488;
-  --color-role-author: #EA580C;
-  --color-role-reader: #64748B;
-}
-
-/* ─── Semantic split: bg-muted ≠ text-muted ─────────────────────────────── */
-/* bg-muted (#F1F5F9) and text-muted (#64748B) are intentionally different   */
-/* values, so they cannot share a single @theme color token.                 */
-@layer utilities {
-  .bg-muted {
-    background-color: #F1F5F9;
-  }
-  .text-muted {
-    color: #64748B;
-  }
-  .border-muted {
-    border-color: #F1F5F9;
-  }
-}
-
-/* ─── Base resets ────────────────────────────────────────────────────────── */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-html {
-  min-height: 100%;
-}
-
-body {
-  margin: 0;
-  min-height: 100%;
-  background: var(--color-app);
-  color: var(--color-primary);
-  font-family: var(--font-primary), system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-
-----------------------------------------------------------------
-FILE: layout.tsx
-----------------------------------------------------------------
-import type { Metadata } from 'next';
-import { QueryProvider } from '@/shared/tanstack/providers';
-import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
-import { primaryFont } from '@/shared/fonts/fonts';
-import './globals.css';
-
-export const metadata: Metadata = {
-  title: 'DevWeb Journal',
-  description: 'Academic Journal Editorial System',
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="en">
-      <body className={`${primaryFont.variable} font-primary`}>
-        <QueryProvider>
-          <ErrorBoundary>{children}</ErrorBoundary>
-        </QueryProvider>
-      </body>
-    </html>
-  );
-}
-
-
-----------------------------------------------------------------
-FILE: page.tsx
-----------------------------------------------------------------
-import { redirect } from 'next/navigation';
-
-export default function RootPage() {
-  redirect('/journal');
-}
-
-
 
 ################################################################
   FOLDER: /c/Users/Lenovo/Desktop/devweb-journal/frontend/src
@@ -454,7 +45,7 @@ function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-function DecisionBadge({ decision }: { decision: EditorialDecision['decision'] }) {
+function DecisionBadge({ decision }: Readonly<{ decision: EditorialDecision['decision'] }>) {
   const map = {
     accepted:          'bg-green-100 text-green-700',
     rejected:          'bg-red-100 text-red-700',
@@ -470,7 +61,7 @@ function DecisionBadge({ decision }: { decision: EditorialDecision['decision'] }
   );
 }
 
-export function ArticleDetailsPage({ id }: { id: number }) {
+export function ArticleDetailsPage({ id }: Readonly<{ id: number }>) {
   const articleQuery = useArticle(id);
   const versionsQuery = useArticleVersions(id);
   const assignmentsQuery = useArticleAssignments(id);
@@ -637,7 +228,7 @@ export function ArticleDetailsPage({ id }: { id: number }) {
                       <p className="text-xs text-muted">{v.change_summary}</p>
                     )}
                   </div>
-                  <span className="text-xs text-muted">{new Date(v.created_at).toLocaleDateString()}</span>
+                  <span className="text-xs text-muted">{new Date(v.submitted_at).toLocaleDateString()}</span>
                 </li>
               ))}
             </ul>
@@ -819,11 +410,11 @@ import { useArticleVersions } from '../hooks/useArticleVersions';
 import { useCreateVersionMutation } from '../mutations/articles.mutations';
 
 const schema = z.object({
-  change_summary: z.string().min(1, 'Change summary is required'),
+  change_summary: z.string().trim().optional(),
 });
 type FormData = z.infer<typeof schema>;
 
-export function ArticleVersionsPage({ id }: { id: number }) {
+export function ArticleVersionsPage({ id }: Readonly<{ id: number }>) {
   const versionsQuery = useArticleVersions(id);
   const createVersion = useCreateVersionMutation(id);
   const versions = versionsQuery.data ?? [];
@@ -907,7 +498,7 @@ export function ArticleVersionsPage({ id }: { id: number }) {
                     )}
                   </div>
                   <span className="text-xs text-muted whitespace-nowrap ml-4">
-                    {new Date(v.created_at).toLocaleDateString()}
+                    {new Date(v.submitted_at).toLocaleDateString()}
                   </span>
                 </li>
               ))}
@@ -942,7 +533,7 @@ export function ArticleVersionsPage({ id }: { id: number }) {
               />
             </FormField>
 
-            <FormField id="change_summary" label="Change Summary" required error={errors.change_summary?.message}>
+            <FormField id="change_summary" label="Change Summary" error={errors.change_summary?.message}>
               <Textarea
                 id="change_summary"
                 rows={3}
@@ -1776,6 +1367,7 @@ import type {
   ReviewerSearchResult,
   ArticleFilters,
   PaginatedArticles,
+  ArticleVersionsResponse,
   CreateArticlePayload,
   UpdateArticlePayload,
   CreateVersionPayload,
@@ -1830,14 +1422,16 @@ export const articlesService = {
 
   // Versions
   getVersions: async (articleId: number): Promise<ArticleVersion[]> => {
-    const { data } = await apiClient.get<ArticleVersion[]>(`${BASE}/${articleId}/versions`);
-    return data;
+    const { data } = await apiClient.get<ArticleVersionsResponse>(`${BASE}/${articleId}/versions`);
+    return data.data;
   },
 
   createVersion: async (articleId: number, payload: CreateVersionPayload): Promise<ArticleVersion> => {
     const form = new FormData();
     form.append('pdf', payload.pdf);
-    form.append('change_summary', payload.change_summary);
+    if (payload.change_summary?.trim()) {
+      form.append('change_summary', payload.change_summary);
+    }
     const { data } = await apiClient.post<ArticleVersion>(`${BASE}/${articleId}/versions`, form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
@@ -1945,9 +1539,14 @@ export interface ArticleVersion {
   id: number;
   article_id: number;
   version_number: number;
-  change_summary: string;
-  pdf_path?: string;
-  created_at: string;
+  pdf_original_name: string;
+  pdf_size: number;
+  change_summary: string | null;
+  submitted_at: string;
+}
+
+export interface ArticleVersionsResponse {
+  data: ArticleVersion[];
 }
 
 export interface ArticleAssignment {
@@ -2014,7 +1613,7 @@ export interface UpdateArticlePayload {
 
 export interface CreateVersionPayload {
   pdf: File;
-  change_summary: string;
+  change_summary?: string;
 }
 
 export interface CreateDecisionPayload {
@@ -3569,10 +3168,7 @@ export function useLoginMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: LoginPayload) => authService.login(payload),
-    onSuccess: (data) => {
-      if (isBrowser) {
-        globalThis.window.localStorage.setItem('access_token', data.access_token);
-      }
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: authKeys.me() });
     },
   });
@@ -3590,7 +3186,6 @@ export function useLogoutMutation() {
     mutationFn: authService.logout,
     onSettled: () => {
       if (isBrowser) {
-        globalThis.window.localStorage.removeItem('access_token');
         queryClient.clear();
         globalThis.window.location.href = '/login';
       }
@@ -3665,6 +3260,7 @@ const BASE = ENDPOINTS.AUTH_BASE;
 
 export const authService = {
   login: async (payload: LoginPayload): Promise<LoginResponse> => {
+    await apiClient.get('/sanctum/csrf-cookie');
     const { data } = await apiClient.post<LoginResponse>(`${BASE}/login`, payload);
     return data;
   },
@@ -3727,9 +3323,9 @@ export interface RegisterPayload {
 }
 
 export interface LoginResponse {
-  access_token: string;
-  token_type: string;
-  user: User;
+  message?: string;
+  user?: User;
+  [key: string]: unknown;
 }
 
 export interface ForgotPasswordPayload {
@@ -4351,12 +3947,12 @@ FILE: features/dashboard/services/dashboard.service.ts
 ----------------------------------------------------------------
 import { apiClient } from '@/shared/api/client';
 import { ENDPOINTS } from '@/shared/api/endpoints.constants';
-import type { DashboardSummary } from '../types/Dashboard.types';
+import type { DashboardSummary, DashboardSummaryResponse } from '../types/Dashboard.types';
 
 export const dashboardService = {
   getSummary: async (): Promise<DashboardSummary> => {
-    const { data } = await apiClient.get<DashboardSummary>(ENDPOINTS.DASHBOARD_BASE);
-    return data;
+    const { data } = await apiClient.get<DashboardSummaryResponse>(ENDPOINTS.DASHBOARD_BASE);
+    return data.data;
   },
 } as const;
 
@@ -4376,6 +3972,10 @@ export interface DashboardSummary {
   requires_attention: DashboardItem[];
   pending: DashboardItem[];
   completed: DashboardItem[];
+}
+
+export interface DashboardSummaryResponse {
+  data: DashboardSummary;
 }
 
 
@@ -5134,16 +4734,16 @@ export interface Publication {
   article_id: number;
   article?: PublicationArticle;
   doi?: string;
-  volume?: string;
-  issue?: string;
+  volume?: number;
+  issue?: number;
   published_at: string;
   created_at: string;
   updated_at: string;
 }
 
 export interface Volume {
-  volume: string;
-  issue: string;
+  volume: number;
+  issue: number;
   count: number;
 }
 
@@ -5163,8 +4763,8 @@ export interface PaginatedPublications {
 
 export interface PublishArticlePayload {
   doi?: string;
-  volume?: string;
-  issue?: string;
+  volume?: number;
+  issue?: number;
 }
 
 
@@ -5208,8 +4808,8 @@ FILE: features/reviews/hooks/useReview.ts
 import { useQuery } from '@tanstack/react-query';
 import { reviewsDetailQueryOptions } from '../queries/reviews.queries';
 
-export function useReview(id: string) {
-  return useQuery(reviewsDetailQueryOptions(id));
+export function useReview(assignmentId: number) {
+  return useQuery(reviewsDetailQueryOptions(assignmentId));
 }
 
 
@@ -5227,7 +4827,7 @@ import { useQuery } from '@tanstack/react-query';
 import { reviewsListQueryOptions } from '../queries/reviews.queries';
 import type { ReviewFilters } from '../types/Review.types';
 
-export function useReviews(filters?: ReviewFilters) {
+export function useReviews(filters: ReviewFilters) {
   return useQuery(reviewsListQueryOptions(filters));
 }
 
@@ -5259,7 +4859,6 @@ export { useReview } from './hooks/useReview';
 export {
   useCreateReviewMutation,
   useUpdateReviewMutation,
-  useDeleteReviewMutation,
 } from './mutations/reviews.mutations';
 
 // Query options (for prefetching in loaders/server components)
@@ -5314,22 +4913,7 @@ export function useUpdateReviewMutation() {
     mutationFn: (payload: ReviewUpdatePayload) => reviewsService.update(payload),
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: reviewsKeys.lists() });
-      queryClient.setQueryData(reviewsKeys.detail(updated.id), updated);
-    },
-  });
-}
-
-/**
- * Delete a review.
- */
-export function useDeleteReviewMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => reviewsService.delete(id),
-    onSuccess: (_data, id) => {
-      queryClient.invalidateQueries({ queryKey: reviewsKeys.lists() });
-      queryClient.removeQueries({ queryKey: reviewsKeys.detail(id) });
+      queryClient.setQueryData(reviewsKeys.detail(updated.assignment_id), updated);
     },
   });
 }
@@ -5362,7 +4946,7 @@ export const reviewsKeys = {
   details: () => [...reviewsKeys.all, 'detail'] as const,
 
   /** Single item detail */
-  detail: (id: string) => [...reviewsKeys.details(), id] as const,
+  detail: (assignmentId: number) => [...reviewsKeys.details(), assignmentId] as const,
 } as const;
 
 
@@ -5382,23 +4966,24 @@ import { reviewsKeys } from './reviews.keys';
 import type { ReviewFilters } from '../types/Review.types';
 
 /**
- * Query options for fetching a paginated list of reviews.
+ * Query options for fetching reviews for a specific article.
  */
 export const reviewsListQueryOptions = (filters?: ReviewFilters) =>
   queryOptions({
     queryKey: reviewsKeys.list(filters),
     queryFn: () => reviewsService.getAll(filters),
+    enabled: Boolean(filters?.article_id),
     staleTime: 60_000,
   });
 
 /**
- * Query options for fetching a single review by ID.
+ * Query options for fetching a single review by assignment ID.
  */
-export const reviewsDetailQueryOptions = (id: string) =>
+export const reviewsDetailQueryOptions = (assignmentId: number) =>
   queryOptions({
-    queryKey: reviewsKeys.detail(id),
-    queryFn: () => reviewsService.getById(id),
-    enabled: Boolean(id),
+    queryKey: reviewsKeys.detail(assignmentId),
+    queryFn: () => reviewsService.getById(assignmentId),
+    enabled: assignmentId > 0,
     staleTime: 60_000,
   });
 
@@ -5423,46 +5008,45 @@ import type {
   ReviewsResponse,
 } from '../types/Review.types';
 
-const BASE = ENDPOINTS.REVIEWS_BASE;
+const ASSIGNMENTS = ENDPOINTS.ASSIGNMENTS_BASE;
+const ARTICLES = ENDPOINTS.ARTICLES_BASE;
 
 export const reviewsService = {
   /**
-   * Fetch a paginated list of reviews.
+   * Fetch reviews for a given article.
    */
   getAll: async (filters?: ReviewFilters): Promise<ReviewsResponse> => {
-    const { data } = await apiClient.get<ReviewsResponse>(BASE, { params: filters });
+    if (!filters?.article_id) {
+      return [];
+    }
+    const { data } = await apiClient.get<ReviewsResponse>(`${ARTICLES}/${filters.article_id}/reviews`);
     return data;
   },
 
   /**
-   * Fetch a single review by ID.
+   * Fetch a review by assignment ID.
    */
-  getById: async (id: string): Promise<Review> => {
-    const { data } = await apiClient.get<Review>(`${BASE}/${id}`);
+  getById: async (assignmentId: number): Promise<Review> => {
+    const { data } = await apiClient.get<Review>(`${ASSIGNMENTS}/${assignmentId}/review`);
     return data;
   },
 
   /**
-   * Create a new review.
+   * Submit (or save draft) review for an assignment.
    */
   create: async (payload: ReviewDraft): Promise<Review> => {
-    const { data } = await apiClient.post<Review>(BASE, payload);
+    const { assignment_id, ...body } = payload;
+    const { data } = await apiClient.post<Review>(`${ASSIGNMENTS}/${assignment_id}/review`, body);
     return data;
   },
 
   /**
-   * Update an existing review.
+   * Submit updated review content for an assignment.
    */
-  update: async ({ id, ...payload }: ReviewUpdatePayload): Promise<Review> => {
-    const { data } = await apiClient.patch<Review>(`${BASE}/${id}`, payload);
+  update: async (payload: ReviewUpdatePayload): Promise<Review> => {
+    const { assignment_id, ...body } = payload;
+    const { data } = await apiClient.post<Review>(`${ASSIGNMENTS}/${assignment_id}/review`, body);
     return data;
-  },
-
-  /**
-   * Delete a review by ID.
-   */
-  delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`${BASE}/${id}`);
   },
 } as const;
 
@@ -5478,36 +5062,34 @@ FILE: features/reviews/types/Review.types.ts
  */
 
 export interface Review {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  // TODO: add your Review-specific fields here
+  id: number;
+  assignment_id: number;
+  comments: string;
+  recommendation: string;
+  is_draft: boolean;
+  created_at: string;
+  updated_at?: string;
 }
 
 export interface ReviewDraft {
-  // TODO: fields required to create a new Review
+  assignment_id: number;
+  comments: string;
+  recommendation: string;
+  is_draft: boolean;
 }
 
 export interface ReviewUpdatePayload {
-  id: string;
-  // TODO: fields allowed to update
+  assignment_id: number;
+  comments: string;
+  recommendation: string;
+  is_draft: boolean;
 }
 
 export interface ReviewFilters {
-  search?: string;
-  page?: number;
-  pageSize?: number;
-  sortBy?: keyof Review;
-  sortOrder?: 'asc' | 'desc';
+  article_id: number;
 }
 
-export interface ReviewsResponse {
-  data: Review[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
+export type ReviewsResponse = Review[];
 
 
 ----------------------------------------------------------------
@@ -5950,7 +5532,7 @@ export const usersService = {
   },
 
   assignRole: async (id: number, payload: AssignRolePayload): Promise<User> => {
-    const { data } = await apiClient.post<User>(`${BASE}/${id}/role`, payload);
+    const { data } = await apiClient.post<User>(`${BASE}/${id}/assign-role`, payload);
     return data;
   },
 } as const;
@@ -6014,7 +5596,7 @@ FILE: shared/api/client.ts
  * ALL features must use this — never instantiate Axios directly.
  *
  * Interceptors:
- *  - Request: attaches Authorization header (if token present in storage)
+ *  - Request: reserved for shared request shaping
  *  - Response: normalizes errors through AppError
  */
 
@@ -6023,6 +5605,7 @@ import { AppError } from '../errors/app.error';
 
 export const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api/v1',
+  withCredentials: true,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -6034,13 +5617,6 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // [zakarya:inject:request-interceptor]
-    const token =
-      typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
     return config;
   },
   (error: unknown) => Promise.reject(error)
@@ -6056,16 +5632,13 @@ apiClient.interceptors.response.use(
     // [zakarya:inject:response-interceptor]
 
     if (status === 401) {
-      // Token expired — clear storage and redirect to login
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('access_token');
-        window.location.href = '/login';
+      // Session expired — redirect to login
+      if (globalThis.window !== undefined) {
+        globalThis.window.location.href = '/login';
       }
     }
 
-    return Promise.reject(
-      new AppError(serverMessage, status, error.response?.data?.errors)
-    );
+    throw new AppError(serverMessage, status, error.response?.data?.errors);
   }
 );
 
@@ -6084,217 +5657,9 @@ FILE: shared/api/endpoints.constants.ts
 export const ENDPOINTS = {
   // [zakarya:inject:endpoints]
   ASSIGNMENTS_BASE: '/assignments',
-  REVIEWS_BASE: '/reviews',
   PUBLICATIONS_BASE: '/publications',
   NOTIFICATIONS_BASE: '/notifications',
-  DASHBOARD_BASE: '/dashboard',
-  CATEGORIES_BASE: '/categories',
-  AUTH_BASE: '/auth',
-  USERS_BASE: '/users',
-  ARTICLES_BASE: '/articles',
-  AUTH: '/auth',
-} as const;
-
-export type EndpointKey = keyof typeof ENDPOINTS;
-
-
-----------------------------------------------------------------
-FILE: shared/api/endpoints.constants.ts.1777827694367.zakarya-backup
-----------------------------------------------------------------
-/**
- * API Endpoints
- *
- * All endpoint base paths in one place.
- * Generated by zakarya — add new endpoints here or run:
- *   zakarya generate feature <name>
- */
-
-export const ENDPOINTS = {
-  // [zakarya:inject:endpoints]
-  AUTH: '/auth',
-} as const;
-
-export type EndpointKey = keyof typeof ENDPOINTS;
-
-
-----------------------------------------------------------------
-FILE: shared/api/endpoints.constants.ts.1777827702319.zakarya-backup
-----------------------------------------------------------------
-/**
- * API Endpoints
- *
- * All endpoint base paths in one place.
- * Generated by zakarya — add new endpoints here or run:
- *   zakarya generate feature <name>
- */
-
-export const ENDPOINTS = {
-  // [zakarya:inject:endpoints]
-  ARTICLES_BASE: '/articles',
-  AUTH: '/auth',
-} as const;
-
-export type EndpointKey = keyof typeof ENDPOINTS;
-
-
-----------------------------------------------------------------
-FILE: shared/api/endpoints.constants.ts.1777827711029.zakarya-backup
-----------------------------------------------------------------
-/**
- * API Endpoints
- *
- * All endpoint base paths in one place.
- * Generated by zakarya — add new endpoints here or run:
- *   zakarya generate feature <name>
- */
-
-export const ENDPOINTS = {
-  // [zakarya:inject:endpoints]
-  USERS_BASE: '/users',
-  ARTICLES_BASE: '/articles',
-  AUTH: '/auth',
-} as const;
-
-export type EndpointKey = keyof typeof ENDPOINTS;
-
-
-----------------------------------------------------------------
-FILE: shared/api/endpoints.constants.ts.1777827719819.zakarya-backup
-----------------------------------------------------------------
-/**
- * API Endpoints
- *
- * All endpoint base paths in one place.
- * Generated by zakarya — add new endpoints here or run:
- *   zakarya generate feature <name>
- */
-
-export const ENDPOINTS = {
-  // [zakarya:inject:endpoints]
-  AUTH_BASE: '/auth',
-  USERS_BASE: '/users',
-  ARTICLES_BASE: '/articles',
-  AUTH: '/auth',
-} as const;
-
-export type EndpointKey = keyof typeof ENDPOINTS;
-
-
-----------------------------------------------------------------
-FILE: shared/api/endpoints.constants.ts.1777827728343.zakarya-backup
-----------------------------------------------------------------
-/**
- * API Endpoints
- *
- * All endpoint base paths in one place.
- * Generated by zakarya — add new endpoints here or run:
- *   zakarya generate feature <name>
- */
-
-export const ENDPOINTS = {
-  // [zakarya:inject:endpoints]
-  CATEGORIES_BASE: '/categories',
-  AUTH_BASE: '/auth',
-  USERS_BASE: '/users',
-  ARTICLES_BASE: '/articles',
-  AUTH: '/auth',
-} as const;
-
-export type EndpointKey = keyof typeof ENDPOINTS;
-
-
-----------------------------------------------------------------
-FILE: shared/api/endpoints.constants.ts.1777827735434.zakarya-backup
-----------------------------------------------------------------
-/**
- * API Endpoints
- *
- * All endpoint base paths in one place.
- * Generated by zakarya — add new endpoints here or run:
- *   zakarya generate feature <name>
- */
-
-export const ENDPOINTS = {
-  // [zakarya:inject:endpoints]
-  DASHBOARD_BASE: '/dashboard',
-  CATEGORIES_BASE: '/categories',
-  AUTH_BASE: '/auth',
-  USERS_BASE: '/users',
-  ARTICLES_BASE: '/articles',
-  AUTH: '/auth',
-} as const;
-
-export type EndpointKey = keyof typeof ENDPOINTS;
-
-
-----------------------------------------------------------------
-FILE: shared/api/endpoints.constants.ts.1777827746544.zakarya-backup
-----------------------------------------------------------------
-/**
- * API Endpoints
- *
- * All endpoint base paths in one place.
- * Generated by zakarya — add new endpoints here or run:
- *   zakarya generate feature <name>
- */
-
-export const ENDPOINTS = {
-  // [zakarya:inject:endpoints]
-  NOTIFICATIONS_BASE: '/notifications',
-  DASHBOARD_BASE: '/dashboard',
-  CATEGORIES_BASE: '/categories',
-  AUTH_BASE: '/auth',
-  USERS_BASE: '/users',
-  ARTICLES_BASE: '/articles',
-  AUTH: '/auth',
-} as const;
-
-export type EndpointKey = keyof typeof ENDPOINTS;
-
-
-----------------------------------------------------------------
-FILE: shared/api/endpoints.constants.ts.1777827757711.zakarya-backup
-----------------------------------------------------------------
-/**
- * API Endpoints
- *
- * All endpoint base paths in one place.
- * Generated by zakarya — add new endpoints here or run:
- *   zakarya generate feature <name>
- */
-
-export const ENDPOINTS = {
-  // [zakarya:inject:endpoints]
-  PUBLICATIONS_BASE: '/publications',
-  NOTIFICATIONS_BASE: '/notifications',
-  DASHBOARD_BASE: '/dashboard',
-  CATEGORIES_BASE: '/categories',
-  AUTH_BASE: '/auth',
-  USERS_BASE: '/users',
-  ARTICLES_BASE: '/articles',
-  AUTH: '/auth',
-} as const;
-
-export type EndpointKey = keyof typeof ENDPOINTS;
-
-
-----------------------------------------------------------------
-FILE: shared/api/endpoints.constants.ts.1777827767848.zakarya-backup
-----------------------------------------------------------------
-/**
- * API Endpoints
- *
- * All endpoint base paths in one place.
- * Generated by zakarya — add new endpoints here or run:
- *   zakarya generate feature <name>
- */
-
-export const ENDPOINTS = {
-  // [zakarya:inject:endpoints]
-  REVIEWS_BASE: '/reviews',
-  PUBLICATIONS_BASE: '/publications',
-  NOTIFICATIONS_BASE: '/notifications',
-  DASHBOARD_BASE: '/dashboard',
+  DASHBOARD_BASE: '/dashboard/summary',
   CATEGORIES_BASE: '/categories',
   AUTH_BASE: '/auth',
   USERS_BASE: '/users',
@@ -8242,6 +7607,415 @@ export function getErrorMessage(error: unknown): string {
   if (error instanceof AppError) return error.message;
   if (error instanceof Error) return error.message;
   return 'An unexpected error occurred.';
+}
+
+
+
+################################################################
+  FOLDER: /c/Users/Lenovo/Desktop/devweb-journal/frontend/app
+################################################################
+
+----------------------------------------------------------------
+FILE: (auth)/forgot-password/page.tsx
+----------------------------------------------------------------
+import { ForgotPasswordPage } from '@/features/auth/components/ForgotPasswordPage';
+
+export default function Page() {
+  return <ForgotPasswordPage />;
+}
+
+
+----------------------------------------------------------------
+FILE: (auth)/layout.tsx
+----------------------------------------------------------------
+import { AuthShell } from '@/shared/components/layout';
+
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
+  return <AuthShell>{children}</AuthShell>;
+}
+
+
+----------------------------------------------------------------
+FILE: (auth)/login/page.tsx
+----------------------------------------------------------------
+import { LoginPage } from '@/features/auth/components/LoginPage';
+
+export default function Page() {
+  return <LoginPage />;
+}
+
+
+----------------------------------------------------------------
+FILE: (auth)/register/page.tsx
+----------------------------------------------------------------
+import { RegisterPage } from '@/features/auth/components/RegisterPage';
+
+export default function Page() {
+  return <RegisterPage />;
+}
+
+
+----------------------------------------------------------------
+FILE: (auth)/reset-password/page.tsx
+----------------------------------------------------------------
+import { ResetPasswordPage } from '@/features/auth/components/ResetPasswordPage';
+
+export default function Page() {
+  return <ResetPasswordPage />;
+}
+
+
+----------------------------------------------------------------
+FILE: (dashboard)/articles/[id]/decision/page.tsx
+----------------------------------------------------------------
+import { EditorialDecisionPage } from '@/features/articles/components/EditorialDecisionPage';
+
+export default async function Page({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
+  const { id } = await params;
+  return <EditorialDecisionPage id={Number(id)} />;
+}
+
+
+----------------------------------------------------------------
+FILE: (dashboard)/articles/[id]/page.tsx
+----------------------------------------------------------------
+import { ArticleDetailsPage } from '@/features/articles/components/ArticleDetailsPage';
+
+export default async function Page({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
+  const { id } = await params;
+  return <ArticleDetailsPage id={Number(id)} />;
+}
+
+
+----------------------------------------------------------------
+FILE: (dashboard)/articles/[id]/versions/page.tsx
+----------------------------------------------------------------
+import { ArticleVersionsPage } from '@/features/articles/components/ArticleVersionsPage';
+
+export default async function Page({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
+  const { id } = await params;
+  return <ArticleVersionsPage id={Number(id)} />;
+}
+
+
+----------------------------------------------------------------
+FILE: (dashboard)/articles/new/page.tsx
+----------------------------------------------------------------
+import { SubmitArticlePage } from '@/features/articles/components/SubmitArticlePage';
+
+export default function Page() {
+  return <SubmitArticlePage />;
+}
+
+
+----------------------------------------------------------------
+FILE: (dashboard)/articles/page.tsx
+----------------------------------------------------------------
+import { ArticlesPage } from '@/features/articles/components/ArticlesPage';
+
+export default function Page() {
+  return <ArticlesPage />;
+}
+
+
+----------------------------------------------------------------
+FILE: (dashboard)/assignments/[id]/page.tsx
+----------------------------------------------------------------
+import { AssignmentDetailsPage } from '@/features/assignments/components/AssignmentDetailsPage';
+
+export default async function Page({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
+  const { id } = await params;
+  return <AssignmentDetailsPage id={Number(id)} />;
+}
+
+
+----------------------------------------------------------------
+FILE: (dashboard)/assignments/[id]/review/page.tsx
+----------------------------------------------------------------
+import { ReviewFormPage } from '@/features/assignments/components/ReviewFormPage';
+
+export default async function Page({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
+  const { id } = await params;
+  return <ReviewFormPage assignmentId={Number(id)} />;
+}
+
+
+----------------------------------------------------------------
+FILE: (dashboard)/assignments/page.tsx
+----------------------------------------------------------------
+import { AssignmentsPage } from '@/features/assignments/components/AssignmentsPage';
+
+export default function Page() {
+  return <AssignmentsPage />;
+}
+
+
+----------------------------------------------------------------
+FILE: (dashboard)/categories/page.tsx
+----------------------------------------------------------------
+import { CategoriesPage } from '@/features/categories/components/CategoriesPage';
+
+export default function Page() {
+  return <CategoriesPage />;
+}
+
+
+----------------------------------------------------------------
+FILE: (dashboard)/dashboard/page.tsx
+----------------------------------------------------------------
+import { DashboardPage } from '@/features/dashboard/components/DashboardPage';
+
+export default function Page() {
+  return <DashboardPage />;
+}
+
+
+----------------------------------------------------------------
+FILE: (dashboard)/layout.tsx
+----------------------------------------------------------------
+import { DashboardLayout } from '@/shared/components/layout';
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return <DashboardLayout>{children}</DashboardLayout>;
+}
+
+
+----------------------------------------------------------------
+FILE: (dashboard)/notifications/page.tsx
+----------------------------------------------------------------
+import { NotificationsPage } from '@/features/notifications/components/NotificationsPage';
+
+export default function Page() {
+  return <NotificationsPage />;
+}
+
+
+----------------------------------------------------------------
+FILE: (dashboard)/profile/page.tsx
+----------------------------------------------------------------
+import { ProfilePage } from '@/features/auth/components/ProfilePage';
+
+export default function Page() {
+  return <ProfilePage />;
+}
+
+
+----------------------------------------------------------------
+FILE: (dashboard)/reviews/page.tsx
+----------------------------------------------------------------
+import { ReviewsPage } from '@/features/reviews/components/ReviewsPage';
+
+export default function Page() {
+  return <ReviewsPage />;
+}
+
+
+----------------------------------------------------------------
+FILE: (dashboard)/users/page.tsx
+----------------------------------------------------------------
+import { UsersPage } from '@/features/users/components/UsersPage';
+
+export default function Page() {
+  return <UsersPage />;
+}
+
+
+----------------------------------------------------------------
+FILE: (public)/journal/[id]/page.tsx
+----------------------------------------------------------------
+import { PublicationDetailPage } from '@/features/publications/components/PublicationDetailPage';
+
+export default async function Page({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
+  const { id } = await params;
+  return <PublicationDetailPage id={Number(id)} />;
+}
+
+
+----------------------------------------------------------------
+FILE: (public)/journal/page.tsx
+----------------------------------------------------------------
+import { PublicJournalPage } from '@/features/publications/components/PublicJournalPage';
+
+export default function Page() {
+  return <PublicJournalPage />;
+}
+
+
+----------------------------------------------------------------
+FILE: (public)/layout.tsx
+----------------------------------------------------------------
+import { PublicShell } from '@/shared/components/layout';
+
+export default function PublicLayout({ children }: { children: React.ReactNode }) {
+  return <PublicShell>{children}</PublicShell>;
+}
+
+
+----------------------------------------------------------------
+FILE: globals.css
+----------------------------------------------------------------
+@import "tailwindcss";
+
+/* ─── Font families ──────────────────────────────────────────────────────── */
+@theme {
+  --font-primary: var(--font-inter);
+}
+
+/* ─── Font weight shorthands ─────────────────────────────────────────────── */
+@layer utilities {
+  .font-primary-regular {
+    font-family: var(--font-primary);
+    font-weight: 400;
+  }
+  .font-primary-medium {
+    font-family: var(--font-primary);
+    font-weight: 500;
+  }
+  .font-primary-semibold {
+    font-family: var(--font-primary);
+    font-weight: 600;
+  }
+  .font-primary-bold {
+    font-family: var(--font-primary);
+    font-weight: 700;
+  }
+}
+
+/* ─── Border radius scale (design system values) ────────────────────────── */
+@theme {
+  --radius-sm: 6px;
+  --radius:    8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+}
+
+/* ─── Shadow tokens ──────────────────────────────────────────────────────── */
+@theme {
+  --shadow-card:   0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+  --shadow-panel:  0 4px 12px 0 rgb(0 0 0 / 0.08);
+  --shadow-dialog: 0 8px 32px 0 rgb(0 0 0 / 0.12);
+}
+
+/* ─── Color tokens ───────────────────────────────────────────────────────── */
+@theme {
+  /* Brand */
+  --color-brand-950: #0B1220;
+  --color-brand-900: #111827;
+  --color-brand-800: #1E293B;
+  --color-brand-700: #1D4ED8;
+  --color-brand-600: #2563EB;
+  --color-brand-500: #3B82F6;
+
+  /* Accent */
+  --color-accent-700: #0F766E;
+  --color-accent-600: #0D9488;
+  --color-accent-500: #14B8A6;
+
+  /* Backgrounds */
+  --color-app: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-soft-blue: #EFF6FF;
+  --color-soft-teal: #F0FDFA;
+
+  /* Text / general */
+  --color-primary: #0F172A;
+  --color-secondary: #475569;
+  --color-inverse: #FFFFFF;
+
+  /* Borders */
+  --color-subtle: #E2E8F0;
+  --color-strong: #CBD5E1;
+
+  /* Status */
+  --color-success: #16A34A;
+  --color-warning: #D97706;
+  --color-danger: #DC2626;
+  --color-info: #2563EB;
+
+  /* Roles */
+  --color-role-admin: #7C3AED;
+  --color-role-editor: #2563EB;
+  --color-role-reviewer: #0D9488;
+  --color-role-author: #EA580C;
+  --color-role-reader: #64748B;
+}
+
+/* ─── Semantic split: bg-muted ≠ text-muted ─────────────────────────────── */
+/* bg-muted (#F1F5F9) and text-muted (#64748B) are intentionally different   */
+/* values, so they cannot share a single @theme color token.                 */
+@layer utilities {
+  .bg-muted {
+    background-color: #F1F5F9;
+  }
+  .text-muted {
+    color: #64748B;
+  }
+  .border-muted {
+    border-color: #F1F5F9;
+  }
+}
+
+/* ─── Base resets ────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--color-app);
+  color: var(--color-primary);
+  font-family: var(--font-primary), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+----------------------------------------------------------------
+FILE: layout.tsx
+----------------------------------------------------------------
+import type { Metadata } from 'next';
+import { QueryProvider } from '@/shared/tanstack/providers';
+import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
+import { primaryFont } from '@/shared/fonts/fonts';
+import './globals.css';
+
+export const metadata: Metadata = {
+  title: 'DevWeb Journal',
+  description: 'Academic Journal Editorial System',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body className={`${primaryFont.variable} font-primary`}>
+        <QueryProvider>
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </QueryProvider>
+      </body>
+    </html>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: page.tsx
+----------------------------------------------------------------
+import { redirect } from 'next/navigation';
+
+export default function RootPage() {
+  redirect('/journal');
 }
 
 
