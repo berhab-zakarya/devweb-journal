@@ -18,11 +18,46 @@ class PublicationController extends Controller
      * @OA\Get(
      *     path="/publications",
      *     tags={"Publications"},
-     *     summary="List all published articles (public)",
-     *     @OA\Parameter(name="search", in="query", required=false, @OA\Schema(type="string")),
-     *     @OA\Parameter(name="category", in="query", required=false, @OA\Schema(type="string")),
-     *     @OA\Parameter(name="page", in="query", required=false, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Paginated publications")
+     *     summary="List all published articles (public, no auth)",
+     *     @OA\Parameter(name="search", in="query", required=false, description="Title, keywords, abstract", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="category", in="query", required=false, description="Category slug", @OA\Schema(type="string", example="computer-science")),
+     *     @OA\Parameter(name="volume", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Parameter(name="issue", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Parameter(name="page", in="query", required=false, @OA\Schema(type="integer", minimum=1)),
+     *     @OA\Response(
+     *         response=200,
+     *         description="LengthAwarePaginator JSON nested under `data` (12 per page); rows are joined article/category/publication fields",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="current_page", type="integer", example=1),
+     *                 @OA\Property(property="data", type="array",
+     *                     @OA\Items(type="object",
+     *                         @OA\Property(property="id", type="integer", description="Publication id"),
+     *                         @OA\Property(property="published_at", type="string", format="date-time"),
+     *                         @OA\Property(property="doi", type="string", nullable=true, example="10.1234/journal.2026.1"),
+     *                         @OA\Property(property="volume", type="string", nullable=true),
+     *                         @OA\Property(property="issue", type="string", nullable=true),
+     *                         @OA\Property(property="article_id", type="integer"),
+     *                         @OA\Property(property="title", type="string"),
+     *                         @OA\Property(property="abstract", type="string"),
+     *                         @OA\Property(property="keywords", type="string"),
+     *                         @OA\Property(property="category_name", type="string"),
+     *                         @OA\Property(property="category_slug", type="string")
+     *                     )
+     *                 ),
+     *                 @OA\Property(property="first_page_url", type="string"),
+     *                 @OA\Property(property="last_page_url", type="string"),
+     *                 @OA\Property(property="links", ref="#/components/schemas/PaginatorLinks"),
+     *                 @OA\Property(property="meta", ref="#/components/schemas/PaginatorMeta"),
+     *                 @OA\Property(property="next_page_url", type="string", nullable=true),
+     *                 @OA\Property(property="path", type="string"),
+     *                 @OA\Property(property="per_page", type="integer", example=12),
+     *                 @OA\Property(property="prev_page_url", type="string", nullable=true),
+     *                 @OA\Property(property="total", type="integer")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function index(Request $request): JsonResponse
@@ -79,9 +114,30 @@ class PublicationController extends Controller
      *     path="/publications/{publication}",
      *     tags={"Publications"},
      *     summary="Get publication details (public)",
-     *     @OA\Parameter(name="publication", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Publication details"),
-     *     @OA\Response(response=404, description="Not found")
+     *     @OA\Parameter(name="publication", in="path", required=true, @OA\Schema(type="integer", example=9)),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Joined publication + article + category + author",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=9),
+     *                 @OA\Property(property="published_at", type="string", format="date-time"),
+     *                 @OA\Property(property="doi", type="string", nullable=true),
+     *                 @OA\Property(property="volume", type="string", nullable=true),
+     *                 @OA\Property(property="issue", type="string", nullable=true),
+     *                 @OA\Property(property="article_version_id", type="integer"),
+     *                 @OA\Property(property="article_id", type="integer"),
+     *                 @OA\Property(property="title", type="string"),
+     *                 @OA\Property(property="abstract", type="string"),
+     *                 @OA\Property(property="keywords", type="string"),
+     *                 @OA\Property(property="category_name", type="string"),
+     *                 @OA\Property(property="category_slug", type="string"),
+     *                 @OA\Property(property="author_name", type="string")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Not published / not found", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function show(Publication $publication): JsonResponse
@@ -127,9 +183,10 @@ class PublicationController extends Controller
      *     path="/publications/{publication}/download",
      *     tags={"Publications"},
      *     summary="Download the published PDF (public)",
-     *     @OA\Parameter(name="publication", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="PDF file"),
-     *     @OA\Response(response=404, description="File not found")
+     *     @OA\Parameter(name="publication", in="path", required=true, @OA\Schema(type="integer", example=9)),
+     *     @OA\Response(response=200, description="PDF binary stream"),
+     *     @OA\Response(response=404, description="Missing publication row or PDF", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function download(Publication $publication): BinaryFileResponse|JsonResponse
@@ -165,7 +222,20 @@ class PublicationController extends Controller
      *     path="/publications/volumes",
      *     tags={"Publications"},
      *     summary="List available volumes and issues (public)",
-     *     @OA\Response(response=200, description="List of volumes/issues")
+     *     @OA\Response(
+     *         response=200,
+     *         description="Distinct rows ordered by year/volume/issue",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(type="object",
+     *                     @OA\Property(property="volume", type="string", nullable=true, example="12"),
+     *                     @OA\Property(property="issue", type="string", nullable=true, example="3"),
+     *                     @OA\Property(property="year", type="integer", example=2026)
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function volumes(): JsonResponse

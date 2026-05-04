@@ -24,13 +24,28 @@ class ReviewerAssignmentController extends Controller
      * @OA\Get(
      *     path="/articles/{article}/reviewers/search",
      *     tags={"Reviewer Assignments"},
-     *     summary="Search for available reviewers by email (editor)",
+     *     summary="Search for available reviewers by email (editor/admin)",
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Parameter(name="q", in="query", required=true, @OA\Schema(type="string")),
-     *     @OA\Parameter(name="limit", in="query", required=false, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="List of matching reviewers"),
-     *     @OA\Response(response=403, description="Access denied")
+     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer", example=42)),
+     *     @OA\Parameter(name="q", in="query", required=true, description="Min length 2", @OA\Schema(type="string", example="rev@")),
+     *     @OA\Parameter(name="limit", in="query", required=false, @OA\Schema(type="integer", minimum=1, maximum=25, default=10)),
+     *     @OA\Response(
+     *         response=200,
+     *         description="{ id, name, email } reviewers",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(type="object",
+     *                     @OA\Property(property="id", type="integer", example=15),
+     *                     @OA\Property(property="name", type="string", example="Pat Reviewer"),
+     *                     @OA\Property(property="email", type="string", example="pat.reviewer@uni.edu")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Cannot create assignments", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=422, description="Validation failed", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function searchReviewers(Request $request, Article $article): JsonResponse
@@ -78,17 +93,39 @@ class ReviewerAssignmentController extends Controller
      * @OA\Post(
      *     path="/articles/{article}/assignments",
      *     tags={"Reviewer Assignments"},
-     *     summary="Assign reviewers to an article (editor)",
+     *     summary="Assign reviewers to an article (editor/admin)",
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer", example=42)),
      *     @OA\RequestBody(required=true,
      *         @OA\JsonContent(required={"reviewer_ids"},
-     *             @OA\Property(property="reviewer_ids", type="array", @OA\Items(type="integer")),
-     *             @OA\Property(property="due_date", type="string", format="date")
+     *             @OA\Property(property="reviewer_ids", type="array", minItems=1,
+     *                 @OA\Items(type="integer", example=15)
+     *             ),
+     *             @OA\Property(property="due_date", type="string", format="date", nullable=true, example="2026-06-01")
      *         )
      *     ),
-     *     @OA\Response(response=201, description="Assignments created"),
-     *     @OA\Response(response=403, description="Access denied")
+     *     @OA\Response(
+     *         response=201,
+     *         description="ReviewerAssignment models created/reused",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Assignments created successfully."),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(type="object",
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="article_id", type="integer"),
+     *                     @OA\Property(property="reviewer_id", type="integer"),
+     *                     @OA\Property(property="assigned_by", type="integer", nullable=true),
+     *                     @OA\Property(property="assigned_at", type="string", format="date-time"),
+     *                     @OA\Property(property="status", type="string", example="pending"),
+     *                     @OA\Property(property="due_date", type="string", format="date-time", nullable=true)
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Forbidden", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=422, description="Validation failed", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function store(Request $request, Article $article): JsonResponse
@@ -157,8 +194,25 @@ class ReviewerAssignmentController extends Controller
      *     tags={"Reviewer Assignments"},
      *     summary="List assignments for an article",
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="List of assignments")
+     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer", example=42)),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Eloquent models with reviewer + assignedBy loaded",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="array",
+     *                 description="ReviewerAssignment models with `reviewer` and `assignedBy` eager-loaded (JSON keys follow Laravel model serialization)",
+     *                 @OA\Items(type="object",
+     *                     @OA\Property(property="id", type="integer", example=101),
+     *                     @OA\Property(property="article_id", type="integer"),
+     *                     @OA\Property(property="reviewer_id", type="integer"),
+     *                     @OA\Property(property="status", type="string", example="pending"),
+     *                     @OA\Property(property="due_date", type="string", format="date-time", nullable=true)
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function index(Request $request, Article $article): JsonResponse
@@ -184,12 +238,14 @@ class ReviewerAssignmentController extends Controller
      * @OA\Delete(
      *     path="/assignments/{assignment}",
      *     tags={"Reviewer Assignments"},
-     *     summary="Delete an assignment (editor)",
+     *     summary="Delete an assignment (editor/admin)",
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(name="assignment", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Assignment deleted"),
-     *     @OA\Response(response=403, description="Access denied"),
-     *     @OA\Response(response=409, description="Cannot delete completed assignment")
+     *     @OA\Parameter(name="assignment", in="path", required=true, @OA\Schema(type="integer", example=101)),
+     *     @OA\Response(response=200, description="Deleted", @OA\JsonContent(@OA\Property(property="message", type="string", example="Assignment deleted successfully."))),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Forbidden", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=409, description="Assignment already complete", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function destroy(Request $request, ReviewerAssignment $assignment): JsonResponse
@@ -219,9 +275,15 @@ class ReviewerAssignmentController extends Controller
      *     tags={"Reviewer Assignments"},
      *     summary="Get assignment details",
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(name="assignment", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Assignment details"),
-     *     @OA\Response(response=403, description="Access denied")
+     *     @OA\Parameter(name="assignment", in="path", required=true, @OA\Schema(type="integer", example=101)),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Assignment with reviewer, assignedBy, article summary",
+     *         @OA\JsonContent(@OA\Property(property="data", type="object"))
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Forbidden", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function show(Request $request, ReviewerAssignment $assignment): JsonResponse
@@ -249,14 +311,25 @@ class ReviewerAssignmentController extends Controller
      *     tags={"Reviewer Assignments"},
      *     summary="Accept or decline a reviewer assignment (reviewer)",
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(name="assignment", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="assignment", in="path", required=true, @OA\Schema(type="integer", example=101)),
      *     @OA\RequestBody(required=true,
      *         @OA\JsonContent(required={"response"},
-     *             @OA\Property(property="response", type="string", enum={"accepted","decline"})
+     *             @OA\Property(property="response", type="string", enum={"accepted","decline"}, example="accepted")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Response recorded"),
-     *     @OA\Response(response=403, description="Access denied")
+     *     @OA\Response(
+     *         response=200,
+     *         description="Updated assignment model",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Response recorded successfully."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Forbidden", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=422, description="Validation failed", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse")),
+     *     @OA\Response(response=409, description="Already processed assignment", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function respond(Request $request, ReviewerAssignment $assignment): JsonResponse

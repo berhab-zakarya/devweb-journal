@@ -29,19 +29,33 @@ class ArticleVersionController extends Controller
      *     tags={"Article Versions"},
      *     summary="Upload a new PDF version for an article",
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer", example=42)),
      *     @OA\RequestBody(required=true,
      *         @OA\MediaType(mediaType="multipart/form-data",
      *             @OA\Schema(
      *                 required={"pdf"},
-     *                 @OA\Property(property="pdf", type="string", format="binary"),
-     *                 @OA\Property(property="change_summary", type="string")
+     *                 @OA\Property(property="pdf", description="application/pdf, max 10240 KiB", type="string", format="binary"),
+     *                 @OA\Property(property="change_summary", type="string", nullable=true, example="Addressed reviewer comments.")
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=201, description="Version uploaded"),
-     *     @OA\Response(response=403, description="Access denied"),
-     *     @OA\Response(response=409, description="Status transition error")
+     *     @OA\Response(
+     *         response=201,
+     *         description="Article metadata after transition",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="New version submitted successfully."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="article_id", type="integer", example=42),
+     *                 @OA\Property(property="current_version_id", type="integer", example=505),
+     *                 @OA\Property(property="status", type="string", example="under_review")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Not author/admin", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=422, description="Validation failed", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse")),
+     *     @OA\Response(response=409, description="Status transition rejected", @OA\JsonContent(ref="#/components/schemas/ConflictResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function store(Request $request, Article $article): JsonResponse
@@ -116,25 +130,30 @@ class ArticleVersionController extends Controller
      *     tags={"Article Versions"},
      *     summary="List all versions of an article",
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer", example=42)),
      *     @OA\Response(
      *         response=200,
-     *         description="List of article versions",
+     *         description="Rows from `article_versions` query builder (includes storage path)",
      *         @OA\JsonContent(
      *             @OA\Property(property="data", type="array",
-     *                 @OA\Items(
-     *                     @OA\Property(property="id", type="integer"),
+     *                 @OA\Items(type="object",
+     *                     @OA\Property(property="id", type="integer", example=500),
      *                     @OA\Property(property="article_id", type="integer"),
-     *                     @OA\Property(property="version_number", type="integer"),
-     *                     @OA\Property(property="pdf_original_name", type="string"),
-     *                     @OA\Property(property="pdf_size", type="integer"),
+     *                     @OA\Property(property="version_number", type="integer", example=2),
+     *                     @OA\Property(property="pdf_path", type="string", example="private/articles/42/uuid.pdf"),
+     *                     @OA\Property(property="pdf_original_name", type="string", example="manuscript.pdf"),
+     *                     @OA\Property(property="pdf_size", type="integer", example=524288),
      *                     @OA\Property(property="change_summary", type="string", nullable=true),
-     *                     @OA\Property(property="submitted_at", type="string", format="date-time")
+     *                     @OA\Property(property="submitted_at", type="string", format="date-time"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time")
      *                 )
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=403, description="Access denied")
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Not author/editor/admin", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function index(Request $request, Article $article): JsonResponse
@@ -166,17 +185,19 @@ class ArticleVersionController extends Controller
      *     tags={"Article Versions"},
      *     summary="Download a specific PDF version of an article",
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Parameter(name="versionId", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer", example=42)),
+     *     @OA\Parameter(name="versionId", in="path", required=true, @OA\Schema(type="integer", example=500)),
      *     @OA\Response(
      *         response=200,
-     *         description="PDF file download",
+     *         description="PDF binary (`application/pdf`)",
      *         @OA\MediaType(mediaType="application/pdf",
      *             @OA\Schema(type="string", format="binary")
      *         )
      *     ),
-     *     @OA\Response(response=403, description="Access denied"),
-     *     @OA\Response(response=404, description="Version or file not found")
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Not author/editor/admin", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=404, description="Unknown version or missing file", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function download(Request $request, Article $article, int $versionId): BinaryFileResponse|JsonResponse

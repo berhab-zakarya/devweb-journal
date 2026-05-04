@@ -41,14 +41,29 @@ class AuthController extends Controller
      *     summary="Register a new user account",
      *     @OA\RequestBody(required=true,
      *         @OA\JsonContent(required={"name","email","password","password_confirmation"},
-     *             @OA\Property(property="name", type="string", example="Jane Doe"),
-     *             @OA\Property(property="email", type="string", format="email", example="jane@example.com"),
-     *             @OA\Property(property="password", type="string", format="password", minLength=8, example="secret123"),
-     *             @OA\Property(property="password_confirmation", type="string", example="secret123")
+     *             @OA\Property(property="name", type="string", maxLength=120, example="Jane Doe"),
+     *             @OA\Property(property="email", type="string", format="email", maxLength=190, example="jane@example.com"),
+     *             @OA\Property(property="password", type="string", format="password", minLength=8, example="secret12345"),
+     *             @OA\Property(property="password_confirmation", type="string", example="secret12345")
      *         )
      *     ),
-     *     @OA\Response(response=201, description="Account created"),
-     *     @OA\Response(response=422, description="Validation error")
+     *     @OA\Response(
+     *         response=201,
+     *         description="Account created; user receives role `reader`",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Account created successfully."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=12),
+     *                 @OA\Property(property="name", type="string", example="Jane Doe"),
+     *                 @OA\Property(property="email", type="string", example="jane@example.com"),
+     *                 @OA\Property(property="roles", type="array", @OA\Items(type="string"), example={"reader"})
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=400, description="Malformed JSON body"),
+     *     @OA\Response(response=422, description="Validation failed", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse")),
+     *     @OA\Response(response=429, description="Too many attempts (throttle: 5/minute)"),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function register(Request $request): JsonResponse
@@ -87,12 +102,27 @@ class AuthController extends Controller
      *     summary="Login and receive a session cookie",
      *     @OA\RequestBody(required=true,
      *         @OA\JsonContent(required={"email","password"},
-     *             @OA\Property(property="email", type="string", format="email"),
-     *             @OA\Property(property="password", type="string", format="password")
+     *             @OA\Property(property="email", type="string", format="email", example="jane@example.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="secret12345")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Login successful"),
-     *     @OA\Response(response=422, description="Invalid credentials")
+     *     @OA\Response(
+     *         response=200,
+     *         description="Login successful; sets session cookie",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Login successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=12),
+     *                 @OA\Property(property="name", type="string", example="Jane Doe"),
+     *                 @OA\Property(property="email", type="string", example="jane@example.com"),
+     *                 @OA\Property(property="roles", type="array", @OA\Items(type="string"), example={"author"})
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=400, description="Malformed JSON body"),
+     *     @OA\Response(response=422, description="Invalid credentials or validation error", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse")),
+     *     @OA\Response(response=429, description="Too many attempts (throttle: 5/minute)"),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function login(Request $request): JsonResponse
@@ -132,7 +162,15 @@ class AuthController extends Controller
      *     tags={"Auth"},
      *     summary="Logout and invalidate the session",
      *     security={{"sanctum":{}}},
-     *     @OA\Response(response=200, description="Logged out successfully")
+     *     @OA\Response(
+     *         response=200,
+     *         description="Session invalidated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Logged out successfully.")
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Not logged in", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function logout(Request $request): JsonResponse
@@ -154,8 +192,20 @@ class AuthController extends Controller
      *     tags={"Auth"},
      *     summary="Get the authenticated user's profile",
      *     security={{"sanctum":{}}},
-     *     @OA\Response(response=200, description="User profile"),
-     *     @OA\Response(response=401, description="Unauthenticated")
+     *     @OA\Response(
+     *         response=200,
+     *         description="Current user",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=12),
+     *                 @OA\Property(property="name", type="string", example="Jane Doe"),
+     *                 @OA\Property(property="email", type="string", example="jane@example.com"),
+     *                 @OA\Property(property="roles", type="array", @OA\Items(type="string"), example={"editor"})
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function me(Request $request): JsonResponse
@@ -182,15 +232,29 @@ class AuthController extends Controller
      *     security={{"sanctum":{}}},
      *     @OA\RequestBody(required=true,
      *         @OA\JsonContent(required={"name","email"},
-     *             @OA\Property(property="name", type="string"),
-     *             @OA\Property(property="email", type="string", format="email"),
-     *             @OA\Property(property="current_password", type="string"),
-     *             @OA\Property(property="password", type="string"),
-     *             @OA\Property(property="password_confirmation", type="string")
+     *             @OA\Property(property="name", type="string", maxLength=120, example="Jane Doe"),
+     *             @OA\Property(property="email", type="string", format="email", example="jane@example.com"),
+     *             @OA\Property(property="current_password", type="string", format="password", description="Required when changing password"),
+     *             @OA\Property(property="password", type="string", format="password", minLength=8),
+     *             @OA\Property(property="password_confirmation", type="string", description="Must match password when password is set")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Profile updated"),
-     *     @OA\Response(response=422, description="Validation error")
+     *     @OA\Response(
+     *         response=200,
+     *         description="Profile updated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Profile updated successfully."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=12),
+     *                 @OA\Property(property="name", type="string", example="Jane Doe"),
+     *                 @OA\Property(property="email", type="string", example="jane.new@example.com"),
+     *                 @OA\Property(property="roles", type="array", @OA\Items(type="string"), example={"reader"})
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=422, description="Validation failed", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function updateProfile(Request $request): JsonResponse
@@ -246,10 +310,19 @@ class AuthController extends Controller
      *     summary="Send a password reset link to the given email",
      *     @OA\RequestBody(required=true,
      *         @OA\JsonContent(required={"email"},
-     *             @OA\Property(property="email", type="string", format="email")
+     *             @OA\Property(property="email", type="string", format="email", example="jane@example.com")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Reset link sent (if account exists)")
+     *     @OA\Response(
+     *         response=200,
+     *         description="Always 200 (does not reveal whether the email exists)",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="If the account exists, a reset link has been sent.")
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Validation failed", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse")),
+     *     @OA\Response(response=429, description="Too many attempts (throttle: 5/minute)"),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function forgotPassword(Request $request): JsonResponse
@@ -274,14 +347,20 @@ class AuthController extends Controller
      *     summary="Reset the user's password using a reset token",
      *     @OA\RequestBody(required=true,
      *         @OA\JsonContent(required={"token","email","password","password_confirmation"},
-     *             @OA\Property(property="token", type="string"),
-     *             @OA\Property(property="email", type="string", format="email"),
-     *             @OA\Property(property="password", type="string"),
-     *             @OA\Property(property="password_confirmation", type="string")
+     *             @OA\Property(property="token", type="string", example="plain-text-token-from-email"),
+     *             @OA\Property(property="email", type="string", format="email", example="jane@example.com"),
+     *             @OA\Property(property="password", type="string", format="password", minLength=8, example="newsecret123"),
+     *             @OA\Property(property="password_confirmation", type="string", example="newsecret123")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Password reset successfully"),
-     *     @OA\Response(response=422, description="Invalid or expired token")
+     *     @OA\Response(
+     *         response=200,
+     *         description="Password updated",
+     *         @OA\JsonContent(@OA\Property(property="message", type="string", example="Password reset successfully."))
+     *     ),
+     *     @OA\Response(response=422, description="Invalid or expired token (validation)", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse")),
+     *     @OA\Response(response=429, description="Too many attempts (throttle: 5/minute)"),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function resetPassword(Request $request): JsonResponse

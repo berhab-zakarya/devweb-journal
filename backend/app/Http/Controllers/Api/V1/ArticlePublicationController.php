@@ -31,17 +31,38 @@ class ArticlePublicationController extends Controller
      *     tags={"Publications"},
      *     summary="Publish an accepted article (editor/admin)",
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer", example=42)),
      *     @OA\RequestBody(
      *         @OA\JsonContent(
-     *             @OA\Property(property="doi", type="string"),
-     *             @OA\Property(property="volume", type="integer"),
-     *             @OA\Property(property="issue", type="integer")
+     *             @OA\Property(property="published_at", type="string", format="date-time", nullable=true, description="Defaults to now"),
+     *             @OA\Property(property="doi", type="string", maxLength=120, nullable=true, example="10.1234/journal.2026.ai"),
+     *             @OA\Property(property="volume", type="string", maxLength=30, nullable=true, example="12"),
+     *             @OA\Property(property="issue", type="string", maxLength=30, nullable=true, example="3")
      *         )
      *     ),
-     *     @OA\Response(response=201, description="Article published"),
-     *     @OA\Response(response=403, description="Access denied"),
-     *     @OA\Response(response=409, description="Article not accepted or already published")
+     *     @OA\Response(
+     *         response=201,
+     *         description="Publication model persisted + article status becomes published",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Article published successfully."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=18),
+     *                 @OA\Property(property="article_id", type="integer"),
+     *                 @OA\Property(property="article_version_id", type="integer"),
+     *                 @OA\Property(property="published_at", type="string", format="date-time"),
+     *                 @OA\Property(property="doi", type="string", nullable=true),
+     *                 @OA\Property(property="volume", type="string", nullable=true),
+     *                 @OA\Property(property="issue", type="string", nullable=true),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Role not allowed", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=422, description="Validation failed", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse")),
+     *     @OA\Response(response=409, description="Workflow conflict", @OA\JsonContent(ref="#/components/schemas/ConflictResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function store(Request $request, Article $article): JsonResponse

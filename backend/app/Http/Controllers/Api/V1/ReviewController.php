@@ -28,17 +28,51 @@ class ReviewController extends Controller
      *     tags={"Reviews"},
      *     summary="Submit or save a draft review for an assignment (reviewer)",
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(name="assignment", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="assignment", in="path", required=true, @OA\Schema(type="integer", example=77)),
      *     @OA\RequestBody(required=true,
      *         @OA\JsonContent(
-     *             @OA\Property(property="comments", type="string"),
-     *             @OA\Property(property="recommendation", type="string"),
-     *             @OA\Property(property="is_draft", type="boolean")
+     *             @OA\Property(property="is_draft", type="boolean", nullable=true, example=false),
+     *             @OA\Property(property="comments", type="string", description="Required when `is_draft` is false"),
+     *             @OA\Property(property="originality_score", type="integer", minimum=0, maximum=10),
+     *             @OA\Property(property="methodology_score", type="integer", minimum=0, maximum=10),
+     *             @OA\Property(property="clarity_score", type="integer", minimum=0, maximum=10),
+     *             @OA\Property(property="overall_score", type="integer", minimum=0, maximum=10),
+     *             @OA\Property(property="recommendation", type="string", enum={"accept","reject","minor_revision","major_revision"}, description="Required when not draft")
      *         )
      *     ),
-     *     @OA\Response(response=201, description="Review submitted"),
-     *     @OA\Response(response=403, description="Access denied"),
-     *     @OA\Response(response=409, description="Assignment not accepted")
+     *     @OA\Response(
+     *         response=201,
+     *         description="First save or submit (resource created)",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer"),
+     *                 @OA\Property(property="assignment_id", type="integer"),
+     *                 @OA\Property(property="article_version_id", type="integer"),
+     *                 @OA\Property(property="originality_score", type="integer", nullable=true),
+     *                 @OA\Property(property="methodology_score", type="integer", nullable=true),
+     *                 @OA\Property(property="clarity_score", type="integer", nullable=true),
+     *                 @OA\Property(property="overall_score", type="integer", nullable=true),
+     *                 @OA\Property(property="comments", type="string"),
+     *                 @OA\Property(property="is_draft", type="boolean"),
+     *                 @OA\Property(property="is_submitted", type="boolean"),
+     *                 @OA\Property(property="submitted_at", type="string", format="date-time", nullable=true),
+     *                 @OA\Property(property="assignment", type="object"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Existing review updated (draft resave or second submit blocked upstream)",
+     *         @OA\JsonContent(@OA\Property(property="message", type="string"), @OA\Property(property="data", type="object"))
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Cannot respond to assignment", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=422, description="Validation failed", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse")),
+     *     @OA\Response(response=409, description="Workflow conflict", @OA\JsonContent(ref="#/components/schemas/ConflictResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function store(StoreReviewRequest $request, ReviewerAssignment $assignment): JsonResponse
@@ -144,10 +178,16 @@ class ReviewController extends Controller
      *     tags={"Reviews"},
      *     summary="Get the review for a given assignment",
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(name="assignment", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Review details"),
-     *     @OA\Response(response=403, description="Access denied"),
-     *     @OA\Response(response=404, description="Review not found")
+     *     @OA\Parameter(name="assignment", in="path", required=true, @OA\Schema(type="integer", example=77)),
+     *     @OA\Response(
+     *         response=200,
+     *         description="ReviewResource",
+     *         @OA\JsonContent(@OA\Property(property="data", type="object"))
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Cannot view review", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=404, description="No review row yet", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function show(Request $request, ReviewerAssignment $assignment): JsonResponse
@@ -180,10 +220,27 @@ class ReviewController extends Controller
      * @OA\Get(
      *     path="/articles/{article}/reviews",
      *     tags={"Reviews"},
-     *     summary="List all submitted reviews for an article (editor/admin)",
+     *     summary="List submitted reviews for an article (editor/admin)",
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="List of reviews")
+     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer", example=42)),
+     *     @OA\Response(
+     *         response=200,
+     *         description="ReviewResource collection (assignments must be complete)",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(type="object",
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="assignment_id", type="integer"),
+     *                     @OA\Property(property="comments", type="string"),
+     *                     @OA\Property(property="is_submitted", type="boolean", example=true),
+     *                     @OA\Property(property="submitted_at", type="string", format="date-time")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Role not allowed", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function indexByArticle(Article $article): JsonResponse

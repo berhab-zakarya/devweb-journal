@@ -23,38 +23,40 @@ class DashboardController extends Controller
      *     security={{"sanctum":{}}},
      *     @OA\Response(
      *         response=200,
-     *         description="Role-based dashboard stats",
+     *         description="Counters grouped by workflow section (shape varies by primary role)",
      *         @OA\JsonContent(
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="role", type="string", example="author"),
      *                 @OA\Property(property="requires_attention", type="array",
-     *                     @OA\Items(
-     *                         @OA\Property(property="key", type="string"),
-     *                         @OA\Property(property="label", type="string"),
-     *                         @OA\Property(property="count", type="integer"),
-     *                         @OA\Property(property="route", type="string")
+     *                     @OA\Items(type="object",
+     *                         @OA\Property(property="key", type="string", example="revisions_required"),
+     *                         @OA\Property(property="label", type="string", example="Revisions required"),
+     *                         @OA\Property(property="count", type="integer", example=2),
+     *                         @OA\Property(property="route", type="string", example="/articles")
      *                     )
      *                 ),
      *                 @OA\Property(property="pending", type="array",
-     *                     @OA\Items(
-     *                         @OA\Property(property="key", type="string"),
-     *                         @OA\Property(property="label", type="string"),
-     *                         @OA\Property(property="count", type="integer"),
-     *                         @OA\Property(property="route", type="string")
+     *                     @OA\Items(type="object",
+     *                         @OA\Property(property="key", type="string", example="pending_decision"),
+     *                         @OA\Property(property="label", type="string", example="Pending submissions"),
+     *                         @OA\Property(property="count", type="integer", example=5),
+     *                         @OA\Property(property="route", type="string", example="/articles")
      *                     )
      *                 ),
      *                 @OA\Property(property="completed", type="array",
-     *                     @OA\Items(
-     *                         @OA\Property(property="key", type="string"),
-     *                         @OA\Property(property="label", type="string"),
-     *                         @OA\Property(property="count", type="integer"),
-     *                         @OA\Property(property="route", type="string")
+     *                     @OA\Items(type="object",
+     *                         @OA\Property(property="key", type="string", example="published"),
+     *                         @OA\Property(property="label", type="string", example="Published articles"),
+     *                         @OA\Property(property="count", type="integer", example=1),
+     *                         @OA\Property(property="route", type="string", example="/journal")
      *                     )
      *                 )
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=401, description="Unauthenticated")
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Role middleware denied", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function summary(Request $request): JsonResponse

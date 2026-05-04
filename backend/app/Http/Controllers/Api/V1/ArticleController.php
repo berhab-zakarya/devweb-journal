@@ -24,10 +24,55 @@ class ArticleController extends Controller
      *     tags={"Articles"},
      *     summary="List articles (filtered by role)",
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(name="search", in="query", required=false, @OA\Schema(type="string")),
-     *     @OA\Parameter(name="page", in="query", required=false, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Paginated list of articles"),
-     *     @OA\Response(response=401, description="Unauthenticated")
+     *     @OA\Parameter(name="search", in="query", required=false, description="Matches title, abstract, keywords", @OA\Schema(type="string", example="machine learning")),
+     *     @OA\Parameter(name="page", in="query", required=false, @OA\Schema(type="integer", minimum=1, example=1)),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Paginated ArticleResource collection (`data.data` items match ArticleResource)",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                     @OA\Items(type="object",
+     *                         @OA\Property(property="id", type="integer", example=42),
+     *                         @OA\Property(property="author_id", type="integer", example=3),
+     *                         @OA\Property(property="category_id", type="integer", example=1),
+     *                         @OA\Property(property="title", type="string", example="Quantum embeddings for IR"),
+     *                         @OA\Property(property="abstract", type="string"),
+     *                         @OA\Property(property="keywords", type="string", example="IR; quantum"),
+     *                         @OA\Property(property="status", type="string", example="under_review"),
+     *                         @OA\Property(property="status_history", type="array",
+     *                             @OA\Items(type="object",
+     *                                 @OA\Property(property="status", type="string", example="submitted"),
+     *                                 @OA\Property(property="changed_at", type="string", format="date-time"),
+     *                                 @OA\Property(property="note", type="string", example="Initial submission")
+     *                             )
+     *                         ),
+     *                         @OA\Property(property="current_version_id", type="integer", example=101),
+     *                         @OA\Property(property="submitted_at", type="string", format="date-time"),
+     *                         @OA\Property(property="is_published", type="boolean", example=false),
+     *                         @OA\Property(property="published_at", type="string", format="date-time", nullable=true),
+     *                         @OA\Property(property="author", type="object",
+     *                             @OA\Property(property="id", type="integer"),
+     *                             @OA\Property(property="name", type="string"),
+     *                             @OA\Property(property="email", type="string")
+     *                         ),
+     *                         @OA\Property(property="category", type="object",
+     *                             @OA\Property(property="id", type="integer"),
+     *                             @OA\Property(property="name", type="string"),
+     *                             @OA\Property(property="slug", type="string")
+     *                         ),
+     *                         @OA\Property(property="publication", type="object", nullable=true),
+     *                         @OA\Property(property="created_at", type="string", format="date-time"),
+     *                         @OA\Property(property="updated_at", type="string", format="date-time")
+     *                     )
+     *                 ),
+     *                 @OA\Property(property="links", ref="#/components/schemas/PaginatorLinks"),
+     *                 @OA\Property(property="meta", ref="#/components/schemas/PaginatorMeta")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function index(Request $request): JsonResponse
@@ -84,17 +129,43 @@ class ArticleController extends Controller
      *         @OA\MediaType(mediaType="multipart/form-data",
      *             @OA\Schema(
      *                 required={"title","abstract","keywords","category_id","pdf"},
-     *                 @OA\Property(property="title", type="string"),
-     *                 @OA\Property(property="abstract", type="string"),
-     *                 @OA\Property(property="keywords", type="string"),
-     *                 @OA\Property(property="category_id", type="integer"),
-     *                 @OA\Property(property="pdf", type="string", format="binary")
+     *                 @OA\Property(property="title", type="string", maxLength=255, example="Quantum embeddings for IR"),
+     *                 @OA\Property(property="abstract", type="string", example="We propose ..."),
+     *                 @OA\Property(property="keywords", type="string", example="information retrieval; quantum"),
+     *                 @OA\Property(property="category_id", type="integer", example=2),
+     *                 @OA\Property(property="pdf", description="PDF file, max 10240 KiB", type="string", format="binary")
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=201, description="Article submitted"),
-     *     @OA\Response(response=403, description="Access denied"),
-     *     @OA\Response(response=422, description="Validation error")
+     *     @OA\Response(
+     *         response=201,
+     *         description="Article submitted",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Article submitted successfully."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=42),
+     *                 @OA\Property(property="author_id", type="integer"),
+     *                 @OA\Property(property="category_id", type="integer"),
+     *                 @OA\Property(property="title", type="string"),
+     *                 @OA\Property(property="abstract", type="string"),
+     *                 @OA\Property(property="keywords", type="string"),
+     *                 @OA\Property(property="status", type="string", example="submitted"),
+     *                 @OA\Property(property="status_history", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="current_version_id", type="integer"),
+     *                 @OA\Property(property="submitted_at", type="string", format="date-time"),
+     *                 @OA\Property(property="is_published", type="boolean", example=false),
+     *                 @OA\Property(property="published_at", type="string", nullable=true),
+     *                 @OA\Property(property="author", type="object"),
+     *                 @OA\Property(property="category", type="object"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Forbidden (policy)", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=422, description="Validation failed", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function store(StoreArticleRequest $request): JsonResponse
@@ -151,10 +222,42 @@ class ArticleController extends Controller
      *     tags={"Articles"},
      *     summary="Get article details",
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Article details"),
-     *     @OA\Response(response=403, description="Access denied"),
-     *     @OA\Response(response=404, description="Not found")
+     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer", example=42)),
+     *     @OA\Response(
+     *         response=200,
+     *         description="ArticleResource (relations loaded internally for status_history only; response matches ArticleResource::toArray)",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=42),
+     *                 @OA\Property(property="author_id", type="integer"),
+     *                 @OA\Property(property="category_id", type="integer"),
+     *                 @OA\Property(property="title", type="string"),
+     *                 @OA\Property(property="abstract", type="string"),
+     *                 @OA\Property(property="keywords", type="string"),
+     *                 @OA\Property(property="status", type="string", example="under_review"),
+     *                 @OA\Property(property="status_history", type="array",
+     *                     @OA\Items(type="object",
+     *                         @OA\Property(property="status", type="string", example="submitted"),
+     *                         @OA\Property(property="changed_at", type="string", format="date-time"),
+     *                         @OA\Property(property="note", type="string", example="Initial submission")
+     *                     )
+     *                 ),
+     *                 @OA\Property(property="current_version_id", type="integer"),
+     *                 @OA\Property(property="submitted_at", type="string", format="date-time"),
+     *                 @OA\Property(property="is_published", type="boolean"),
+     *                 @OA\Property(property="published_at", type="string", format="date-time", nullable=true),
+     *                 @OA\Property(property="author", type="object"),
+     *                 @OA\Property(property="category", type="object"),
+     *                 @OA\Property(property="publication", type="object", nullable=true),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Cannot view article", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=404, description="Implicit route model binding when invalid id"),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function show(Request $request, Article $article): JsonResponse
@@ -187,17 +290,27 @@ class ArticleController extends Controller
      *     tags={"Articles"},
      *     summary="Update article metadata",
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer", example=42)),
      *     @OA\RequestBody(required=true,
      *         @OA\JsonContent(
-     *             @OA\Property(property="title", type="string"),
+     *             @OA\Property(property="title", type="string", maxLength=255),
      *             @OA\Property(property="abstract", type="string"),
      *             @OA\Property(property="keywords", type="string"),
-     *             @OA\Property(property="category_id", type="integer")
+     *             @OA\Property(property="category_id", type="integer", description="Existing category id")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Article updated"),
-     *     @OA\Response(response=403, description="Access denied")
+     *     @OA\Response(
+     *         response=200,
+     *         description="Updated ArticleResource",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Article updated successfully."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Cannot update", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=422, description="Validation failed", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function update(Request $request, Article $article): JsonResponse
@@ -232,9 +345,11 @@ class ArticleController extends Controller
      *     tags={"Articles"},
      *     summary="Delete (soft) an article",
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Article deleted"),
-     *     @OA\Response(response=403, description="Access denied")
+     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer", example=42)),
+     *     @OA\Response(response=200, description="Soft-deleted", @OA\JsonContent(@OA\Property(property="message", type="string", example="Article deleted successfully."))),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Cannot delete", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function destroy(Request $request, Article $article): JsonResponse
@@ -261,10 +376,12 @@ class ArticleController extends Controller
      *     tags={"Articles"},
      *     summary="Download the current PDF version of an article",
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="PDF file"),
-     *     @OA\Response(response=403, description="Access denied"),
-     *     @OA\Response(response=404, description="No version or file not found")
+     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer", example=42)),
+     *     @OA\Response(response=200, description="PDF binary (`application/pdf`)"),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Cannot download", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=404, description="No current version or PDF missing on disk", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function download(Request $request, Article $article): BinaryFileResponse|JsonResponse

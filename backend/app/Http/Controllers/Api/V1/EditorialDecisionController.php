@@ -29,18 +29,38 @@ class EditorialDecisionController extends Controller
      * @OA\Post(
      *     path="/articles/{article}/decision",
      *     tags={"Editorial Decisions"},
-     *     summary="Record a final editorial decision (editor only)",
+     *     summary="Record or update the final editorial decision (editor only)",
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer", example=42)),
      *     @OA\RequestBody(required=true,
      *         @OA\JsonContent(required={"decision","comments"},
-     *             @OA\Property(property="decision", type="string", enum={"accepted","rejected","revision_required"}),
-     *             @OA\Property(property="comments", type="string")
+     *             @OA\Property(property="decision", type="string", enum={"accepted","rejected","revision_required"}, example="accepted"),
+     *             @OA\Property(property="comments", type="string", example="Minor edits requested previously; now accepted.")
      *         )
      *     ),
-     *     @OA\Response(response=201, description="Decision recorded"),
-     *     @OA\Response(response=403, description="Access denied"),
-     *     @OA\Response(response=409, description="Status transition error")
+     *     @OA\Response(
+     *         response=201,
+     *         description="EditorialDecision persisted (`stage` finale)",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Final editorial decision recorded successfully."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer"),
+     *                 @OA\Property(property="article_id", type="integer"),
+     *                 @OA\Property(property="editor_id", type="integer"),
+     *                 @OA\Property(property="decision", type="string"),
+     *                 @OA\Property(property="stage", type="string", example="finale"),
+     *                 @OA\Property(property="comments", type="string"),
+     *                 @OA\Property(property="decided_at", type="string", format="date-time"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Not an editor / policy denied", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=422, description="Validation failed", @OA\JsonContent(ref="#/components/schemas/ValidationErrorResponse")),
+     *     @OA\Response(response=409, description="Workflow conflict", @OA\JsonContent(ref="#/components/schemas/ConflictResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function store(Request $request, Article $article): JsonResponse
@@ -154,11 +174,32 @@ class EditorialDecisionController extends Controller
      * @OA\Get(
      *     path="/articles/{article}/decision",
      *     tags={"Editorial Decisions"},
-     *     summary="Get the editorial decision and history for an article",
+     *     summary="Get latest finale decision + history for an article",
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Decision details"),
-     *     @OA\Response(response=403, description="Access denied")
+     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer", example=42)),
+     *     @OA\Response(
+     *         response=200,
+     *         description="latest/latest_final mirror finale row; history filtered to finale stage",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="latest", description="Latest finale EditorialDecision or null", type="object", nullable=true),
+     *                 @OA\Property(property="latest_proposal", type="object", nullable=true, example=null),
+     *                 @OA\Property(property="latest_final", description="Same as latest", type="object", nullable=true),
+     *                 @OA\Property(property="history", type="array",
+     *                     @OA\Items(type="object",
+     *                         @OA\Property(property="id", type="integer"),
+     *                         @OA\Property(property="stage", type="string", example="finale"),
+     *                         @OA\Property(property="decision", type="string"),
+     *                         @OA\Property(property="comments", type="string"),
+     *                         @OA\Property(property="editor", type="object", nullable=true)
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Author not owner or not staff", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function show(Request $request, Article $article): JsonResponse
