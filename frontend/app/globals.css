@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+/* ─── Font families ──────────────────────────────────────────────────────── */
+@theme {
+  --font-primary: var(--font-inter);
+}
+
+/* ─── Font weight shorthands ─────────────────────────────────────────────── */
+@layer utilities {
+  .font-primary-regular {
+    font-family: var(--font-primary);
+    font-weight: 400;
+  }
+  .font-primary-medium {
+    font-family: var(--font-primary);
+    font-weight: 500;
+  }
+  .font-primary-semibold {
+    font-family: var(--font-primary);
+    font-weight: 600;
+  }
+  .font-primary-bold {
+    font-family: var(--font-primary);
+    font-weight: 700;
+  }
+}
+
+/* ─── Border radius scale (design system values) ────────────────────────── */
+@theme {
+  --radius-sm: 6px;
+  --radius:    8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+}
+
+/* ─── Shadow tokens ──────────────────────────────────────────────────────── */
+@theme {
+  --shadow-card:   0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+  --shadow-panel:  0 4px 12px 0 rgb(0 0 0 / 0.08);
+  --shadow-dialog: 0 8px 32px 0 rgb(0 0 0 / 0.12);
+}
+
+/* ─── Color tokens ───────────────────────────────────────────────────────── */
+@theme {
+  /* Brand */
+  --color-brand-950: #0B1220;
+  --color-brand-900: #111827;
+  --color-brand-800: #1E293B;
+  --color-brand-700: #1D4ED8;
+  --color-brand-600: #2563EB;
+  --color-brand-500: #3B82F6;
+
+  /* Accent */
+  --color-accent-700: #0F766E;
+  --color-accent-600: #0D9488;
+  --color-accent-500: #14B8A6;
+
+  /* Backgrounds */
+  --color-app: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-soft-blue: #EFF6FF;
+  --color-soft-teal: #F0FDFA;
+
+  /* Text / general */
+  --color-primary: #0F172A;
+  --color-secondary: #475569;
+  --color-inverse: #FFFFFF;
+
+  /* Borders */
+  --color-subtle: #E2E8F0;
+  --color-strong: #CBD5E1;
+
+  /* Status */
+  --color-success: #16A34A;
+  --color-warning: #D97706;
+  --color-danger: #DC2626;
+  --color-info: #2563EB;
+
+  /* Roles */
+  --color-role-admin: #7C3AED;
+  --color-role-editor: #2563EB;
+  --color-role-reviewer: #0D9488;
+  --color-role-author: #EA580C;
+  --color-role-reader: #64748B;
+}
+
+/* ─── Semantic split: bg-muted ≠ text-muted ─────────────────────────────── */
+/* bg-muted (#F1F5F9) and text-muted (#64748B) are intentionally different   */
+/* values, so they cannot share a single @theme color token.                 */
+@layer utilities {
+  .bg-muted {
+    background-color: #F1F5F9;
+  }
+  .text-muted {
+    color: #64748B;
+  }
+  .border-muted {
+    border-color: #F1F5F9;
+  }
+}
+
+/* ─── Base resets ────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--color-app);
+  color: var(--color-primary);
+  font-family: var(--font-primary), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
