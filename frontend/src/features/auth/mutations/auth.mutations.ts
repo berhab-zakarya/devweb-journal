@@ -1,58 +1,67 @@
-/**
- * Auth Mutations
- *
- * TanStack Query mutation factories.
- * Each mutation handles cache invalidation automatically.
- */
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { authService } from '../services/auth.service';
 import { authKeys } from '../queries/auth.keys';
 import type {
-  AuthDraft,
-  AuthUpdatePayload,
+  LoginPayload,
+  RegisterPayload,
+  ForgotPasswordPayload,
+  ResetPasswordPayload,
+  UpdateProfilePayload,
 } from '../types/Auth.types';
 
-/**
- * Create a new auth.
- */
-export function useCreateAuthMutation() {
-  const queryClient = useQueryClient();
+const isBrowser = globalThis.window !== undefined;
 
+export function useLoginMutation() {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: AuthDraft) => authService.create(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: authKeys.lists() });
+    mutationFn: (payload: LoginPayload) => authService.login(payload),
+    onSuccess: (data) => {
+      if (isBrowser) {
+        globalThis.window.localStorage.setItem('access_token', data.access_token);
+      }
+      queryClient.invalidateQueries({ queryKey: authKeys.me() });
     },
   });
 }
 
-/**
- * Update an existing auth.
- */
-export function useUpdateAuthMutation() {
-  const queryClient = useQueryClient();
-
+export function useRegisterMutation() {
   return useMutation({
-    mutationFn: (payload: AuthUpdatePayload) => authService.update(payload),
-    onSuccess: (updated) => {
-      queryClient.invalidateQueries({ queryKey: authKeys.lists() });
-      queryClient.setQueryData(authKeys.detail(updated.id), updated);
+    mutationFn: (payload: RegisterPayload) => authService.register(payload),
+  });
+}
+
+export function useLogoutMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: authService.logout,
+    onSettled: () => {
+      if (isBrowser) {
+        globalThis.window.localStorage.removeItem('access_token');
+        queryClient.clear();
+        globalThis.window.location.href = '/login';
+      }
     },
   });
 }
 
-/**
- * Delete a auth.
- */
-export function useDeleteAuthMutation() {
+export function useUpdateProfileMutation() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: (id: string) => authService.delete(id),
-    onSuccess: (_data, id) => {
-      queryClient.invalidateQueries({ queryKey: authKeys.lists() });
-      queryClient.removeQueries({ queryKey: authKeys.detail(id) });
+    mutationFn: (payload: UpdateProfilePayload) => authService.updateProfile(payload),
+    onSuccess: (user) => {
+      queryClient.setQueryData(authKeys.me(), user);
     },
+  });
+}
+
+export function useForgotPasswordMutation() {
+  return useMutation({
+    mutationFn: (payload: ForgotPasswordPayload) => authService.forgotPassword(payload),
+  });
+}
+
+export function useResetPasswordMutation() {
+  return useMutation({
+    mutationFn: (payload: ResetPasswordPayload) => authService.resetPassword(payload),
   });
 }

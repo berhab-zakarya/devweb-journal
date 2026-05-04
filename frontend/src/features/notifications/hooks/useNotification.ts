@@ -1,12 +1,6 @@
-/**
- * useNotification hook
- *
- * Fetches a single notification by ID.
- */
+import { useNotifications } from './useNotifications';
 
-import { useQuery } from '@tanstack/react-query';
-import { notificationsDetailQueryOptions } from '../queries/notifications.queries';
-
-export function useNotification(id: string) {
-  return useQuery(notificationsDetailQueryOptions(id));
+export function useNotification(id: number) {
+  const { data } = useNotifications();
+  return data?.data.find((n) => n.id === id) ?? null;
 }

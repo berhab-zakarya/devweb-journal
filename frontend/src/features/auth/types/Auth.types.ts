@@ -1,38 +1,47 @@
-/**
- * Auth Domain Types
- *
- * All types for the auth feature live here.
- * Do NOT import types from other features — use shared/types if needed.
- */
-
-export interface Auth {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  // TODO: add your Auth-specific fields here
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  email_verified_at: string | null;
+  roles: string[];
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string | null;
 }
 
-export interface AuthDraft {
-  // TODO: fields required to create a new Auth
+export interface LoginPayload {
+  email: string;
+  password: string;
 }
 
-export interface AuthUpdatePayload {
-  id: string;
-  // TODO: fields allowed to update
+export interface RegisterPayload {
+  name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
 }
 
-export interface AuthFilters {
-  search?: string;
-  page?: number;
-  pageSize?: number;
-  sortBy?: keyof Auth;
-  sortOrder?: 'asc' | 'desc';
+export interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  user: User;
 }
 
-export interface AuthsResponse {
-  data: Auth[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface ResetPasswordPayload {
+  token: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+}
+
+export interface UpdateProfilePayload {
+  name: string;
+  email: string;
+  current_password?: string;
+  password?: string;
+  password_confirmation?: string;
 }

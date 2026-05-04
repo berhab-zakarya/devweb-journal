@@ -1,38 +1,43 @@
-/**
- * User Domain Types
- *
- * All types for the users feature live here.
- * Do NOT import types from other features — use shared/types if needed.
- */
+export type UserRole = 'admin' | 'editor' | 'reviewer' | 'author' | 'reader';
 
 export interface User {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  // TODO: add your User-specific fields here
-}
-
-export interface UserDraft {
-  // TODO: fields required to create a new User
-}
-
-export interface UserUpdatePayload {
-  id: string;
-  // TODO: fields allowed to update
+  id: number;
+  name: string;
+  email: string;
+  roles: UserRole[];
+  email_verified_at: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface UserFilters {
   search?: string;
+  role?: UserRole;
+  sort_by?: string;
+  sort_direction?: 'asc' | 'desc';
   page?: number;
-  pageSize?: number;
-  sortBy?: keyof User;
-  sortOrder?: 'asc' | 'desc';
 }
 
-export interface UsersResponse {
+export interface PaginatedUsers {
   data: User[];
+  current_page: number;
+  last_page: number;
+  per_page: number;
   total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+}
+
+export interface CreateUserPayload {
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+}
+
+export interface UpdateUserPayload {
+  name: string;
+  email: string;
+}
+
+export interface AssignRolePayload {
+  role: UserRole;
 }

@@ -1,58 +1,22 @@
-/**
- * Assignment Mutations
- *
- * TanStack Query mutation factories.
- * Each mutation handles cache invalidation automatically.
- */
+'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { assignmentsService } from '../services/assignments.service';
 import { assignmentsKeys } from '../queries/assignments.keys';
-import type {
-  AssignmentDraft,
-  AssignmentUpdatePayload,
-} from '../types/Assignment.types';
+import type { SubmitReviewPayload } from '../types/Assignment.types';
 
-/**
- * Create a new assignment.
- */
-export function useCreateAssignmentMutation() {
-  const queryClient = useQueryClient();
-
+export function useRespondMutation(assignmentId: number) {
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: (payload: AssignmentDraft) => assignmentsService.create(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: assignmentsKeys.lists() });
-    },
+    mutationFn: (response: 'accepted' | 'decline') => assignmentsService.respond(assignmentId, response),
+    onSuccess: () => qc.invalidateQueries({ queryKey: assignmentsKeys.detail(assignmentId) }),
   });
 }
 
-/**
- * Update an existing assignment.
- */
-export function useUpdateAssignmentMutation() {
-  const queryClient = useQueryClient();
-
+export function useSubmitReviewMutation(assignmentId: number) {
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: (payload: AssignmentUpdatePayload) => assignmentsService.update(payload),
-    onSuccess: (updated) => {
-      queryClient.invalidateQueries({ queryKey: assignmentsKeys.lists() });
-      queryClient.setQueryData(assignmentsKeys.detail(updated.id), updated);
-    },
-  });
-}
-
-/**
- * Delete a assignment.
- */
-export function useDeleteAssignmentMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => assignmentsService.delete(id),
-    onSuccess: (_data, id) => {
-      queryClient.invalidateQueries({ queryKey: assignmentsKeys.lists() });
-      queryClient.removeQueries({ queryKey: assignmentsKeys.detail(id) });
-    },
+    mutationFn: (payload: SubmitReviewPayload) => assignmentsService.submitReview(assignmentId, payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: assignmentsKeys.review(assignmentId) }),
   });
 }

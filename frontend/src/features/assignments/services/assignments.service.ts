@@ -1,59 +1,27 @@
-/**
- * Assignment Service
- *
- * This is the ONLY place where API calls for the assignments feature are made.
- * Uses the shared Axios client — never instantiate Axios directly here.
- */
-
 import { apiClient } from '@/shared/api/client';
 import { ENDPOINTS } from '@/shared/api/endpoints.constants';
-import type {
-  Assignment,
-  AssignmentDraft,
-  AssignmentUpdatePayload,
-  AssignmentFilters,
-  AssignmentsResponse,
-} from '../types/Assignment.types';
+import type { Assignment, AssignmentReview, SubmitReviewPayload } from '../types/Assignment.types';
 
 const BASE = ENDPOINTS.ASSIGNMENTS_BASE;
 
 export const assignmentsService = {
-  /**
-   * Fetch a paginated list of assignments.
-   */
-  getAll: async (filters?: AssignmentFilters): Promise<AssignmentsResponse> => {
-    const { data } = await apiClient.get<AssignmentsResponse>(BASE, { params: filters });
-    return data;
-  },
-
-  /**
-   * Fetch a single assignment by ID.
-   */
-  getById: async (id: string): Promise<Assignment> => {
+  getById: async (id: number): Promise<Assignment> => {
     const { data } = await apiClient.get<Assignment>(`${BASE}/${id}`);
     return data;
   },
 
-  /**
-   * Create a new assignment.
-   */
-  create: async (payload: AssignmentDraft): Promise<Assignment> => {
-    const { data } = await apiClient.post<Assignment>(BASE, payload);
+  respond: async (id: number, response: 'accepted' | 'decline'): Promise<Assignment> => {
+    const { data } = await apiClient.patch<Assignment>(`${BASE}/${id}/respond`, { response });
     return data;
   },
 
-  /**
-   * Update an existing assignment.
-   */
-  update: async ({ id, ...payload }: AssignmentUpdatePayload): Promise<Assignment> => {
-    const { data } = await apiClient.patch<Assignment>(`${BASE}/${id}`, payload);
+  getReview: async (id: number): Promise<AssignmentReview> => {
+    const { data } = await apiClient.get<AssignmentReview>(`${BASE}/${id}/review`);
     return data;
   },
 
-  /**
-   * Delete a assignment by ID.
-   */
-  delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`${BASE}/${id}`);
+  submitReview: async (id: number, payload: SubmitReviewPayload): Promise<AssignmentReview> => {
+    const { data } = await apiClient.post<AssignmentReview>(`${BASE}/${id}/review`, payload);
+    return data;
   },
 } as const;

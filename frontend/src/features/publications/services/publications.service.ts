@@ -1,59 +1,41 @@
-/**
- * Publication Service
- *
- * This is the ONLY place where API calls for the publications feature are made.
- * Uses the shared Axios client — never instantiate Axios directly here.
- */
-
 import { apiClient } from '@/shared/api/client';
 import { ENDPOINTS } from '@/shared/api/endpoints.constants';
 import type {
   Publication,
-  PublicationDraft,
-  PublicationUpdatePayload,
+  PaginatedPublications,
   PublicationFilters,
-  PublicationsResponse,
+  PublishArticlePayload,
+  Volume,
 } from '../types/Publication.types';
 
 const BASE = ENDPOINTS.PUBLICATIONS_BASE;
+const ARTICLES = ENDPOINTS.ARTICLES_BASE;
 
 export const publicationsService = {
-  /**
-   * Fetch a paginated list of publications.
-   */
-  getAll: async (filters?: PublicationFilters): Promise<PublicationsResponse> => {
-    const { data } = await apiClient.get<PublicationsResponse>(BASE, { params: filters });
+  getAll: async (filters?: PublicationFilters): Promise<PaginatedPublications> => {
+    const { data } = await apiClient.get<PaginatedPublications>(BASE, { params: filters });
     return data;
   },
 
-  /**
-   * Fetch a single publication by ID.
-   */
-  getById: async (id: string): Promise<Publication> => {
+  getById: async (id: number): Promise<Publication> => {
     const { data } = await apiClient.get<Publication>(`${BASE}/${id}`);
     return data;
   },
 
-  /**
-   * Create a new publication.
-   */
-  create: async (payload: PublicationDraft): Promise<Publication> => {
-    const { data } = await apiClient.post<Publication>(BASE, payload);
+  getVolumes: async (): Promise<Volume[]> => {
+    const { data } = await apiClient.get<Volume[]>(`${BASE}/volumes`);
     return data;
   },
 
-  /**
-   * Update an existing publication.
-   */
-  update: async ({ id, ...payload }: PublicationUpdatePayload): Promise<Publication> => {
-    const { data } = await apiClient.patch<Publication>(`${BASE}/${id}`, payload);
+  download: async (id: number): Promise<Blob> => {
+    const { data } = await apiClient.get<Blob>(`${BASE}/${id}/download`, {
+      responseType: 'blob',
+    });
     return data;
   },
 
-  /**
-   * Delete a publication by ID.
-   */
-  delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`${BASE}/${id}`);
+  publish: async (articleId: number, payload: PublishArticlePayload): Promise<Publication> => {
+    const { data } = await apiClient.post<Publication>(`${ARTICLES}/${articleId}/publish`, payload);
+    return data;
   },
 } as const;

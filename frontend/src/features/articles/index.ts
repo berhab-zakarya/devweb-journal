@@ -1,35 +1,52 @@
-/**
- * Article Feature — Public API
- *
- * Only export what consumers of this feature need.
- * Internal implementation details remain private.
- */
-
-// Types
 export type {
   Article,
-  ArticleDraft,
-  ArticleUpdatePayload,
+  ArticleVersion,
+  ArticleAssignment,
+  ArticleReview,
+  EditorialDecision,
+  ReviewerSearchResult,
   ArticleFilters,
-  ArticlesResponse,
+  PaginatedArticles,
+  CreateArticlePayload,
+  UpdateArticlePayload,
+  CreateVersionPayload,
+  CreateDecisionPayload,
+  AssignReviewersPayload,
+  RespondAssignmentPayload,
+  SubmitReviewPayload,
+  ArticleStatus,
+  DecisionType,
+  AssignmentStatus,
+  AssignmentResponse,
 } from './types/Article.types';
 
-// Hooks (primary interface for components)
 export { useArticles } from './hooks/useArticles';
 export { useArticle } from './hooks/useArticle';
+export { useArticleVersions } from './hooks/useArticleVersions';
+export { useArticleAssignments } from './hooks/useArticleAssignments';
+export { useArticleDecision } from './hooks/useArticleDecision';
+export { useArticleReviews } from './hooks/useArticleReviews';
 
-// Mutations
 export {
   useCreateArticleMutation,
   useUpdateArticleMutation,
   useDeleteArticleMutation,
+  useCreateVersionMutation,
+  useAssignReviewersMutation,
+  useDeleteAssignmentMutation,
+  useRespondAssignmentMutation,
+  useSubmitReviewMutation,
+  useCreateDecisionMutation,
 } from './mutations/articles.mutations';
 
-// Query options (for prefetching in loaders/server components)
 export {
   articlesListQueryOptions,
   articlesDetailQueryOptions,
+  articleVersionsQueryOptions,
+  articleAssignmentsQueryOptions,
+  articleReviewsQueryOptions,
+  articleDecisionQueryOptions,
+  assignmentReviewQueryOptions,
 } from './queries/articles.queries';
 
-// Query keys (for targeted invalidation from other features via shared/)
 export { articlesKeys } from './queries/articles.keys';

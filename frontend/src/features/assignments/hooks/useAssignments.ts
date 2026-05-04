@@ -1,14 +1,7 @@
-/**
- * useAssignments hook
- *
- * Composes query options + useQuery for listing assignments.
- * This is what components import — never useQuery directly.
- */
-
 import { useQuery } from '@tanstack/react-query';
-import { assignmentsListQueryOptions } from '../queries/assignments.queries';
-import type { AssignmentFilters } from '../types/Assignment.types';
+import { assignmentsDetailQueryOptions } from '../queries/assignments.queries';
 
-export function useAssignments(filters?: AssignmentFilters) {
-  return useQuery(assignmentsListQueryOptions(filters));
+// Alias kept for backward compat — use useAssignment(id) for specific assignments
+export function useAssignments(id: number) {
+  return useQuery(assignmentsDetailQueryOptions(id));
 }

@@ -25,6 +25,22 @@
   }
 }
 
+/* ─── Border radius scale (design system values) ────────────────────────── */
+@theme {
+  --radius-sm: 6px;
+  --radius:    8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+}
+
+/* ─── Shadow tokens ──────────────────────────────────────────────────────── */
+@theme {
+  --shadow-card:   0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+  --shadow-panel:  0 4px 12px 0 rgb(0 0 0 / 0.08);
+  --shadow-dialog: 0 8px 32px 0 rgb(0 0 0 / 0.12);
+}
+
 /* ─── Color tokens ───────────────────────────────────────────────────────── */
 @theme {
   /* Brand */

@@ -1,59 +1,37 @@
-/**
- * Category Service
- *
- * This is the ONLY place where API calls for the categories feature are made.
- * Uses the shared Axios client — never instantiate Axios directly here.
- */
-
 import { apiClient } from '@/shared/api/client';
 import { ENDPOINTS } from '@/shared/api/endpoints.constants';
 import type {
   Category,
-  CategoryDraft,
-  CategoryUpdatePayload,
+  CreateCategoryPayload,
+  UpdateCategoryPayload,
   CategoryFilters,
-  CategoriesResponse,
+  PaginatedCategories,
 } from '../types/Category.types';
 
 const BASE = ENDPOINTS.CATEGORIES_BASE;
 
 export const categoriesService = {
-  /**
-   * Fetch a paginated list of categories.
-   */
-  getAll: async (filters?: CategoryFilters): Promise<CategoriesResponse> => {
-    const { data } = await apiClient.get<CategoriesResponse>(BASE, { params: filters });
+  getAll: async (filters?: CategoryFilters): Promise<PaginatedCategories> => {
+    const { data } = await apiClient.get<PaginatedCategories>(BASE, { params: filters });
     return data;
   },
 
-  /**
-   * Fetch a single category by ID.
-   */
-  getById: async (id: string): Promise<Category> => {
-    const { data } = await apiClient.get<Category>(`${BASE}/${id}`);
+  getList: async (): Promise<Category[]> => {
+    const { data } = await apiClient.get<Category[]>(BASE);
     return data;
   },
 
-  /**
-   * Create a new category.
-   */
-  create: async (payload: CategoryDraft): Promise<Category> => {
+  create: async (payload: CreateCategoryPayload): Promise<Category> => {
     const { data } = await apiClient.post<Category>(BASE, payload);
     return data;
   },
 
-  /**
-   * Update an existing category.
-   */
-  update: async ({ id, ...payload }: CategoryUpdatePayload): Promise<Category> => {
-    const { data } = await apiClient.patch<Category>(`${BASE}/${id}`, payload);
+  update: async ({ id, ...payload }: UpdateCategoryPayload): Promise<Category> => {
+    const { data } = await apiClient.put<Category>(`${BASE}/${id}`, payload);
     return data;
   },
 
-  /**
-   * Delete a category by ID.
-   */
-  delete: async (id: string): Promise<void> => {
+  delete: async (id: number): Promise<void> => {
     await apiClient.delete(`${BASE}/${id}`);
   },
 } as const;

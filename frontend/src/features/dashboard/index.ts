@@ -1,35 +1,14 @@
-/**
- * Dashboard Feature — Public API
- *
- * Only export what consumers of this feature need.
- * Internal implementation details remain private.
- */
-
 // Types
 export type {
-  Dashboard,
-  DashboardDraft,
-  DashboardUpdatePayload,
-  DashboardFilters,
-  DashboardsResponse,
+  DashboardItem,
+  DashboardSummary,
 } from './types/Dashboard.types';
 
-// Hooks (primary interface for components)
-export { useDashboards } from './hooks/useDashboards';
+// Hooks
 export { useDashboard } from './hooks/useDashboard';
 
-// Mutations
-export {
-  useCreateDashboardMutation,
-  useUpdateDashboardMutation,
-  useDeleteDashboardMutation,
-} from './mutations/dashboard.mutations';
+// Query options
+export { dashboardSummaryQueryOptions } from './queries/dashboard.queries';
 
-// Query options (for prefetching in loaders/server components)
-export {
-  dashboardListQueryOptions,
-  dashboardDetailQueryOptions,
-} from './queries/dashboard.queries';
-
-// Query keys (for targeted invalidation from other features via shared/)
+// Query keys
 export { dashboardKeys } from './queries/dashboard.keys';

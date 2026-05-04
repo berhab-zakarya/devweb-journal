@@ -1,58 +1,38 @@
-/**
- * User Mutations
- *
- * TanStack Query mutation factories.
- * Each mutation handles cache invalidation automatically.
- */
+'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { usersService } from '../services/users.service';
 import { usersKeys } from '../queries/users.keys';
-import type {
-  UserDraft,
-  UserUpdatePayload,
-} from '../types/User.types';
+import type { CreateUserPayload, UpdateUserPayload, AssignRolePayload } from '../types/User.types';
 
-/**
- * Create a new user.
- */
 export function useCreateUserMutation() {
-  const queryClient = useQueryClient();
-
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: (payload: UserDraft) => usersService.create(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
-    },
+    mutationFn: (payload: CreateUserPayload) => usersService.create(payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: usersKeys.lists() }),
   });
 }
 
-/**
- * Update an existing user.
- */
-export function useUpdateUserMutation() {
-  const queryClient = useQueryClient();
-
+export function useUpdateUserMutation(id: number) {
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: (payload: UserUpdatePayload) => usersService.update(payload),
-    onSuccess: (updated) => {
-      queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
-      queryClient.setQueryData(usersKeys.detail(updated.id), updated);
-    },
+    mutationFn: (payload: UpdateUserPayload) => usersService.update(id, payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: usersKeys.lists() }),
   });
 }
 
-/**
- * Delete a user.
- */
 export function useDeleteUserMutation() {
-  const queryClient = useQueryClient();
-
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => usersService.delete(id),
-    onSuccess: (_data, id) => {
-      queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
-      queryClient.removeQueries({ queryKey: usersKeys.detail(id) });
-    },
+    mutationFn: (id: number) => usersService.delete(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: usersKeys.lists() }),
+  });
+}
+
+export function useAssignRoleMutation(id: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: AssignRolePayload) => usersService.assignRole(id, payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: usersKeys.lists() }),
   });
 }

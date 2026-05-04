@@ -5,7 +5,7 @@
  * Compose these inside hooks — never call useQuery directly in components.
  */
 
-import { queryOptions, infiniteQueryOptions } from '@tanstack/react-query';
+import { queryOptions } from '@tanstack/react-query';
 import { reviewsService } from '../services/reviews.service';
 import { reviewsKeys } from './reviews.keys';
 import type { ReviewFilters } from '../types/Review.types';
