@@ -37,7 +37,7 @@ namespace App\Http\Controllers;
  *         property="errors",
  *         type="object",
  *         @OA\AdditionalProperties(type="array", @OA\Items(type="string")),
- *         example={"email":["The email field is required."]}
+ *         example={"email"={"The email field is required."}}
  *     )
  * )
  *
