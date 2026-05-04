@@ -17,11 +17,43 @@ class DashboardController extends Controller
 {
     /**
      * @OA\Get(
-     *     path="/dashboard",
+     *     path="/dashboard/summary",
      *     tags={"Dashboard"},
      *     summary="Get role-based dashboard statistics",
      *     security={{"sanctum":{}}},
-     *     @OA\Response(response=200, description="Dashboard stats"),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Role-based dashboard stats",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="role", type="string", example="author"),
+     *                 @OA\Property(property="requires_attention", type="array",
+     *                     @OA\Items(
+     *                         @OA\Property(property="key", type="string"),
+     *                         @OA\Property(property="label", type="string"),
+     *                         @OA\Property(property="count", type="integer"),
+     *                         @OA\Property(property="route", type="string")
+     *                     )
+     *                 ),
+     *                 @OA\Property(property="pending", type="array",
+     *                     @OA\Items(
+     *                         @OA\Property(property="key", type="string"),
+     *                         @OA\Property(property="label", type="string"),
+     *                         @OA\Property(property="count", type="integer"),
+     *                         @OA\Property(property="route", type="string")
+     *                     )
+     *                 ),
+     *                 @OA\Property(property="completed", type="array",
+     *                     @OA\Items(
+     *                         @OA\Property(property="key", type="string"),
+     *                         @OA\Property(property="label", type="string"),
+     *                         @OA\Property(property="count", type="integer"),
+     *                         @OA\Property(property="route", type="string")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
      *     @OA\Response(response=401, description="Unauthenticated")
      * )
      */

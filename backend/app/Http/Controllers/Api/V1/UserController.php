@@ -206,7 +206,7 @@ class UserController extends Controller
      * Assign a primary role to a user.
      *
      * @OA\Post(
-     *     path="/users/{user}/role",
+     *     path="/users/{user}/assign-role",
      *     tags={"Users"},
      *     summary="Assign a role to a user (admin only)",
      *     security={{"sanctum":{}}},
