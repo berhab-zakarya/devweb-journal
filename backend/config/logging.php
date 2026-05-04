@@ -54,8 +54,34 @@ return [
 
         'stack' => [
             'driver' => 'stack',
-            'channels' => explode(',', (string) env('LOG_STACK', 'single')),
+            'channels' => ['app', 'auth', 'jobs'],
             'ignore_exceptions' => false,
+        ],
+        // Custom daily log channel for application logs
+        'app' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/app/app.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'tap' => [App\Logging\CustomizeFormatter::class],
+        ],
+
+        // Custom daily log channel for authentication logs
+        'auth' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/auth/auth.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'tap' => [App\Logging\CustomizeFormatter::class],
+        ],
+
+        // Custom daily log channel for job logs
+        'jobs' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/jobs/jobs.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'tap' => [App\Logging\CustomizeFormatter::class],
         ],
 
         'single' => [
