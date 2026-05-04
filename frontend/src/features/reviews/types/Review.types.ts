@@ -6,33 +6,31 @@
  */
 
 export interface Review {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  // TODO: add your Review-specific fields here
+  id: number;
+  assignment_id: number;
+  comments: string;
+  recommendation: string;
+  is_draft: boolean;
+  created_at: string;
+  updated_at?: string;
 }
 
 export interface ReviewDraft {
-  // TODO: fields required to create a new Review
+  assignment_id: number;
+  comments: string;
+  recommendation: string;
+  is_draft: boolean;
 }
 
 export interface ReviewUpdatePayload {
-  id: string;
-  // TODO: fields allowed to update
+  assignment_id: number;
+  comments: string;
+  recommendation: string;
+  is_draft: boolean;
 }
 
 export interface ReviewFilters {
-  search?: string;
-  page?: number;
-  pageSize?: number;
-  sortBy?: keyof Review;
-  sortOrder?: 'asc' | 'desc';
+  article_id: number;
 }
 
-export interface ReviewsResponse {
-  data: Review[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
+export type ReviewsResponse = Review[];

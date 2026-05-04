@@ -9,6 +9,7 @@ import type {
   ReviewerSearchResult,
   ArticleFilters,
   PaginatedArticles,
+  ArticleVersionsResponse,
   CreateArticlePayload,
   UpdateArticlePayload,
   CreateVersionPayload,
@@ -63,14 +64,16 @@ export const articlesService = {
 
   // Versions
   getVersions: async (articleId: number): Promise<ArticleVersion[]> => {
-    const { data } = await apiClient.get<ArticleVersion[]>(`${BASE}/${articleId}/versions`);
-    return data;
+    const { data } = await apiClient.get<ArticleVersionsResponse>(`${BASE}/${articleId}/versions`);
+    return data.data;
   },
 
   createVersion: async (articleId: number, payload: CreateVersionPayload): Promise<ArticleVersion> => {
     const form = new FormData();
     form.append('pdf', payload.pdf);
-    form.append('change_summary', payload.change_summary);
+    if (payload.change_summary?.trim()) {
+      form.append('change_summary', payload.change_summary);
+    }
     const { data } = await apiClient.post<ArticleVersion>(`${BASE}/${articleId}/versions`, form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });

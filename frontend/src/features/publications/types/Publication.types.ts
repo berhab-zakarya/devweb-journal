@@ -12,16 +12,16 @@ export interface Publication {
   article_id: number;
   article?: PublicationArticle;
   doi?: string;
-  volume?: string;
-  issue?: string;
+  volume?: number;
+  issue?: number;
   published_at: string;
   created_at: string;
   updated_at: string;
 }
 
 export interface Volume {
-  volume: string;
-  issue: string;
+  volume: number;
+  issue: number;
   count: number;
 }
 
@@ -41,6 +41,6 @@ export interface PaginatedPublications {
 
 export interface PublishArticlePayload {
   doi?: string;
-  volume?: string;
-  issue?: string;
+  volume?: number;
+  issue?: number;
 }

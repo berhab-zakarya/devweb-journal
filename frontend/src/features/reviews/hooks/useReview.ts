@@ -7,6 +7,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { reviewsDetailQueryOptions } from '../queries/reviews.queries';
 
-export function useReview(id: string) {
-  return useQuery(reviewsDetailQueryOptions(id));
+export function useReview(assignmentId: number) {
+  return useQuery(reviewsDetailQueryOptions(assignmentId));
 }

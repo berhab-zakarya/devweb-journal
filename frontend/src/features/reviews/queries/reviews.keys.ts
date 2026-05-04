@@ -22,5 +22,5 @@ export const reviewsKeys = {
   details: () => [...reviewsKeys.all, 'detail'] as const,
 
   /** Single item detail */
-  detail: (id: string) => [...reviewsKeys.details(), id] as const,
+  detail: (assignmentId: number) => [...reviewsKeys.details(), assignmentId] as const,
 } as const;

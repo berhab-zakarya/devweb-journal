@@ -22,7 +22,6 @@ export { useReview } from './hooks/useReview';
 export {
   useCreateReviewMutation,
   useUpdateReviewMutation,
-  useDeleteReviewMutation,
 } from './mutations/reviews.mutations';
 
 // Query options (for prefetching in loaders/server components)

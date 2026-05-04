@@ -15,45 +15,44 @@ import type {
   ReviewsResponse,
 } from '../types/Review.types';
 
-const BASE = ENDPOINTS.REVIEWS_BASE;
+const ASSIGNMENTS = ENDPOINTS.ASSIGNMENTS_BASE;
+const ARTICLES = ENDPOINTS.ARTICLES_BASE;
 
 export const reviewsService = {
   /**
-   * Fetch a paginated list of reviews.
+   * Fetch reviews for a given article.
    */
   getAll: async (filters?: ReviewFilters): Promise<ReviewsResponse> => {
-    const { data } = await apiClient.get<ReviewsResponse>(BASE, { params: filters });
+    if (!filters?.article_id) {
+      return [];
+    }
+    const { data } = await apiClient.get<ReviewsResponse>(`${ARTICLES}/${filters.article_id}/reviews`);
     return data;
   },
 
   /**
-   * Fetch a single review by ID.
+   * Fetch a review by assignment ID.
    */
-  getById: async (id: string): Promise<Review> => {
-    const { data } = await apiClient.get<Review>(`${BASE}/${id}`);
+  getById: async (assignmentId: number): Promise<Review> => {
+    const { data } = await apiClient.get<Review>(`${ASSIGNMENTS}/${assignmentId}/review`);
     return data;
   },
 
   /**
-   * Create a new review.
+   * Submit (or save draft) review for an assignment.
    */
   create: async (payload: ReviewDraft): Promise<Review> => {
-    const { data } = await apiClient.post<Review>(BASE, payload);
+    const { assignment_id, ...body } = payload;
+    const { data } = await apiClient.post<Review>(`${ASSIGNMENTS}/${assignment_id}/review`, body);
     return data;
   },
 
   /**
-   * Update an existing review.
+   * Submit updated review content for an assignment.
    */
-  update: async ({ id, ...payload }: ReviewUpdatePayload): Promise<Review> => {
-    const { data } = await apiClient.patch<Review>(`${BASE}/${id}`, payload);
+  update: async (payload: ReviewUpdatePayload): Promise<Review> => {
+    const { assignment_id, ...body } = payload;
+    const { data } = await apiClient.post<Review>(`${ASSIGNMENTS}/${assignment_id}/review`, body);
     return data;
-  },
-
-  /**
-   * Delete a review by ID.
-   */
-  delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`${BASE}/${id}`);
   },
 } as const;

@@ -22,9 +22,9 @@ export interface RegisterPayload {
 }
 
 export interface LoginResponse {
-  access_token: string;
-  token_type: string;
-  user: User;
+  message?: string;
+  user?: User;
+  [key: string]: unknown;
 }
 
 export interface ForgotPasswordPayload {

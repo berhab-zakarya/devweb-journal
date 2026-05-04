@@ -9,10 +9,9 @@
 export const ENDPOINTS = {
   // [zakarya:inject:endpoints]
   ASSIGNMENTS_BASE: '/assignments',
-  REVIEWS_BASE: '/reviews',
   PUBLICATIONS_BASE: '/publications',
   NOTIFICATIONS_BASE: '/notifications',
-  DASHBOARD_BASE: '/dashboard',
+  DASHBOARD_BASE: '/dashboard/summary',
   CATEGORIES_BASE: '/categories',
   AUTH_BASE: '/auth',
   USERS_BASE: '/users',

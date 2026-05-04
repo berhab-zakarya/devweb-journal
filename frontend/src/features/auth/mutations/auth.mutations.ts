@@ -15,10 +15,7 @@ export function useLoginMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: LoginPayload) => authService.login(payload),
-    onSuccess: (data) => {
-      if (isBrowser) {
-        globalThis.window.localStorage.setItem('access_token', data.access_token);
-      }
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: authKeys.me() });
     },
   });
@@ -36,7 +33,6 @@ export function useLogoutMutation() {
     mutationFn: authService.logout,
     onSettled: () => {
       if (isBrowser) {
-        globalThis.window.localStorage.removeItem('access_token');
         queryClient.clear();
         globalThis.window.location.href = '/login';
       }

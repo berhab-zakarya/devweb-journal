@@ -23,11 +23,11 @@ import { useArticleVersions } from '../hooks/useArticleVersions';
 import { useCreateVersionMutation } from '../mutations/articles.mutations';
 
 const schema = z.object({
-  change_summary: z.string().min(1, 'Change summary is required'),
+  change_summary: z.string().trim().optional(),
 });
 type FormData = z.infer<typeof schema>;
 
-export function ArticleVersionsPage({ id }: { id: number }) {
+export function ArticleVersionsPage({ id }: Readonly<{ id: number }>) {
   const versionsQuery = useArticleVersions(id);
   const createVersion = useCreateVersionMutation(id);
   const versions = versionsQuery.data ?? [];
@@ -111,7 +111,7 @@ export function ArticleVersionsPage({ id }: { id: number }) {
                     )}
                   </div>
                   <span className="text-xs text-muted whitespace-nowrap ml-4">
-                    {new Date(v.created_at).toLocaleDateString()}
+                    {new Date(v.submitted_at).toLocaleDateString()}
                   </span>
                 </li>
               ))}
@@ -146,7 +146,7 @@ export function ArticleVersionsPage({ id }: { id: number }) {
               />
             </FormField>
 
-            <FormField id="change_summary" label="Change Summary" required error={errors.change_summary?.message}>
+            <FormField id="change_summary" label="Change Summary" error={errors.change_summary?.message}>
               <Textarea
                 id="change_summary"
                 rows={3}

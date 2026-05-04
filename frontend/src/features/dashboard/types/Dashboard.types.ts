@@ -11,3 +11,7 @@ export interface DashboardSummary {
   pending: DashboardItem[];
   completed: DashboardItem[];
 }
+
+export interface DashboardSummaryResponse {
+  data: DashboardSummary;
+}
