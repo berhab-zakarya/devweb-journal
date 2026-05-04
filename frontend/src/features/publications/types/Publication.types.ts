@@ -1,38 +1,46 @@
-/**
- * Publication Domain Types
- *
- * All types for the publications feature live here.
- * Do NOT import types from other features — use shared/types if needed.
- */
+export interface PublicationArticle {
+  id: number;
+  title: string;
+  abstract: string;
+  keywords: string;
+  author?: { id: number; name: string; email: string };
+  category?: { id: number; name: string; slug: string };
+}
 
 export interface Publication {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  // TODO: add your Publication-specific fields here
+  id: number;
+  article_id: number;
+  article?: PublicationArticle;
+  doi?: string;
+  volume?: string;
+  issue?: string;
+  published_at: string;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface PublicationDraft {
-  // TODO: fields required to create a new Publication
-}
-
-export interface PublicationUpdatePayload {
-  id: string;
-  // TODO: fields allowed to update
+export interface Volume {
+  volume: string;
+  issue: string;
+  count: number;
 }
 
 export interface PublicationFilters {
   search?: string;
+  category?: string;
   page?: number;
-  pageSize?: number;
-  sortBy?: keyof Publication;
-  sortOrder?: 'asc' | 'desc';
 }
 
-export interface PublicationsResponse {
+export interface PaginatedPublications {
   data: Publication[];
+  current_page: number;
+  last_page: number;
+  per_page: number;
   total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+}
+
+export interface PublishArticlePayload {
+  doi?: string;
+  volume?: string;
+  issue?: string;
 }

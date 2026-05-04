@@ -1,38 +1,36 @@
-/**
- * Assignment Domain Types
- *
- * All types for the assignments feature live here.
- * Do NOT import types from other features — use shared/types if needed.
- */
+export type AssignmentStatus = 'pending' | 'accepted' | 'decline' | 'complete';
+export type AssignmentResponse = 'accepted' | 'decline';
+
+export interface AssignmentArticle {
+  id: number;
+  title: string;
+  abstract: string;
+  status: string;
+}
 
 export interface Assignment {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  // TODO: add your Assignment-specific fields here
+  id: number;
+  article_id: number;
+  article?: AssignmentArticle;
+  reviewer_id: number;
+  due_date: string;
+  response: AssignmentResponse | null;
+  status: AssignmentStatus;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface AssignmentDraft {
-  // TODO: fields required to create a new Assignment
+export interface AssignmentReview {
+  id: number;
+  assignment_id: number;
+  comments: string;
+  recommendation: string;
+  is_draft: boolean;
+  created_at: string;
 }
 
-export interface AssignmentUpdatePayload {
-  id: string;
-  // TODO: fields allowed to update
-}
-
-export interface AssignmentFilters {
-  search?: string;
-  page?: number;
-  pageSize?: number;
-  sortBy?: keyof Assignment;
-  sortOrder?: 'asc' | 'desc';
-}
-
-export interface AssignmentsResponse {
-  data: Assignment[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+export interface SubmitReviewPayload {
+  comments: string;
+  recommendation: string;
+  is_draft: boolean;
 }

@@ -1,7 +1,7 @@
 ════════════════════════════════════════════
   Next.js Project Structure
   Folder : /c/Users/Lenovo/Desktop/devweb-journal/frontend
-  Date   : 2026-05-03 20:01:32
+  Date   : 2026-05-03 21:39:11
 ════════════════════════════════════════════
 
 [ tree command not found — using find fallback ]
@@ -16,143 +16,16 @@ app
 │   ├── page.tsx
 assets
 │   ├── fonts
-│   │   ├── academic
-│   │   │   ├── SourceSerif4_18pt-Black.ttf
-│   │   │   ├── SourceSerif4_18pt-BlackItalic.ttf
-│   │   │   ├── SourceSerif4_18pt-Bold.ttf
-│   │   │   ├── SourceSerif4_18pt-BoldItalic.ttf
-│   │   │   ├── SourceSerif4_18pt-ExtraBold.ttf
-│   │   │   ├── SourceSerif4_18pt-ExtraBoldItalic.ttf
-│   │   │   ├── SourceSerif4_18pt-ExtraLight.ttf
-│   │   │   ├── SourceSerif4_18pt-ExtraLightItalic.ttf
-│   │   │   ├── SourceSerif4_18pt-Italic.ttf
-│   │   │   ├── SourceSerif4_18pt-Light.ttf
-│   │   │   ├── SourceSerif4_18pt-LightItalic.ttf
-│   │   │   ├── SourceSerif4_18pt-Medium.ttf
-│   │   │   ├── SourceSerif4_18pt-MediumItalic.ttf
-│   │   │   ├── SourceSerif4_18pt-Regular.ttf
-│   │   │   ├── SourceSerif4_18pt-SemiBold.ttf
-│   │   │   ├── SourceSerif4_18pt-SemiBoldItalic.ttf
-│   │   │   ├── SourceSerif4_36pt-Black.ttf
-│   │   │   ├── SourceSerif4_36pt-BlackItalic.ttf
-│   │   │   ├── SourceSerif4_36pt-Bold.ttf
-│   │   │   ├── SourceSerif4_36pt-BoldItalic.ttf
-│   │   │   ├── SourceSerif4_36pt-ExtraBold.ttf
-│   │   │   ├── SourceSerif4_36pt-ExtraBoldItalic.ttf
-│   │   │   ├── SourceSerif4_36pt-ExtraLight.ttf
-│   │   │   ├── SourceSerif4_36pt-ExtraLightItalic.ttf
-│   │   │   ├── SourceSerif4_36pt-Italic.ttf
-│   │   │   ├── SourceSerif4_36pt-Light.ttf
-│   │   │   ├── SourceSerif4_36pt-LightItalic.ttf
-│   │   │   ├── SourceSerif4_36pt-Medium.ttf
-│   │   │   ├── SourceSerif4_36pt-MediumItalic.ttf
-│   │   │   ├── SourceSerif4_36pt-Regular.ttf
-│   │   │   ├── SourceSerif4_36pt-SemiBold.ttf
-│   │   │   ├── SourceSerif4_36pt-SemiBoldItalic.ttf
-│   │   │   ├── SourceSerif4_48pt-Black.ttf
-│   │   │   ├── SourceSerif4_48pt-BlackItalic.ttf
-│   │   │   ├── SourceSerif4_48pt-Bold.ttf
-│   │   │   ├── SourceSerif4_48pt-BoldItalic.ttf
-│   │   │   ├── SourceSerif4_48pt-ExtraBold.ttf
-│   │   │   ├── SourceSerif4_48pt-ExtraBoldItalic.ttf
-│   │   │   ├── SourceSerif4_48pt-ExtraLight.ttf
-│   │   │   ├── SourceSerif4_48pt-ExtraLightItalic.ttf
-│   │   │   ├── SourceSerif4_48pt-Italic.ttf
-│   │   │   ├── SourceSerif4_48pt-Light.ttf
-│   │   │   ├── SourceSerif4_48pt-LightItalic.ttf
-│   │   │   ├── SourceSerif4_48pt-Medium.ttf
-│   │   │   ├── SourceSerif4_48pt-MediumItalic.ttf
-│   │   │   ├── SourceSerif4_48pt-Regular.ttf
-│   │   │   ├── SourceSerif4_48pt-SemiBold.ttf
-│   │   │   ├── SourceSerif4_48pt-SemiBoldItalic.ttf
-│   │   │   ├── SourceSerif4-Black.ttf
-│   │   │   ├── SourceSerif4-BlackItalic.ttf
-│   │   │   ├── SourceSerif4-Bold.ttf
-│   │   │   ├── SourceSerif4-BoldItalic.ttf
-│   │   │   ├── SourceSerif4-ExtraBold.ttf
-│   │   │   ├── SourceSerif4-ExtraBoldItalic.ttf
-│   │   │   ├── SourceSerif4-ExtraLight.ttf
-│   │   │   ├── SourceSerif4-ExtraLightItalic.ttf
-│   │   │   ├── SourceSerif4-Italic.ttf
-│   │   │   ├── SourceSerif4-Light.ttf
-│   │   │   ├── SourceSerif4-LightItalic.ttf
-│   │   │   ├── SourceSerif4-Medium.ttf
-│   │   │   ├── SourceSerif4-MediumItalic.ttf
-│   │   │   ├── SourceSerif4-Regular.ttf
-│   │   │   ├── SourceSerif4-SemiBold.ttf
-│   │   │   ├── SourceSerif4-SemiBoldItalic.ttf
-│   │   ├── mono
-│   │   │   ├── JetBrainsMono-Bold.ttf
-│   │   │   ├── JetBrainsMono-BoldItalic.ttf
-│   │   │   ├── JetBrainsMono-ExtraBold.ttf
-│   │   │   ├── JetBrainsMono-ExtraBoldItalic.ttf
-│   │   │   ├── JetBrainsMono-ExtraLight.ttf
-│   │   │   ├── JetBrainsMono-ExtraLightItalic.ttf
-│   │   │   ├── JetBrainsMono-Italic.ttf
-│   │   │   ├── JetBrainsMono-Light.ttf
-│   │   │   ├── JetBrainsMono-LightItalic.ttf
-│   │   │   ├── JetBrainsMono-Medium.ttf
-│   │   │   ├── JetBrainsMono-MediumItalic.ttf
-│   │   │   ├── JetBrainsMono-Regular.ttf
-│   │   │   ├── JetBrainsMono-SemiBold.ttf
-│   │   │   ├── JetBrainsMono-SemiBoldItalic.ttf
-│   │   │   ├── JetBrainsMono-Thin.ttf
-│   │   │   ├── JetBrainsMono-ThinItalic.ttf
 │   │   ├── primary
-│   │   │   ├── Inter_18pt-Black.ttf
-│   │   │   ├── Inter_18pt-BlackItalic.ttf
-│   │   │   ├── Inter_18pt-Bold.ttf
-│   │   │   ├── Inter_18pt-BoldItalic.ttf
-│   │   │   ├── Inter_18pt-ExtraBold.ttf
-│   │   │   ├── Inter_18pt-ExtraBoldItalic.ttf
-│   │   │   ├── Inter_18pt-ExtraLight.ttf
-│   │   │   ├── Inter_18pt-ExtraLightItalic.ttf
-│   │   │   ├── Inter_18pt-Italic.ttf
-│   │   │   ├── Inter_18pt-Light.ttf
-│   │   │   ├── Inter_18pt-LightItalic.ttf
-│   │   │   ├── Inter_18pt-Medium.ttf
-│   │   │   ├── Inter_18pt-MediumItalic.ttf
-│   │   │   ├── Inter_18pt-Regular.ttf
-│   │   │   ├── Inter_18pt-SemiBold.ttf
-│   │   │   ├── Inter_18pt-SemiBoldItalic.ttf
-│   │   │   ├── Inter_18pt-Thin.ttf
-│   │   │   ├── Inter_18pt-ThinItalic.ttf
-│   │   │   ├── Inter_24pt-Black.ttf
-│   │   │   ├── Inter_24pt-BlackItalic.ttf
-│   │   │   ├── Inter_24pt-Bold.ttf
-│   │   │   ├── Inter_24pt-BoldItalic.ttf
-│   │   │   ├── Inter_24pt-ExtraBold.ttf
-│   │   │   ├── Inter_24pt-ExtraBoldItalic.ttf
-│   │   │   ├── Inter_24pt-ExtraLight.ttf
-│   │   │   ├── Inter_24pt-ExtraLightItalic.ttf
-│   │   │   ├── Inter_24pt-Italic.ttf
-│   │   │   ├── Inter_24pt-Light.ttf
-│   │   │   ├── Inter_24pt-LightItalic.ttf
-│   │   │   ├── Inter_24pt-Medium.ttf
-│   │   │   ├── Inter_24pt-MediumItalic.ttf
-│   │   │   ├── Inter_24pt-Regular.ttf
-│   │   │   ├── Inter_24pt-SemiBold.ttf
-│   │   │   ├── Inter_24pt-SemiBoldItalic.ttf
-│   │   │   ├── Inter_24pt-Thin.ttf
-│   │   │   ├── Inter_24pt-ThinItalic.ttf
-│   │   │   ├── Inter_28pt-Black.ttf
-│   │   │   ├── Inter_28pt-BlackItalic.ttf
-│   │   │   ├── Inter_28pt-Bold.ttf
-│   │   │   ├── Inter_28pt-BoldItalic.ttf
-│   │   │   ├── Inter_28pt-ExtraBold.ttf
-│   │   │   ├── Inter_28pt-ExtraBoldItalic.ttf
-│   │   │   ├── Inter_28pt-ExtraLight.ttf
-│   │   │   ├── Inter_28pt-ExtraLightItalic.ttf
-│   │   │   ├── Inter_28pt-Italic.ttf
-│   │   │   ├── Inter_28pt-Light.ttf
-│   │   │   ├── Inter_28pt-LightItalic.ttf
-│   │   │   ├── Inter_28pt-Medium.ttf
-│   │   │   ├── Inter_28pt-MediumItalic.ttf
-│   │   │   ├── Inter_28pt-Regular.ttf
-│   │   │   ├── Inter_28pt-SemiBold.ttf
-│   │   │   ├── Inter_28pt-SemiBoldItalic.ttf
-│   │   │   ├── Inter_28pt-Thin.ttf
-│   │   │   ├── Inter_28pt-ThinItalic.ttf
+│   │   │   ├── Outfit-Black.ttf
+│   │   │   ├── Outfit-Bold.ttf
+│   │   │   ├── Outfit-ExtraBold.ttf
+│   │   │   ├── Outfit-ExtraLight.ttf
+│   │   │   ├── Outfit-Light.ttf
+│   │   │   ├── Outfit-Medium.ttf
+│   │   │   ├── Outfit-Regular.ttf
+│   │   │   ├── Outfit-SemiBold.ttf
+│   │   │   ├── Outfit-Thin.ttf
 │   ├── images
 code_map.sh
 code_map.txt
@@ -164,6 +37,7 @@ nextjs_structure.txt
 node_modules
 package.json
 package-lock.json
+postcss.config.mjs
 src
 │   ├── features
 │   │   ├── articles
@@ -327,6 +201,8 @@ src
 │   │   ├── constants
 │   │   ├── errors
 │   │   │   ├── app.error.ts
+│   │   ├── fonts
+│   │   │   ├── fonts.ts
 │   │   ├── index.ts
 │   │   ├── tanstack
 │   │   │   ├── providers.tsx
@@ -335,8 +211,8 @@ src
 │   │   ├── utils
 swagger.json
 tsconfig.json
+tsconfig.tsbuildinfo
 zakarya.config.json
-zakarya.skill
 
 ════════════════════════════════════════════
   End of structure

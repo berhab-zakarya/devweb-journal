@@ -1,26 +1,14 @@
-/**
- * Article Query Keys
- *
- * Centralized, typed query key factory for TanStack Query.
- * All articles queries/mutations reference keys from here.
- */
-
 import type { ArticleFilters } from '../types/Article.types';
 
 export const articlesKeys = {
-  /** Base key for all articles queries */
   all: ['articles'] as const,
-
-  /** All list variants */
   lists: () => [...articlesKeys.all, 'list'] as const,
-
-  /** Specific list with filters */
-  list: (filters?: ArticleFilters) =>
-    [...articlesKeys.lists(), { filters }] as const,
-
-  /** All detail variants */
+  list: (filters?: ArticleFilters) => [...articlesKeys.lists(), { filters }] as const,
   details: () => [...articlesKeys.all, 'detail'] as const,
-
-  /** Single item detail */
-  detail: (id: string) => [...articlesKeys.details(), id] as const,
+  detail: (id: number) => [...articlesKeys.details(), id] as const,
+  versions: (articleId: number) => [...articlesKeys.all, 'versions', articleId] as const,
+  assignments: (articleId: number) => [...articlesKeys.all, 'assignments', articleId] as const,
+  reviews: (articleId: number) => [...articlesKeys.all, 'reviews', articleId] as const,
+  decision: (articleId: number) => [...articlesKeys.all, 'decision', articleId] as const,
+  assignmentReview: (assignmentId: number) => [...articlesKeys.all, 'assignmentReview', assignmentId] as const,
 } as const;

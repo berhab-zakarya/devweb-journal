@@ -1,32 +1,20 @@
-/**
- * Assignment Query Options
- *
- * TanStack Query queryOptions factories.
- * Compose these inside hooks — never call useQuery directly in components.
- */
-
-import { queryOptions, infiniteQueryOptions } from '@tanstack/react-query';
+import { queryOptions } from '@tanstack/react-query';
 import { assignmentsService } from '../services/assignments.service';
 import { assignmentsKeys } from './assignments.keys';
-import type { AssignmentFilters } from '../types/Assignment.types';
 
-/**
- * Query options for fetching a paginated list of assignments.
- */
-export const assignmentsListQueryOptions = (filters?: AssignmentFilters) =>
-  queryOptions({
-    queryKey: assignmentsKeys.list(filters),
-    queryFn: () => assignmentsService.getAll(filters),
-    staleTime: 60_000,
-  });
-
-/**
- * Query options for fetching a single assignment by ID.
- */
-export const assignmentsDetailQueryOptions = (id: string) =>
+export const assignmentsDetailQueryOptions = (id: number) =>
   queryOptions({
     queryKey: assignmentsKeys.detail(id),
     queryFn: () => assignmentsService.getById(id),
-    enabled: Boolean(id),
+    enabled: id > 0,
     staleTime: 60_000,
+  });
+
+export const assignmentReviewQueryOptions = (id: number) =>
+  queryOptions({
+    queryKey: assignmentsKeys.review(id),
+    queryFn: () => assignmentsService.getReview(id),
+    enabled: id > 0,
+    staleTime: 60_000,
+    retry: false,
   });

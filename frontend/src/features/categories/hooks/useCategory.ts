@@ -1,12 +1,6 @@
-/**
- * useCategory hook
- *
- * Fetches a single category by ID.
- */
+import { useCategories } from './useCategories';
 
-import { useQuery } from '@tanstack/react-query';
-import { categoriesDetailQueryOptions } from '../queries/categories.queries';
-
-export function useCategory(id: string) {
-  return useQuery(categoriesDetailQueryOptions(id));
+export function useCategory(id: number) {
+  const { data: categories = [] } = useCategories();
+  return categories.find((c) => c.id === id) ?? null;
 }

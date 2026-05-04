@@ -1,59 +1,49 @@
-/**
- * Auth Service
- *
- * This is the ONLY place where API calls for the auth feature are made.
- * Uses the shared Axios client — never instantiate Axios directly here.
- */
-
 import { apiClient } from '@/shared/api/client';
 import { ENDPOINTS } from '@/shared/api/endpoints.constants';
 import type {
-  Auth,
-  AuthDraft,
-  AuthUpdatePayload,
-  AuthFilters,
-  AuthsResponse,
+  User,
+  LoginPayload,
+  LoginResponse,
+  RegisterPayload,
+  ForgotPasswordPayload,
+  ResetPasswordPayload,
+  UpdateProfilePayload,
 } from '../types/Auth.types';
 
 const BASE = ENDPOINTS.AUTH_BASE;
 
 export const authService = {
-  /**
-   * Fetch a paginated list of auths.
-   */
-  getAll: async (filters?: AuthFilters): Promise<AuthsResponse> => {
-    const { data } = await apiClient.get<AuthsResponse>(BASE, { params: filters });
+  login: async (payload: LoginPayload): Promise<LoginResponse> => {
+    const { data } = await apiClient.post<LoginResponse>(`${BASE}/login`, payload);
     return data;
   },
 
-  /**
-   * Fetch a single auth by ID.
-   */
-  getById: async (id: string): Promise<Auth> => {
-    const { data } = await apiClient.get<Auth>(`${BASE}/${id}`);
+  register: async (payload: RegisterPayload): Promise<{ message: string }> => {
+    const { data } = await apiClient.post<{ message: string }>(`${BASE}/register`, payload);
     return data;
   },
 
-  /**
-   * Create a new auth.
-   */
-  create: async (payload: AuthDraft): Promise<Auth> => {
-    const { data } = await apiClient.post<Auth>(BASE, payload);
+  logout: async (): Promise<void> => {
+    await apiClient.post(`${BASE}/logout`);
+  },
+
+  me: async (): Promise<User> => {
+    const { data } = await apiClient.get<User>(`${BASE}/me`);
     return data;
   },
 
-  /**
-   * Update an existing auth.
-   */
-  update: async ({ id, ...payload }: AuthUpdatePayload): Promise<Auth> => {
-    const { data } = await apiClient.patch<Auth>(`${BASE}/${id}`, payload);
+  updateProfile: async (payload: UpdateProfilePayload): Promise<User> => {
+    const { data } = await apiClient.put<User>(`${BASE}/profile`, payload);
     return data;
   },
 
-  /**
-   * Delete a auth by ID.
-   */
-  delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`${BASE}/${id}`);
+  forgotPassword: async (payload: ForgotPasswordPayload): Promise<{ message: string }> => {
+    const { data } = await apiClient.post<{ message: string }>(`${BASE}/forgot-password`, payload);
+    return data;
+  },
+
+  resetPassword: async (payload: ResetPasswordPayload): Promise<{ message: string }> => {
+    const { data } = await apiClient.post<{ message: string }>(`${BASE}/reset-password`, payload);
+    return data;
   },
 } as const;

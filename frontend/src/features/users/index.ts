@@ -1,35 +1,19 @@
-/**
- * User Feature — Public API
- *
- * Only export what consumers of this feature need.
- * Internal implementation details remain private.
- */
-
-// Types
 export type {
   User,
-  UserDraft,
-  UserUpdatePayload,
+  UserRole,
   UserFilters,
-  UsersResponse,
+  PaginatedUsers,
+  CreateUserPayload,
+  UpdateUserPayload,
+  AssignRolePayload,
 } from './types/User.types';
 
-// Hooks (primary interface for components)
 export { useUsers } from './hooks/useUsers';
-export { useUser } from './hooks/useUser';
-
-// Mutations
 export {
   useCreateUserMutation,
   useUpdateUserMutation,
   useDeleteUserMutation,
+  useAssignRoleMutation,
 } from './mutations/users.mutations';
-
-// Query options (for prefetching in loaders/server components)
-export {
-  usersListQueryOptions,
-  usersDetailQueryOptions,
-} from './queries/users.queries';
-
-// Query keys (for targeted invalidation from other features via shared/)
+export { usersListQueryOptions } from './queries/users.queries';
 export { usersKeys } from './queries/users.keys';

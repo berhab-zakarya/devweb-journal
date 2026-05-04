@@ -1,59 +1,133 @@
-/**
- * Article Service
- *
- * This is the ONLY place where API calls for the articles feature are made.
- * Uses the shared Axios client — never instantiate Axios directly here.
- */
-
 import { apiClient } from '@/shared/api/client';
 import { ENDPOINTS } from '@/shared/api/endpoints.constants';
 import type {
   Article,
-  ArticleDraft,
-  ArticleUpdatePayload,
+  ArticleVersion,
+  ArticleAssignment,
+  ArticleReview,
+  EditorialDecision,
+  ReviewerSearchResult,
   ArticleFilters,
-  ArticlesResponse,
+  PaginatedArticles,
+  CreateArticlePayload,
+  UpdateArticlePayload,
+  CreateVersionPayload,
+  CreateDecisionPayload,
+  AssignReviewersPayload,
+  RespondAssignmentPayload,
+  SubmitReviewPayload,
 } from '../types/Article.types';
 
 const BASE = ENDPOINTS.ARTICLES_BASE;
+const ASSIGN = ENDPOINTS.ASSIGNMENTS_BASE;
 
 export const articlesService = {
-  /**
-   * Fetch a paginated list of articles.
-   */
-  getAll: async (filters?: ArticleFilters): Promise<ArticlesResponse> => {
-    const { data } = await apiClient.get<ArticlesResponse>(BASE, { params: filters });
+  getAll: async (filters?: ArticleFilters): Promise<PaginatedArticles> => {
+    const { data } = await apiClient.get<PaginatedArticles>(BASE, { params: filters });
     return data;
   },
 
-  /**
-   * Fetch a single article by ID.
-   */
-  getById: async (id: string): Promise<Article> => {
+  getById: async (id: number): Promise<Article> => {
     const { data } = await apiClient.get<Article>(`${BASE}/${id}`);
     return data;
   },
 
-  /**
-   * Create a new article.
-   */
-  create: async (payload: ArticleDraft): Promise<Article> => {
-    const { data } = await apiClient.post<Article>(BASE, payload);
+  create: async (payload: CreateArticlePayload): Promise<Article> => {
+    const form = new FormData();
+    form.append('title', payload.title);
+    form.append('abstract', payload.abstract);
+    form.append('keywords', payload.keywords);
+    form.append('category_id', String(payload.category_id));
+    form.append('pdf', payload.pdf);
+    const { data } = await apiClient.post<Article>(BASE, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return data;
   },
 
-  /**
-   * Update an existing article.
-   */
-  update: async ({ id, ...payload }: ArticleUpdatePayload): Promise<Article> => {
-    const { data } = await apiClient.patch<Article>(`${BASE}/${id}`, payload);
+  update: async (id: number, payload: UpdateArticlePayload): Promise<Article> => {
+    const { data } = await apiClient.put<Article>(`${BASE}/${id}`, payload);
     return data;
   },
 
-  /**
-   * Delete a article by ID.
-   */
-  delete: async (id: string): Promise<void> => {
+  delete: async (id: number): Promise<void> => {
     await apiClient.delete(`${BASE}/${id}`);
+  },
+
+  download: async (id: number): Promise<Blob> => {
+    const { data } = await apiClient.get<Blob>(`${BASE}/${id}/download`, {
+      responseType: 'blob',
+    });
+    return data;
+  },
+
+  // Versions
+  getVersions: async (articleId: number): Promise<ArticleVersion[]> => {
+    const { data } = await apiClient.get<ArticleVersion[]>(`${BASE}/${articleId}/versions`);
+    return data;
+  },
+
+  createVersion: async (articleId: number, payload: CreateVersionPayload): Promise<ArticleVersion> => {
+    const form = new FormData();
+    form.append('pdf', payload.pdf);
+    form.append('change_summary', payload.change_summary);
+    const { data } = await apiClient.post<ArticleVersion>(`${BASE}/${articleId}/versions`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data;
+  },
+
+  // Assignments
+  getAssignments: async (articleId: number): Promise<ArticleAssignment[]> => {
+    const { data } = await apiClient.get<ArticleAssignment[]>(`${BASE}/${articleId}/assignments`);
+    return data;
+  },
+
+  assignReviewers: async (articleId: number, payload: AssignReviewersPayload): Promise<ArticleAssignment[]> => {
+    const { data } = await apiClient.post<ArticleAssignment[]>(`${BASE}/${articleId}/assignments`, payload);
+    return data;
+  },
+
+  searchReviewers: async (articleId: number, q: string, limit?: number): Promise<ReviewerSearchResult[]> => {
+    const { data } = await apiClient.get<ReviewerSearchResult[]>(`${BASE}/${articleId}/reviewers/search`, {
+      params: { q, limit },
+    });
+    return data;
+  },
+
+  deleteAssignment: async (assignmentId: number): Promise<void> => {
+    await apiClient.delete(`${ASSIGN}/${assignmentId}`);
+  },
+
+  respondAssignment: async (assignmentId: number, payload: RespondAssignmentPayload): Promise<ArticleAssignment> => {
+    const { data } = await apiClient.patch<ArticleAssignment>(`${ASSIGN}/${assignmentId}/respond`, payload);
+    return data;
+  },
+
+  // Reviews
+  getReviews: async (articleId: number): Promise<ArticleReview[]> => {
+    const { data } = await apiClient.get<ArticleReview[]>(`${BASE}/${articleId}/reviews`);
+    return data;
+  },
+
+  getAssignmentReview: async (assignmentId: number): Promise<ArticleReview> => {
+    const { data } = await apiClient.get<ArticleReview>(`${ASSIGN}/${assignmentId}/review`);
+    return data;
+  },
+
+  submitReview: async (assignmentId: number, payload: SubmitReviewPayload): Promise<ArticleReview> => {
+    const { data } = await apiClient.post<ArticleReview>(`${ASSIGN}/${assignmentId}/review`, payload);
+    return data;
+  },
+
+  // Editorial decision
+  getDecision: async (articleId: number): Promise<EditorialDecision> => {
+    const { data } = await apiClient.get<EditorialDecision>(`${BASE}/${articleId}/decision`);
+    return data;
+  },
+
+  createDecision: async (articleId: number, payload: CreateDecisionPayload): Promise<EditorialDecision> => {
+    const { data } = await apiClient.post<EditorialDecision>(`${BASE}/${articleId}/decision`, payload);
+    return data;
   },
 } as const;
