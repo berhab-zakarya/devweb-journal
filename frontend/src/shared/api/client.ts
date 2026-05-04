@@ -33,11 +33,26 @@ apiClient.interceptors.request.use(
   (error: unknown) => Promise.reject(error)
 );
 
+type RetriableConfig = InternalAxiosRequestConfig & { __csrfRetried?: boolean };
+
 // ── Response interceptor ───────────────────────────────────────────────────────
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError<{ message?: string; errors?: unknown }>) => {
     const status = error.response?.status ?? 0;
+    const cfg = error.config as RetriableConfig | undefined;
+
+    // Laravel Sanctum SPA: refresh CSRF cookie once, then retry (stale/missing X-XSRF-TOKEN).
+    if (status === 419 && cfg && !cfg.__csrfRetried) {
+      cfg.__csrfRetried = true;
+      try {
+        await apiClient.get('/sanctum/csrf-cookie');
+      } catch {
+        // ignore; original retry may still fail with 419
+      }
+      return apiClient.request(cfg);
+    }
+
     const serverMessage = error.response?.data?.message ?? error.message;
 
     // [zakarya:inject:response-interceptor]
