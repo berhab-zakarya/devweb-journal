@@ -1,0 +1,219 @@
+════════════════════════════════════════════
+  Next.js Project Structure
+  Folder : /c/Users/Lenovo/Desktop/devweb-journal/frontend
+  Date   : 2026-05-03 21:39:11
+════════════════════════════════════════════
+
+[ tree command not found — using find fallback ]
+
+.env.example
+.env.local
+.gitignore
+.next
+app
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── page.tsx
+assets
+│   ├── fonts
+│   │   ├── primary
+│   │   │   ├── Outfit-Black.ttf
+│   │   │   ├── Outfit-Bold.ttf
+│   │   │   ├── Outfit-ExtraBold.ttf
+│   │   │   ├── Outfit-ExtraLight.ttf
+│   │   │   ├── Outfit-Light.ttf
+│   │   │   ├── Outfit-Medium.ttf
+│   │   │   ├── Outfit-Regular.ttf
+│   │   │   ├── Outfit-SemiBold.ttf
+│   │   │   ├── Outfit-Thin.ttf
+│   ├── images
+code_map.sh
+code_map.txt
+code_map_frontend.txt
+next.config.ts
+next-env.d.ts
+nextjs_structure.sh
+nextjs_structure.txt
+node_modules
+package.json
+package-lock.json
+postcss.config.mjs
+src
+│   ├── features
+│   │   ├── articles
+│   │   │   ├── components
+│   │   │   ├── hooks
+│   │   │   │   ├── useArticle.ts
+│   │   │   │   ├── useArticles.ts
+│   │   │   ├── index.ts
+│   │   │   ├── mutations
+│   │   │   │   ├── articles.mutations.ts
+│   │   │   ├── queries
+│   │   │   │   ├── articles.keys.ts
+│   │   │   │   ├── articles.queries.ts
+│   │   │   ├── services
+│   │   │   │   ├── articles.service.ts
+│   │   │   ├── types
+│   │   │   │   ├── Article.types.ts
+│   │   ├── assignments
+│   │   │   ├── components
+│   │   │   ├── hooks
+│   │   │   │   ├── useAssignment.ts
+│   │   │   │   ├── useAssignments.ts
+│   │   │   ├── index.ts
+│   │   │   ├── mutations
+│   │   │   │   ├── assignments.mutations.ts
+│   │   │   ├── queries
+│   │   │   │   ├── assignments.keys.ts
+│   │   │   │   ├── assignments.queries.ts
+│   │   │   ├── services
+│   │   │   │   ├── assignments.service.ts
+│   │   │   ├── types
+│   │   │   │   ├── Assignment.types.ts
+│   │   ├── auth
+│   │   │   ├── components
+│   │   │   ├── hooks
+│   │   │   │   ├── useAuth.ts
+│   │   │   │   ├── useAuths.ts
+│   │   │   ├── index.ts
+│   │   │   ├── mutations
+│   │   │   │   ├── auth.mutations.ts
+│   │   │   ├── queries
+│   │   │   │   ├── auth.keys.ts
+│   │   │   │   ├── auth.queries.ts
+│   │   │   ├── services
+│   │   │   │   ├── auth.service.ts
+│   │   │   ├── types
+│   │   │   │   ├── Auth.types.ts
+│   │   ├── categories
+│   │   │   ├── components
+│   │   │   ├── hooks
+│   │   │   │   ├── useCategories.ts
+│   │   │   │   ├── useCategory.ts
+│   │   │   ├── index.ts
+│   │   │   ├── mutations
+│   │   │   │   ├── categories.mutations.ts
+│   │   │   ├── queries
+│   │   │   │   ├── categories.keys.ts
+│   │   │   │   ├── categories.queries.ts
+│   │   │   ├── services
+│   │   │   │   ├── categories.service.ts
+│   │   │   ├── types
+│   │   │   │   ├── Category.types.ts
+│   │   ├── dashboard
+│   │   │   ├── components
+│   │   │   ├── hooks
+│   │   │   │   ├── useDashboard.ts
+│   │   │   │   ├── useDashboards.ts
+│   │   │   ├── index.ts
+│   │   │   ├── mutations
+│   │   │   │   ├── dashboard.mutations.ts
+│   │   │   ├── queries
+│   │   │   │   ├── dashboard.keys.ts
+│   │   │   │   ├── dashboard.queries.ts
+│   │   │   ├── services
+│   │   │   │   ├── dashboard.service.ts
+│   │   │   ├── types
+│   │   │   │   ├── Dashboard.types.ts
+│   │   ├── index.ts
+│   │   ├── index.ts.1777827702325.zakarya-backup
+│   │   ├── index.ts.1777827711035.zakarya-backup
+│   │   ├── index.ts.1777827719824.zakarya-backup
+│   │   ├── index.ts.1777827728349.zakarya-backup
+│   │   ├── index.ts.1777827735442.zakarya-backup
+│   │   ├── index.ts.1777827746550.zakarya-backup
+│   │   ├── index.ts.1777827757717.zakarya-backup
+│   │   ├── index.ts.1777827767855.zakarya-backup
+│   │   ├── notifications
+│   │   │   ├── components
+│   │   │   ├── hooks
+│   │   │   │   ├── useNotification.ts
+│   │   │   │   ├── useNotifications.ts
+│   │   │   ├── index.ts
+│   │   │   ├── mutations
+│   │   │   │   ├── notifications.mutations.ts
+│   │   │   ├── queries
+│   │   │   │   ├── notifications.keys.ts
+│   │   │   │   ├── notifications.queries.ts
+│   │   │   ├── services
+│   │   │   │   ├── notifications.service.ts
+│   │   │   ├── types
+│   │   │   │   ├── Notification.types.ts
+│   │   ├── publications
+│   │   │   ├── components
+│   │   │   ├── hooks
+│   │   │   │   ├── usePublication.ts
+│   │   │   │   ├── usePublications.ts
+│   │   │   ├── index.ts
+│   │   │   ├── mutations
+│   │   │   │   ├── publications.mutations.ts
+│   │   │   ├── queries
+│   │   │   │   ├── publications.keys.ts
+│   │   │   │   ├── publications.queries.ts
+│   │   │   ├── services
+│   │   │   │   ├── publications.service.ts
+│   │   │   ├── types
+│   │   │   │   ├── Publication.types.ts
+│   │   ├── reviews
+│   │   │   ├── components
+│   │   │   ├── hooks
+│   │   │   │   ├── useReview.ts
+│   │   │   │   ├── useReviews.ts
+│   │   │   ├── index.ts
+│   │   │   ├── mutations
+│   │   │   │   ├── reviews.mutations.ts
+│   │   │   ├── queries
+│   │   │   │   ├── reviews.keys.ts
+│   │   │   │   ├── reviews.queries.ts
+│   │   │   ├── services
+│   │   │   │   ├── reviews.service.ts
+│   │   │   ├── types
+│   │   │   │   ├── Review.types.ts
+│   │   ├── users
+│   │   │   ├── components
+│   │   │   ├── hooks
+│   │   │   │   ├── useUser.ts
+│   │   │   │   ├── useUsers.ts
+│   │   │   ├── index.ts
+│   │   │   ├── mutations
+│   │   │   │   ├── users.mutations.ts
+│   │   │   ├── queries
+│   │   │   │   ├── users.keys.ts
+│   │   │   │   ├── users.queries.ts
+│   │   │   ├── services
+│   │   │   │   ├── users.service.ts
+│   │   │   ├── types
+│   │   │   │   ├── User.types.ts
+│   ├── shared
+│   │   ├── api
+│   │   │   ├── client.ts
+│   │   │   ├── endpoints.constants.ts
+│   │   │   ├── endpoints.constants.ts.1777827694367.zakarya-backup
+│   │   │   ├── endpoints.constants.ts.1777827702319.zakarya-backup
+│   │   │   ├── endpoints.constants.ts.1777827711029.zakarya-backup
+│   │   │   ├── endpoints.constants.ts.1777827719819.zakarya-backup
+│   │   │   ├── endpoints.constants.ts.1777827728343.zakarya-backup
+│   │   │   ├── endpoints.constants.ts.1777827735434.zakarya-backup
+│   │   │   ├── endpoints.constants.ts.1777827746544.zakarya-backup
+│   │   │   ├── endpoints.constants.ts.1777827757711.zakarya-backup
+│   │   │   ├── endpoints.constants.ts.1777827767848.zakarya-backup
+│   │   ├── config
+│   │   ├── constants
+│   │   ├── errors
+│   │   │   ├── app.error.ts
+│   │   ├── fonts
+│   │   │   ├── fonts.ts
+│   │   ├── index.ts
+│   │   ├── tanstack
+│   │   │   ├── providers.tsx
+│   │   │   ├── query-client.ts
+│   │   ├── types
+│   │   ├── utils
+swagger.json
+tsconfig.json
+tsconfig.tsbuildinfo
+zakarya.config.json
+
+════════════════════════════════════════════
+  End of structure
+════════════════════════════════════════════

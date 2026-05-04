@@ -1,0 +1,2070 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Academic Journal API",
+        "description": "REST API for the academic journal management system. Handles article submissions, peer reviews, editorial decisions, and publications.",
+        "contact": {
+            "email": "admin@journal.local"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api/v1",
+            "description": "API v1"
+        }
+    ],
+    "paths": {
+        "/articles": {
+            "get": {
+                "tags": [
+                    "Articles"
+                ],
+                "summary": "List articles (filtered by role)",
+                "description": "List articles based on the user's role.",
+                "operationId": "0b157633bd436069bf76ab6e9dfbfe07",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of articles"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Articles"
+                ],
+                "summary": "Submit a new article (with PDF upload)",
+                "description": "Create an article and its initial version (v1) with secure PDF upload.",
+                "operationId": "a2c4a0cea7d0a72af8b9c59e64ceaebb",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "abstract",
+                                    "keywords",
+                                    "category_id",
+                                    "pdf"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "abstract": {
+                                        "type": "string"
+                                    },
+                                    "keywords": {
+                                        "type": "string"
+                                    },
+                                    "category_id": {
+                                        "type": "integer"
+                                    },
+                                    "pdf": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Article submitted"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/articles/{article}": {
+            "get": {
+                "tags": [
+                    "Articles"
+                ],
+                "summary": "Get article details",
+                "description": "Show article details.",
+                "operationId": "75539105dbc7eabea026be5a8afd6a7d",
+                "parameters": [
+                    {
+                        "name": "article",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Article details"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Articles"
+                ],
+                "summary": "Update article metadata",
+                "description": "Update article metadata.",
+                "operationId": "81c12a3783a5e963661c15e1e6255746",
+                "parameters": [
+                    {
+                        "name": "article",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "abstract": {
+                                        "type": "string"
+                                    },
+                                    "keywords": {
+                                        "type": "string"
+                                    },
+                                    "category_id": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Article updated"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Articles"
+                ],
+                "summary": "Delete (soft) an article",
+                "description": "Soft-delete an article.",
+                "operationId": "ac30ceb001f3d53e3533c5f8358a7ce3",
+                "parameters": [
+                    {
+                        "name": "article",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Article deleted"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/articles/{article}/download": {
+            "get": {
+                "tags": [
+                    "Articles"
+                ],
+                "summary": "Download the current PDF version of an article",
+                "description": "Download the PDF of the current version of an article.",
+                "operationId": "d704e6cc7929ff7e00481f0c20e8819c",
+                "parameters": [
+                    {
+                        "name": "article",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF file"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    },
+                    "404": {
+                        "description": "No version or file not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/articles/{article}/publish": {
+            "post": {
+                "tags": [
+                    "Publications"
+                ],
+                "summary": "Publish an accepted article (editor/admin)",
+                "description": "Explicitly publish an accepted article.",
+                "operationId": "2bcdcdc9bc8a3687d97fbffb35cc24e0",
+                "parameters": [
+                    {
+                        "name": "article",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "doi": {
+                                        "type": "string"
+                                    },
+                                    "volume": {
+                                        "type": "integer"
+                                    },
+                                    "issue": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Article published"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    },
+                    "409": {
+                        "description": "Article not accepted or already published"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/articles/{article}/versions": {
+            "get": {
+                "tags": [
+                    "Article Versions"
+                ],
+                "summary": "List all versions of an article",
+                "description": "List the version history of an article.",
+                "operationId": "7f301a5f88a9332490dd4cda71a67a96",
+                "parameters": [
+                    {
+                        "name": "article",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of article versions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "article_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "version_number": {
+                                                        "type": "integer"
+                                                    },
+                                                    "pdf_original_name": {
+                                                        "type": "string"
+                                                    },
+                                                    "pdf_size": {
+                                                        "type": "integer"
+                                                    },
+                                                    "change_summary": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "submitted_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Article Versions"
+                ],
+                "summary": "Upload a new PDF version for an article",
+                "description": "Add a new PDF version to an article (re-submission).",
+                "operationId": "0289588a2f038b32dcedbe8a7b0bb307",
+                "parameters": [
+                    {
+                        "name": "article",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "pdf"
+                                ],
+                                "properties": {
+                                    "pdf": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "change_summary": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Version uploaded"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    },
+                    "409": {
+                        "description": "Status transition error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/articles/{article}/versions/{versionId}/download": {
+            "get": {
+                "tags": [
+                    "Article Versions"
+                ],
+                "summary": "Download a specific PDF version of an article",
+                "description": "Download a specific version of an article.",
+                "operationId": "cc619558c74a22bad34fab1ffb673d26",
+                "parameters": [
+                    {
+                        "name": "article",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "versionId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF file download",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    },
+                    "404": {
+                        "description": "Version or file not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Register a new user account",
+                "description": "Register a new user.",
+                "operationId": "8f20688904ee49d0d8739eeb08faf0b1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Jane Doe"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "jane@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "minLength": 8,
+                                        "example": "secret123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "example": "secret123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Account created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login and receive a session cookie",
+                "description": "Login via Sanctum (stateful cookie).",
+                "operationId": "985cd5203e2d0a820e113f2f4fdb2847",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login successful"
+                    },
+                    "422": {
+                        "description": "Invalid credentials"
+                    }
+                }
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout and invalidate the session",
+                "description": "Logout the current user.",
+                "operationId": "a05022a34eef599e04fb0a5254375b84",
+                "responses": {
+                    "200": {
+                        "description": "Logged out successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/auth/me": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Get the authenticated user's profile",
+                "description": "Get the authenticated user's profile.",
+                "operationId": "e339e0e74860c0647fd1d41bbbbc13b2",
+                "responses": {
+                    "200": {
+                        "description": "User profile"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/auth/profile": {
+            "put": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Update the authenticated user's profile",
+                "description": "Update the authenticated user's profile.",
+                "operationId": "8ae8865c5f311d02651165a308c73fce",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "current_password": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profile updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/auth/forgot-password": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Send a password reset link to the given email",
+                "description": "Send a password reset link.",
+                "operationId": "3fa909bd1644377d7ebba46717f93f4c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Reset link sent (if account exists)"
+                    }
+                }
+            }
+        },
+        "/auth/reset-password": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Reset the user's password using a reset token",
+                "description": "Reset the user's password.",
+                "operationId": "b3f72751f247808edd4f07ef5e9dba97",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "token",
+                                    "email",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "token": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password reset successfully"
+                    },
+                    "422": {
+                        "description": "Invalid or expired token"
+                    }
+                }
+            }
+        },
+        "/categories": {
+            "get": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "List all categories",
+                "description": "List categories.",
+                "operationId": "2eb9088f8a869db09d83eaa9c605312f",
+                "responses": {
+                    "200": {
+                        "description": "List of categories"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Create a new category (admin/editor)",
+                "description": "Create a category.",
+                "operationId": "7bdbe2d756cdbeeb0e8332a71bfde4a0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "slug"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "slug": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Category created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/categories/{category}": {
+            "put": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Update a category (admin/editor)",
+                "description": "Update a category.",
+                "operationId": "cb74e1d6f11ec6ec2c908bc6bb031cc2",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "slug": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Category updated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Delete a category (admin/editor)",
+                "description": "Delete a category.",
+                "operationId": "8ff356e4f0f9a60e390281ecb3f4e24e",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Category deleted"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/summary": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get role-based dashboard statistics",
+                "operationId": "df38ca995b07a2800ce6752d3226582e",
+                "responses": {
+                    "200": {
+                        "description": "Role-based dashboard stats",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "author"
+                                                },
+                                                "requires_attention": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "count": {
+                                                                "type": "integer"
+                                                            },
+                                                            "route": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "pending": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "count": {
+                                                                "type": "integer"
+                                                            },
+                                                            "route": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "completed": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "count": {
+                                                                "type": "integer"
+                                                            },
+                                                            "route": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/articles/{article}/decision": {
+            "get": {
+                "tags": [
+                    "Editorial Decisions"
+                ],
+                "summary": "Get the editorial decision and history for an article",
+                "description": "Show the latest decision and history for an article.",
+                "operationId": "249b722fbb1f49f42ad99291b9ff1b5e",
+                "parameters": [
+                    {
+                        "name": "article",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Decision details"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Editorial Decisions"
+                ],
+                "summary": "Record a final editorial decision (editor only)",
+                "description": "Record an editorial decision and update the article status.",
+                "operationId": "3878cacde4662b23a0dcd893eddd2284",
+                "parameters": [
+                    {
+                        "name": "article",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "decision",
+                                    "comments"
+                                ],
+                                "properties": {
+                                    "decision": {
+                                        "type": "string",
+                                        "enum": [
+                                            "accepted",
+                                            "rejected",
+                                            "revision_required"
+                                        ]
+                                    },
+                                    "comments": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Decision recorded"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    },
+                    "409": {
+                        "description": "Status transition error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/notifications": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "List notifications for the authenticated user",
+                "description": "List notifications for the authenticated user.",
+                "operationId": "a48dc613f9c4d7d3414d6dcf848889c8",
+                "parameters": [
+                    {
+                        "name": "only_unread",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated notifications"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/notifications/{notification}/read": {
+            "patch": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Mark a notification as read",
+                "description": "Mark a notification as read.",
+                "operationId": "9e02c36f8c70497e1b9a4815b3c14d3d",
+                "parameters": [
+                    {
+                        "name": "notification",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notification marked as read"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/notifications/read-all": {
+            "post": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Mark all unread notifications as read",
+                "description": "Mark all unread notifications as read.",
+                "operationId": "7352fa4da13d1333add4e08cdbb763ed",
+                "responses": {
+                    "200": {
+                        "description": "All notifications marked as read"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/notifications/unread-count": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Get the unread notification count",
+                "description": "Return the number of unread notifications.",
+                "operationId": "584990badb02c0857a345ef40f46fc7f",
+                "responses": {
+                    "200": {
+                        "description": "Unread count"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/publications": {
+            "get": {
+                "tags": [
+                    "Publications"
+                ],
+                "summary": "List all published articles (public)",
+                "description": "Public list of published articles with filters and search.",
+                "operationId": "5924577af6c388ba20331fbc4402dc69",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated publications"
+                    }
+                }
+            }
+        },
+        "/publications/{publication}": {
+            "get": {
+                "tags": [
+                    "Publications"
+                ],
+                "summary": "Get publication details (public)",
+                "description": "Public detail of a publication.",
+                "operationId": "47c6650b1a707fde9638757197ba2409",
+                "parameters": [
+                    {
+                        "name": "publication",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Publication details"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
+        "/publications/{publication}/download": {
+            "get": {
+                "tags": [
+                    "Publications"
+                ],
+                "summary": "Download the published PDF (public)",
+                "description": "Public download of the published PDF.",
+                "operationId": "6e401276990b47ee5ba2dfbb27874f4d",
+                "parameters": [
+                    {
+                        "name": "publication",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF file"
+                    },
+                    "404": {
+                        "description": "File not found"
+                    }
+                }
+            }
+        },
+        "/publications/volumes": {
+            "get": {
+                "tags": [
+                    "Publications"
+                ],
+                "summary": "List available volumes and issues (public)",
+                "description": "Return distinct volumes/issues available for filtering.",
+                "operationId": "0937fcb9b8ec43f0e4163845fd7eab05",
+                "responses": {
+                    "200": {
+                        "description": "List of volumes/issues"
+                    }
+                }
+            }
+        },
+        "/assignments/{assignment}/review": {
+            "get": {
+                "tags": [
+                    "Reviews"
+                ],
+                "summary": "Get the review for a given assignment",
+                "description": "Show the review for an assignment.",
+                "operationId": "80c83ea1084154ce01ef308b7fd44c16",
+                "parameters": [
+                    {
+                        "name": "assignment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Review details"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    },
+                    "404": {
+                        "description": "Review not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Reviews"
+                ],
+                "summary": "Submit or save a draft review for an assignment (reviewer)",
+                "description": "Submit a review for an accepted assignment.",
+                "operationId": "e5a9f78c0a8d41db5aac0cf2a2f7e8ca",
+                "parameters": [
+                    {
+                        "name": "assignment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "comments": {
+                                        "type": "string"
+                                    },
+                                    "recommendation": {
+                                        "type": "string"
+                                    },
+                                    "is_draft": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Review submitted"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    },
+                    "409": {
+                        "description": "Assignment not accepted"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/articles/{article}/reviews": {
+            "get": {
+                "tags": [
+                    "Reviews"
+                ],
+                "summary": "List all submitted reviews for an article (editor/admin)",
+                "description": "List reviews for an article (editor/admin).",
+                "operationId": "7c33581e1e67a0a9e95f73eebdd44237",
+                "parameters": [
+                    {
+                        "name": "article",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of reviews"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/articles/{article}/reviewers/search": {
+            "get": {
+                "tags": [
+                    "Reviewer Assignments"
+                ],
+                "summary": "Search for available reviewers by email (editor)",
+                "description": "Search reviewers by email to populate the assignment autocomplete.",
+                "operationId": "5ee34826d1630a61f2e335ce939150f7",
+                "parameters": [
+                    {
+                        "name": "article",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of matching reviewers"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/articles/{article}/assignments": {
+            "get": {
+                "tags": [
+                    "Reviewer Assignments"
+                ],
+                "summary": "List assignments for an article",
+                "description": "List assignments for an article.",
+                "operationId": "b3c5480ac4e8849cb1d83e9d3a5f56ec",
+                "parameters": [
+                    {
+                        "name": "article",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of assignments"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Reviewer Assignments"
+                ],
+                "summary": "Assign reviewers to an article (editor)",
+                "description": "Create reviewer assignments for an article.",
+                "operationId": "3efd7d4829a6813bc8763e94fe5e3df8",
+                "parameters": [
+                    {
+                        "name": "article",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "reviewer_ids"
+                                ],
+                                "properties": {
+                                    "reviewer_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "due_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Assignments created"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/assignments/{assignment}": {
+            "get": {
+                "tags": [
+                    "Reviewer Assignments"
+                ],
+                "summary": "Get assignment details",
+                "description": "Show assignment details for the assigned reviewer or editorial staff.",
+                "operationId": "1bfd1b149154a31a5cf88824a7fbe4f0",
+                "parameters": [
+                    {
+                        "name": "assignment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Assignment details"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Reviewer Assignments"
+                ],
+                "summary": "Delete an assignment (editor)",
+                "description": "Delete an assignment (if not completed).",
+                "operationId": "bd9e3ad33ad5bb545db2008ddfbe609f",
+                "parameters": [
+                    {
+                        "name": "assignment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Assignment deleted"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    },
+                    "409": {
+                        "description": "Cannot delete completed assignment"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/assignments/{assignment}/respond": {
+            "patch": {
+                "tags": [
+                    "Reviewer Assignments"
+                ],
+                "summary": "Accept or decline a reviewer assignment (reviewer)",
+                "description": "The reviewer accepts or declines their assignment.",
+                "operationId": "f25cb7a55d89a4f475d34cc04961a691",
+                "parameters": [
+                    {
+                        "name": "assignment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "response"
+                                ],
+                                "properties": {
+                                    "response": {
+                                        "type": "string",
+                                        "enum": [
+                                            "accepted",
+                                            "decline"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Response recorded"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/users": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "List all users with optional search/filter (admin only)",
+                "description": "List users (admin), with simple search filter.",
+                "operationId": "47249454f1cdb4ad92ff4dd2abad233f",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort_by",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort_direction",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated user list"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Create a new user and assign a role (admin only)",
+                "description": "Create a user and assign their primary role.",
+                "operationId": "381804010d0bc76cac24bab8ac5f1707",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "role"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "enum": [
+                                            "admin",
+                                            "editor",
+                                            "reviewer",
+                                            "author",
+                                            "reader"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User created"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/users/{user}": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get user details (admin or own profile)",
+                "description": "Show user details.",
+                "operationId": "b9a07aec8a1f6aa66688f39bc64c9918",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User details"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update user information (admin or own profile)",
+                "description": "Update basic user information.",
+                "operationId": "be3ee125d287f4a7879aee61773fb958",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User updated"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Soft-delete a user (admin only)",
+                "description": "Soft-delete a user.",
+                "operationId": "77dac9fb291ec7a7ce1fbba05c742cdf",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User deleted"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/users/{user}/assign-role": {
+            "post": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Assign a role to a user (admin only)",
+                "description": "Assign a primary role to a user.",
+                "operationId": "54b53cb26b927993e6eecb209d712a45",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "role"
+                                ],
+                                "properties": {
+                                    "role": {
+                                        "type": "string",
+                                        "enum": [
+                                            "admin",
+                                            "editor",
+                                            "reviewer",
+                                            "author",
+                                            "reader"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Role assigned"
+                    },
+                    "403": {
+                        "description": "Access denied"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "sanctum": {
+                "type": "apiKey",
+                "description": "Laravel Sanctum stateful cookie authentication. Call /sanctum/csrf-cookie before /api/v1/auth/login and send credentials with cookies.",
+                "name": "laravel_session",
+                "in": "cookie"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Auth",
+            "description": "Authentication endpoints"
+        },
+        {
+            "name": "Articles",
+            "description": "Article management"
+        },
+        {
+            "name": "Article Versions",
+            "description": "Article version uploads"
+        },
+        {
+            "name": "Categories",
+            "description": "Article categories"
+        },
+        {
+            "name": "Reviews",
+            "description": "Peer reviews"
+        },
+        {
+            "name": "Reviewer Assignments",
+            "description": "Reviewer assignment management"
+        },
+        {
+            "name": "Editorial Decisions",
+            "description": "Editor decisions on articles"
+        },
+        {
+            "name": "Publications",
+            "description": "Published article listing"
+        },
+        {
+            "name": "Notifications",
+            "description": "User notification management"
+        },
+        {
+            "name": "Dashboard",
+            "description": "Role-based dashboard stats"
+        },
+        {
+            "name": "Users",
+            "description": "User management (admin)"
+        }
+    ]
+}
