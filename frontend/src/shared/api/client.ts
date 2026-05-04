@@ -40,13 +40,10 @@ apiClient.interceptors.response.use(
 
     // [zakarya:inject:response-interceptor]
 
-    if (status === 401) {
-      // Session expired — redirect to login
-      if (globalThis.window !== undefined) {
-        globalThis.window.location.href = '/login';
-      }
-    }
-
+    // Do not perform a global redirect here — let the UI layer decide how to
+    // handle authentication state. Redirecting from the interceptor causes
+    // navigation loops during auth hydration (/auth/me calls). Simply wrap
+    // the server error in an AppError and reject so callers can handle 401.
     throw new AppError(serverMessage, status, error.response?.data?.errors);
   }
 );

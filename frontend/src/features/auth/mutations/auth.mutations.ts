@@ -15,8 +15,11 @@ export function useLoginMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: LoginPayload) => authService.login(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: authKeys.me() });
+    onSuccess: (user) => {
+      // Seed the current user cache immediately to avoid a race where the
+      // UI navigates to a protected route then `/auth/me` fires and returns
+      // 401 before the session cookie is fully established.
+      queryClient.setQueryData(authKeys.me(), user);
     },
   });
 }
