@@ -3,7 +3,7 @@
   Roots  :
     - /c/Users/Lenovo/Desktop/devweb-journal/frontend/app
     - /c/Users/Lenovo/Desktop/devweb-journal/frontend/src
-  Created: 2026-05-04 23:30:22
+  Created: 2026-05-05 01:35:55
 ================================================================
 
 ################################################################
@@ -1766,6 +1766,7 @@ export const assignmentReviewQueryOptions = (assignmentId: number) =>
 FILE: features/articles/services/articles.service.ts
 ----------------------------------------------------------------
 import { apiClient } from '@/shared/api/client';
+import { ensureCsrfCookie } from '@/shared/api/csrf';
 import { ENDPOINTS } from '@/shared/api/endpoints.constants';
 import type {
   Article,
@@ -1804,24 +1805,25 @@ export const articlesService = {
   },
 
   create: async (payload: CreateArticlePayload): Promise<Article> => {
+    await ensureCsrfCookie();
     const form = new FormData();
     form.append('title', payload.title);
     form.append('abstract', payload.abstract);
     form.append('keywords', payload.keywords);
     form.append('category_id', String(payload.category_id));
     form.append('pdf', payload.pdf);
-    const { data } = await apiClient.post<{ message: string; data: Article }>(BASE, form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const { data } = await apiClient.post<{ message: string; data: Article }>(BASE, form);
     return data.data;
   },
 
   update: async (id: number, payload: UpdateArticlePayload): Promise<Article> => {
+    await ensureCsrfCookie();
     const { data } = await apiClient.put<{ message: string; data: Article }>(`${BASE}/${id}`, payload);
     return data.data;
   },
 
   delete: async (id: number): Promise<void> => {
+    await ensureCsrfCookie();
     await apiClient.delete(`${BASE}/${id}`);
   },
 
@@ -1839,6 +1841,7 @@ export const articlesService = {
   },
 
   createVersion: async (articleId: number, payload: CreateVersionPayload): Promise<CreateVersionResponse> => {
+    await ensureCsrfCookie();
     const form = new FormData();
     form.append('pdf', payload.pdf);
     if (payload.change_summary?.trim()) {
@@ -1846,10 +1849,7 @@ export const articlesService = {
     }
     const { data } = await apiClient.post<{ message: string; data: CreateVersionResponse }>(
       `${BASE}/${articleId}/versions`,
-      form,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }
+      form
     );
     return data.data;
   },
@@ -1868,6 +1868,7 @@ export const articlesService = {
   },
 
   assignReviewers: async (articleId: number, payload: AssignReviewersPayload): Promise<ArticleAssignment[]> => {
+    await ensureCsrfCookie();
     const { data } = await apiClient.post<{ message: string; data: ArticleAssignment[] }>(
       `${BASE}/${articleId}/assignments`,
       payload
@@ -1891,10 +1892,12 @@ export const articlesService = {
   },
 
   deleteAssignment: async (assignmentId: number): Promise<void> => {
+    await ensureCsrfCookie();
     await apiClient.delete(`${ASSIGN}/${assignmentId}`);
   },
 
   respondAssignment: async (assignmentId: number, payload: RespondAssignmentPayload): Promise<ArticleAssignment> => {
+    await ensureCsrfCookie();
     const { data } = await apiClient.patch<{ message: string; data: ArticleAssignment }>(
       `${ASSIGN}/${assignmentId}/respond`,
       payload
@@ -1914,6 +1917,7 @@ export const articlesService = {
   },
 
   submitReview: async (assignmentId: number, payload: SubmitReviewPayload): Promise<ArticleReview> => {
+    await ensureCsrfCookie();
     const { data } = await apiClient.post<{ message: string; data: ArticleReview }>(
       `${ASSIGN}/${assignmentId}/review`,
       payload
@@ -1928,6 +1932,7 @@ export const articlesService = {
   },
 
   createDecision: async (articleId: number, payload: CreateDecisionPayload): Promise<EditorialDecision> => {
+    await ensureCsrfCookie();
     const { data } = await apiClient.post<{ message: string; data: EditorialDecision }>(
       `${BASE}/${articleId}/decision`,
       payload
@@ -1940,6 +1945,7 @@ export const articlesService = {
     articleId: number,
     payload: { published_at?: string | null; doi?: string | null; volume?: string | null; issue?: string | null }
   ): Promise<{ id: number; article_id: number; article_version_id: number; published_at: string; doi: string | null; volume: string | null; issue: string | null; created_at: string; updated_at: string }> => {
+    await ensureCsrfCookie();
     const { data } = await apiClient.post<{
       message: string;
       data: { id: number; article_id: number; article_version_id: number; published_at: string; doi: string | null; volume: string | null; issue: string | null; created_at: string; updated_at: string };
@@ -2637,6 +2643,7 @@ export const assignmentReviewQueryOptions = (id: number) =>
 FILE: features/assignments/services/assignments.service.ts
 ----------------------------------------------------------------
 import { apiClient } from '@/shared/api/client';
+import { ensureCsrfCookie } from '@/shared/api/csrf';
 import { ENDPOINTS } from '@/shared/api/endpoints.constants';
 import type { Assignment, AssignmentReview, SubmitReviewPayload } from '../types/Assignment.types';
 
@@ -2649,6 +2656,7 @@ export const assignmentsService = {
   },
 
   respond: async (id: number, response: 'accepted' | 'decline'): Promise<Assignment> => {
+    await ensureCsrfCookie();
     const { data } = await apiClient.patch<Assignment>(`${BASE}/${id}/respond`, { response });
     return data;
   },
@@ -2659,6 +2667,7 @@ export const assignmentsService = {
   },
 
   submitReview: async (id: number, payload: SubmitReviewPayload): Promise<AssignmentReview> => {
+    await ensureCsrfCookie();
     const { data } = await apiClient.post<AssignmentReview>(`${BASE}/${id}/review`, payload);
     return data;
   },
@@ -3003,7 +3012,13 @@ export function LoginForm() {
   const onSubmit = (data: FormData) => {
     setGeneralError('');
     login.mutate(data, {
-      onSuccess: () => router.push('/dashboard'),
+      onSuccess: (user) => {
+        const roles = user.roles ?? [];
+        const isReaderOnly =
+          roles.includes('reader') &&
+          !roles.some((r) => ['admin', 'editor', 'author', 'reviewer'].includes(r));
+        router.push(isReaderOnly ? '/journal' : '/dashboard');
+      },
       onError: (error) => {
         const fieldErrors = getLaravelFieldErrors(error);
         if (Object.keys(fieldErrors).length > 0) {
@@ -3326,7 +3341,7 @@ import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { useRegisterMutation } from '../mutations/auth.mutations';
 import { getLaravelFieldErrors, getErrorMessage } from '@/shared/utils/errors';
-import { Button, FormField, Input } from '@/shared/components/ui';
+import { Button, FormField, Input, Select } from '@/shared/components/ui';
 
 const schema = z
   .object({
@@ -3334,6 +3349,7 @@ const schema = z
     email:                 z.string().email('Enter a valid email address'),
     password:              z.string().min(8, 'Password must be at least 8 characters'),
     password_confirmation: z.string().min(1, 'Please confirm your password'),
+    role:                  z.enum(['author', 'reader'], { required_error: 'Choose author or reader' }),
   })
   .refine((d) => d.password === d.password_confirmation, {
     message: "Passwords don't match",
@@ -3352,7 +3368,10 @@ export function RegisterForm() {
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({ resolver: zodResolver(schema) });
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: { role: 'reader' },
+  });
 
   const onSubmit = (data: FormData) => {
     setGeneralError('');
@@ -3399,6 +3418,13 @@ export function RegisterForm() {
           error={!!errors.email}
           {...field('email')}
         />
+      </FormField>
+
+      <FormField id="role" label="I am registering as" required error={errors.role?.message}>
+        <Select id="role" error={!!errors.role} {...field('role')}>
+          <option value="reader">Reader — browse published work</option>
+          <option value="author">Author — submit manuscripts</option>
+        </Select>
       </FormField>
 
       <FormField id="password" label="Password" required error={errors.password?.message}
@@ -3455,7 +3481,7 @@ export function RegisterPage() {
     <>
       <h2 className="text-xl font-semibold text-primary mb-1">Create an account</h2>
       <p className="text-sm text-muted mb-6">
-        Join DevWeb Journal — you&apos;ll start as a reader
+        Join DevWeb Journal — choose whether you will submit articles as an author or browse as a reader.
       </p>
 
       <RegisterForm />
@@ -3719,9 +3745,12 @@ export function useLogoutMutation() {
   return useMutation({
     mutationFn: authService.logout,
     onSettled: () => {
+      // Remove only auth-related queries and clear current user cache.
+      // Do not perform a global redirect here — the UI layer should
+      // navigate after the mutation settles to avoid navigation races.
       if (isBrowser) {
-        queryClient.clear();
-        globalThis.window.location.href = '/login';
+        queryClient.removeQueries({ queryKey: authKeys.all });
+        queryClient.setQueryData(authKeys.me(), undefined);
       }
     },
   });
@@ -3772,6 +3801,8 @@ export const currentUserQueryOptions = () =>
     queryFn:  authService.me,
     staleTime: 5 * 60_000,
     retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
 
@@ -3779,6 +3810,7 @@ export const currentUserQueryOptions = () =>
 FILE: features/auth/services/auth.service.ts
 ----------------------------------------------------------------
 import { apiClient } from '@/shared/api/client';
+import { ensureCsrfCookie } from '@/shared/api/csrf';
 import { ENDPOINTS } from '@/shared/api/endpoints.constants';
 import type {
   User,
@@ -3795,18 +3827,19 @@ const BASE = ENDPOINTS.AUTH_BASE;
 
 export const authService = {
   login: async (payload: LoginPayload): Promise<User> => {
-    // Get CSRF cookie before login (or use the one from /api/v1/sanctum/csrf-cookie)
-    await apiClient.get('/sanctum/csrf-cookie');
+    await ensureCsrfCookie();
     const { data } = await apiClient.post<AuthDataResponse<User>>(`${BASE}/login`, payload);
     return data.data;
   },
 
   register: async (payload: RegisterPayload): Promise<User> => {
+    await ensureCsrfCookie();
     const { data } = await apiClient.post<AuthDataResponse<User>>(`${BASE}/register`, payload);
     return data.data;
   },
 
   logout: async (): Promise<void> => {
+    await ensureCsrfCookie();
     await apiClient.post(`${BASE}/logout`);
   },
 
@@ -3816,16 +3849,19 @@ export const authService = {
   },
 
   updateProfile: async (payload: UpdateProfilePayload): Promise<User> => {
+    await ensureCsrfCookie();
     const { data } = await apiClient.put<AuthDataResponse<User>>(`${BASE}/profile`, payload);
     return data.data;
   },
 
   forgotPassword: async (payload: ForgotPasswordPayload): Promise<AuthMessageResponse> => {
+    await ensureCsrfCookie();
     const { data } = await apiClient.post<AuthMessageResponse>(`${BASE}/forgot-password`, payload);
     return data;
   },
 
   resetPassword: async (payload: ResetPasswordPayload): Promise<AuthMessageResponse> => {
+    await ensureCsrfCookie();
     const { data } = await apiClient.post<AuthMessageResponse>(`${BASE}/reset-password`, payload);
     return data;
   },
@@ -3856,6 +3892,7 @@ export interface RegisterPayload {
   email: string;
   password: string;
   password_confirmation: string;
+  role: 'author' | 'reader';
 }
 
 /**
@@ -4235,6 +4272,7 @@ export const categoriesListQueryOptions = () =>
 FILE: features/categories/services/categories.service.ts
 ----------------------------------------------------------------
 import { apiClient } from '@/shared/api/client';
+import { ensureCsrfCookie } from '@/shared/api/csrf';
 import { ENDPOINTS } from '@/shared/api/endpoints.constants';
 import type { Category, CreateCategoryPayload, UpdateCategoryPayload } from '../types/Category.types';
 
@@ -4247,16 +4285,19 @@ export const categoriesService = {
   },
 
   create: async (payload: CreateCategoryPayload): Promise<Category> => {
+    await ensureCsrfCookie();
     const { data } = await apiClient.post<{ message: string; data: Category }>(BASE, payload);
     return data.data;
   },
 
   update: async (id: number, payload: UpdateCategoryPayload): Promise<Category> => {
+    await ensureCsrfCookie();
     const { data } = await apiClient.put<{ message: string; data: Category }>(`${BASE}/${id}`, payload);
     return data.data;
   },
 
   delete: async (id: number): Promise<void> => {
+    await ensureCsrfCookie();
     await apiClient.delete(`${BASE}/${id}`);
   },
 } as const;
@@ -4292,21 +4333,38 @@ FILE: features/dashboard/components/DashboardPage.tsx
 ----------------------------------------------------------------
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { LayoutDashboard } from 'lucide-react';
 import { PageHeader, EmptyState, LoadingState, ErrorState } from '@/shared/components/ui';
+import { authKeys } from '@/features/auth/queries/auth.keys';
+import { AppError } from '@/shared/errors/app.error';
 import { useDashboard } from '../hooks/useDashboard';
 
 export function DashboardPage() {
-  const { data, isLoading, isError, refetch } = useDashboard();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { data, isLoading, isError, error, refetch } = useDashboard();
+
+  useEffect(() => {
+    if (!isError || !(error instanceof AppError) || !error.isUnauthorized) return;
+    queryClient.removeQueries({ queryKey: authKeys.me() });
+    router.replace('/login');
+  }, [isError, error, queryClient, router]);
 
   if (isLoading) return <LoadingState rows={4} />;
-  if (isError)
+  if (isError) {
+    if (error instanceof AppError && error.isUnauthorized) {
+      return <LoadingState rows={2} />;
+    }
     return (
       <ErrorState
         message="Could not load dashboard data."
         onRetry={() => refetch()}
       />
     );
+  }
 
   return (
     <div>
@@ -4692,6 +4750,22 @@ export function useNotifications(filters?: NotificationFilters) {
 
 
 ----------------------------------------------------------------
+FILE: features/notifications/hooks/useNotificationsUnreadCount.ts
+----------------------------------------------------------------
+'use client';
+
+import { useQuery } from '@tanstack/react-query';
+import { notificationsUnreadCountQueryOptions } from '../queries/notifications.queries';
+
+export function useNotificationsUnreadCount(enabled = true) {
+  return useQuery({
+    ...notificationsUnreadCountQueryOptions(),
+    enabled,
+  });
+}
+
+
+----------------------------------------------------------------
 FILE: features/notifications/index.ts
 ----------------------------------------------------------------
 export type {
@@ -4702,6 +4776,7 @@ export type {
 } from './types/Notification.types';
 
 export { useNotifications } from './hooks/useNotifications';
+export { useNotificationsUnreadCount } from './hooks/useNotificationsUnreadCount';
 export { useMarkReadMutation, useMarkAllReadMutation } from './mutations/notifications.mutations';
 export { notificationsListQueryOptions, notificationsUnreadCountQueryOptions } from './queries/notifications.queries';
 export { notificationsKeys } from './queries/notifications.keys';
@@ -4736,6 +4811,3561 @@ export function useMarkAllReadMutation() {
       qc.invalidateQueries({ queryKey: notificationsKeys.unreadCount() });
     },
   });
+}
+
+
+----------------------------------------------------------------
+FILE: features/notifications/queries/notifications.keys.ts
+----------------------------------------------------------------
+import type { NotificationFilters } from '../types/Notification.types';
+
+export const notificationsKeys = {
+  all: ['notifications'] as const,
+  lists: () => [...notificationsKeys.all, 'list'] as const,
+  list: (filters?: NotificationFilters) => [...notificationsKeys.lists(), { filters }] as const,
+  unreadCount: () => [...notificationsKeys.all, 'unread-count'] as const,
+} as const;
+
+
+----------------------------------------------------------------
+FILE: features/notifications/queries/notifications.queries.ts
+----------------------------------------------------------------
+import { queryOptions } from '@tanstack/react-query';
+import { notificationsService } from '../services/notifications.service';
+import { notificationsKeys } from './notifications.keys';
+import type { NotificationFilters } from '../types/Notification.types';
+
+export const notificationsListQueryOptions = (filters?: NotificationFilters) =>
+  queryOptions({
+    queryKey: notificationsKeys.list(filters),
+    queryFn: () => notificationsService.getAll(filters),
+    staleTime: 30_000,
+  });
+
+export const notificationsUnreadCountQueryOptions = () =>
+  queryOptions({
+    queryKey: notificationsKeys.unreadCount(),
+    queryFn: () => notificationsService.getUnreadCount(),
+    staleTime: 30_000,
+  });
+
+
+----------------------------------------------------------------
+FILE: features/notifications/services/notifications.service.ts
+----------------------------------------------------------------
+import { apiClient } from '@/shared/api/client';
+import { ensureCsrfCookie } from '@/shared/api/csrf';
+import { ENDPOINTS } from '@/shared/api/endpoints.constants';
+import type {
+  Notification,
+  PaginatedNotifications,
+  NotificationFilters,
+  UnreadCountResponse,
+} from '../types/Notification.types';
+
+const BASE = ENDPOINTS.NOTIFICATIONS_BASE;
+
+export const notificationsService = {
+  getAll: async (filters?: NotificationFilters): Promise<PaginatedNotifications> => {
+    const { data } = await apiClient.get<PaginatedNotifications>(BASE, { params: filters });
+    return data;
+  },
+
+  getUnreadCount: async (): Promise<number> => {
+    const { data } = await apiClient.get<UnreadCountResponse>(`${BASE}/unread-count`);
+    return data.unread_count;
+  },
+
+  markRead: async (id: number): Promise<Notification> => {
+    await ensureCsrfCookie();
+    const { data } = await apiClient.patch<{ message: string; data: Notification }>(`${BASE}/${id}/read`);
+    return data.data;
+  },
+
+  markAllRead: async (): Promise<number> => {
+    await ensureCsrfCookie();
+    const { data } = await apiClient.post<{ message: string; data: { updated: number } }>(
+      `${BASE}/read-all`
+    );
+    return data.data.updated;
+  },
+} as const;
+
+
+----------------------------------------------------------------
+FILE: features/notifications/types/Notification.types.ts
+----------------------------------------------------------------
+export interface PaginatorLinks {
+  first: string | null;
+  last: string | null;
+  prev: string | null;
+  next: string | null;
+}
+
+export interface PaginatorMeta {
+  current_page: number;
+  from: number | null;
+  last_page: number;
+  path: string;
+  per_page: number;
+  to: number | null;
+  total: number;
+}
+
+export interface Notification {
+  id: number;
+  user_id: number;
+  type: string;
+  title: string;
+  body: string;
+  data: Record<string, unknown> | null;
+  read_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaginatedNotifications {
+  data: {
+    data: Notification[];
+    links: PaginatorLinks;
+    meta: PaginatorMeta;
+  };
+}
+
+export interface NotificationFilters {
+  only_unread?: boolean;
+  page?: number;
+}
+
+export interface UnreadCountResponse {
+  data: {
+    unread_count: number;
+  };
+  unread_count: number;
+}
+
+
+----------------------------------------------------------------
+FILE: features/publications/components/PublicationDetailPage.tsx
+----------------------------------------------------------------
+'use client';
+
+import Link from 'next/link';
+import { Download, ChevronLeft, BookOpen } from 'lucide-react';
+import { LoadingState, ErrorState, Button } from '@/shared/components/ui';
+import { usePublication } from '../hooks/usePublication';
+import { publicationsService } from '../services/publications.service';
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function PublicationDetailPage({ id }: { id: number }) {
+  const { data: pub, isLoading, isError, refetch } = usePublication(id);
+
+  if (isLoading) return <LoadingState rows={5} />;
+  if (isError) return <ErrorState message="Could not load publication." onRetry={() => refetch()} />;
+
+  async function handleDownload() {
+    const blob = await publicationsService.download(id);
+    downloadBlob(blob, `publication-${id}.pdf`);
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-10">
+      <div className="mb-6">
+        <Link href="/journal" className="inline-flex items-center gap-1 text-sm text-muted hover:text-secondary">
+          <ChevronLeft className="w-4 h-4" /> Back to Journal
+        </Link>
+      </div>
+
+      <div className="flex items-start justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center shrink-0">
+            <BookOpen className="w-5 h-5 text-brand-600" />
+          </div>
+          <div>
+            {(pub!.volume || pub!.issue) && (
+              <p className="text-xs text-muted">
+                {pub!.volume && `Vol. ${pub!.volume}`}
+                {pub!.volume && pub!.issue && ' · '}
+                {pub!.issue && `Issue ${pub!.issue}`}
+              </p>
+            )}
+            <p className="text-xs text-muted">
+              Published {new Date(pub!.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
+          </div>
+        </div>
+        <Button variant="secondary" size="sm" leftIcon={<Download className="w-4 h-4" />} onClick={handleDownload}>
+          Download PDF
+        </Button>
+      </div>
+
+      <h1 className="text-2xl font-bold text-primary leading-snug mb-3">
+        {pub!.title ?? `Publication #${id}`}
+      </h1>
+
+      <p className="text-sm text-muted mb-1">{pub!.author_name}</p>
+
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-brand-50 text-brand-700 mb-4">
+        {pub!.category_name}
+      </span>
+
+      {pub!.doi && (
+        <p className="text-xs text-muted font-mono mb-6">DOI: {pub!.doi}</p>
+      )}
+
+      {pub!.keywords && (
+        <div className="mb-6">
+          <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">Keywords</p>
+          <p className="text-sm text-secondary">{pub!.keywords}</p>
+        </div>
+      )}
+
+      {pub!.abstract && (
+        <div className="bg-muted rounded-lg p-5">
+          <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Abstract</p>
+          <p className="text-sm text-secondary leading-relaxed whitespace-pre-wrap">{pub!.abstract}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: features/publications/components/PublicJournalPage.tsx
+----------------------------------------------------------------
+'use client';
+
+import type { ChangeEvent } from 'react';
+import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
+import { BookOpen, Search } from 'lucide-react';
+import {
+  EmptyState,
+  LoadingState,
+  ErrorState,
+  SearchInput,
+  Pagination,
+  Card,
+  Input,
+  Select,
+  FormField,
+} from '@/shared/components/ui';
+import { usePublications } from '../hooks/usePublications';
+import { publicationsVolumesQueryOptions } from '../queries/publications.queries';
+import type { PublicationListItem, Volume } from '../types/Publication.types';
+
+function groupByYearAndVolume(items: PublicationListItem[]): { label: string; items: PublicationListItem[] }[] {
+  const map = new Map<string, PublicationListItem[]>();
+  const order: string[] = [];
+
+  for (const p of items) {
+    const y = new Date(p.published_at).getFullYear();
+    const vol = p.volume ?? '—';
+    const key = `${y}__${vol}`;
+    if (!map.has(key)) {
+      map.set(key, []);
+      order.push(key);
+    }
+    map.get(key)!.push(p);
+  }
+
+  for (const arr of map.values()) {
+    arr.sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
+  }
+
+  order.sort((a, b) => {
+    const [ya, va] = a.split('__');
+    const [yb, vb] = b.split('__');
+    if (ya !== yb) return Number(yb) - Number(ya);
+    return String(va).localeCompare(String(vb), undefined, { numeric: true });
+  });
+
+  return order.map((key) => {
+    const [y, vol] = key.split('__');
+    return { label: `${y} · Volume ${vol}`, items: map.get(key)! };
+  });
+}
+
+export function PublicJournalPage() {
+  const [search, setSearch] = useState('');
+  const [author, setAuthor] = useState('');
+  const [year, setYear] = useState<number | ''>('');
+  const [volume, setVolume] = useState('');
+  const [page, setPage] = useState(1);
+
+  const { data: volumes = [] } = useQuery(publicationsVolumesQueryOptions());
+
+  const yearOptions = useMemo(() => {
+    const ys = new Set<number>();
+    for (const v of volumes as Volume[]) {
+      if (typeof v.year === 'number' && v.year > 0) {
+        ys.add(v.year);
+      }
+    }
+    return Array.from(ys).sort((a, b) => b - a);
+  }, [volumes]);
+
+  const volumeOptionsForYear = useMemo(() => {
+    const vols = volumes as Volume[];
+    if (year === '') {
+      return Array.from(new Set(vols.map((v) => v.volume).filter(Boolean))) as string[];
+    }
+    return Array.from(
+      new Set(
+        vols.filter((v) => v.year === year).map((v) => v.volume).filter(Boolean)
+      )
+    ) as string[];
+  }, [volumes, year]);
+
+  const { data, isLoading, isError, refetch } = usePublications({
+    search: search || undefined,
+    author: author.trim() || undefined,
+    year: year === '' ? undefined : year,
+    volume: volume || undefined,
+    page,
+  });
+
+  const publications = data?.data?.data ?? [];
+  const total = data?.data?.meta?.total ?? 0;
+  const lastPage = data?.data?.meta?.last_page ?? 1;
+  const perPage = data?.data?.meta?.per_page ?? 12;
+
+  const groupedSections = useMemo(() => groupByYearAndVolume(publications), [publications]);
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-10">
+      <div className="mb-10 text-center">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-brand-50 mb-4">
+          <BookOpen className="w-7 h-7 text-brand-600" />
+        </div>
+        <h1 className="text-3xl font-bold text-primary">DevWeb Journal</h1>
+        <p className="text-base text-muted mt-2">Browse peer-reviewed articles published by our editorial team</p>
+      </div>
+
+      <div className="mb-8 space-y-4 max-w-2xl mx-auto">
+        <SearchInput
+          value={search}
+          onChange={(v) => { setSearch(v); setPage(1); }}
+          placeholder="Search title, abstract, keywords, or author…"
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <FormField id="filter-author" label="Author name">
+            <Input
+              id="filter-author"
+              value={author}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => { setAuthor(e.target.value); setPage(1); }}
+              placeholder="Filter by author"
+            />
+          </FormField>
+          <FormField id="filter-year" label="Year">
+            <Select
+              id="filter-year"
+              value={year === '' ? '' : String(year)}
+              onChange={(e: ChangeEvent<HTMLSelectElement>) => {
+                const v = e.target.value;
+                setYear(v === '' ? '' : Number(v));
+                setVolume('');
+                setPage(1);
+              }}
+            >
+              <option value="">All years</option>
+              {yearOptions.map((y: number) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </Select>
+          </FormField>
+          <FormField id="filter-volume" label="Volume">
+            <Select
+              id="filter-volume"
+              value={volume}
+              onChange={(e: ChangeEvent<HTMLSelectElement>) => { setVolume(e.target.value); setPage(1); }}
+            >
+              <option value="">All volumes</option>
+              {volumeOptionsForYear.map((vol: string) => (
+                <option key={vol} value={vol}>{vol}</option>
+              ))}
+            </Select>
+          </FormField>
+        </div>
+      </div>
+
+      {isLoading && <LoadingState variant="list" rows={5} />}
+
+      {isError && (
+        <ErrorState message="Could not load publications." onRetry={() => refetch()} />
+      )}
+
+      {!isLoading && !isError && publications.length === 0 && (
+        <EmptyState
+          icon={<Search className="w-6 h-6" />}
+          title={search || author || year !== '' || volume ? 'No results found' : 'No publications yet'}
+          description={search || author || year !== '' || volume ? 'Try adjusting filters or search.' : 'Check back later for new publications.'}
+          className="py-16"
+        />
+      )}
+
+      {!isLoading && !isError && publications.length > 0 && (
+        <>
+          <div className="space-y-10">
+            {groupedSections.map((section: { label: string; items: PublicationListItem[] }) => (
+              <section key={section.label}>
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-3 border-b border-subtle pb-2">
+                  {section.label}
+                </h2>
+                <div className="space-y-4">
+                  {section.items.map((pub: PublicationListItem) => (
+                    <Card key={pub.id} className="hover:shadow-panel transition-shadow duration-150">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <Link
+                            href={`/journal/${pub.id}`}
+                            className="text-lg font-semibold text-primary hover:text-brand-600 transition-colors leading-snug"
+                          >
+                            {pub.title ?? `Publication #${pub.id}`}
+                          </Link>
+
+                          {pub.author_name && (
+                            <p className="text-sm text-secondary mt-1">
+                              {pub.author_name}
+                            </p>
+                          )}
+
+                          {pub.abstract && (
+                            <p className="text-sm text-secondary mt-2 line-clamp-2">
+                              {pub.abstract}
+                            </p>
+                          )}
+
+                          <div className="flex flex-wrap items-center gap-3 mt-3">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                              Published
+                            </span>
+                            {pub.category_name && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-brand-50 text-brand-700">
+                                {pub.category_name}
+                              </span>
+                            )}
+                            {pub.doi && (
+                              <span className="text-xs text-muted font-mono">DOI: {pub.doi}</span>
+                            )}
+                            {(pub.volume || pub.issue) && (
+                              <span className="text-xs text-muted">
+                                {pub.volume && `Vol. ${pub.volume}`}
+                                {pub.volume && pub.issue && ' · '}
+                                {pub.issue && `Issue ${pub.issue}`}
+                              </span>
+                            )}
+                            <span className="text-xs text-muted">
+                              {new Date(pub.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                            </span>
+                          </div>
+                        </div>
+
+                        <Link
+                          href={`/journal/${pub.id}`}
+                          className="shrink-0 text-sm text-brand-600 hover:underline font-medium whitespace-nowrap"
+                        >
+                          Read →
+                        </Link>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+
+          {total > perPage && (
+            <div className="mt-8">
+              <Pagination
+                page={page}
+                lastPage={lastPage}
+                total={total}
+                from={(page - 1) * perPage + 1}
+                to={Math.min(page * perPage, total)}
+                onPageChange={setPage}
+              />
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: features/publications/hooks/usePublication.ts
+----------------------------------------------------------------
+import { useQuery } from '@tanstack/react-query';
+import { publicationsDetailQueryOptions } from '../queries/publications.queries';
+
+export function usePublication(id: number) {
+  return useQuery(publicationsDetailQueryOptions(id));
+}
+
+
+----------------------------------------------------------------
+FILE: features/publications/hooks/usePublications.ts
+----------------------------------------------------------------
+import { useQuery } from '@tanstack/react-query';
+import { publicationsListQueryOptions } from '../queries/publications.queries';
+import type { PublicationFilters } from '../types/Publication.types';
+
+export function usePublications(filters?: PublicationFilters) {
+  return useQuery(publicationsListQueryOptions(filters));
+}
+
+
+----------------------------------------------------------------
+FILE: features/publications/index.ts
+----------------------------------------------------------------
+export type {
+  PublicationDetail,
+  PublicationFilters,
+  PaginatedPublications,
+  PublishArticlePayload,
+  Volume,
+} from './types/Publication.types';
+
+export { usePublications } from './hooks/usePublications';
+export { usePublication } from './hooks/usePublication';
+export { usePublishArticleMutation } from './mutations/publications.mutations';
+export {
+  publicationsListQueryOptions,
+  publicationsDetailQueryOptions,
+  publicationsVolumesQueryOptions,
+} from './queries/publications.queries';
+export { publicationsKeys } from './queries/publications.keys';
+
+
+----------------------------------------------------------------
+FILE: features/publications/mutations/publications.mutations.ts
+----------------------------------------------------------------
+'use client';
+
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { publicationsService } from '../services/publications.service';
+import { publicationsKeys } from '../queries/publications.keys';
+import type { PublishArticlePayload } from '../types/Publication.types';
+
+export function usePublishArticleMutation(articleId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: PublishArticlePayload) => publicationsService.publish(articleId, payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: publicationsKeys.lists() }),
+  });
+}
+
+
+----------------------------------------------------------------
+FILE: features/publications/queries/publications.keys.ts
+----------------------------------------------------------------
+import type { PublicationFilters } from '../types/Publication.types';
+
+export const publicationsKeys = {
+  all: ['publications'] as const,
+  lists: () => [...publicationsKeys.all, 'list'] as const,
+  list: (filters?: PublicationFilters) => [...publicationsKeys.lists(), { filters }] as const,
+  details: () => [...publicationsKeys.all, 'detail'] as const,
+  detail: (id: number) => [...publicationsKeys.details(), id] as const,
+  volumes: () => [...publicationsKeys.all, 'volumes'] as const,
+} as const;
+
+
+----------------------------------------------------------------
+FILE: features/publications/queries/publications.queries.ts
+----------------------------------------------------------------
+import { queryOptions } from '@tanstack/react-query';
+import { publicationsService } from '../services/publications.service';
+import { publicationsKeys } from './publications.keys';
+import type { PublicationFilters } from '../types/Publication.types';
+
+export const publicationsListQueryOptions = (filters?: PublicationFilters) =>
+  queryOptions({
+    queryKey: publicationsKeys.list(filters),
+    queryFn: () => publicationsService.getAll(filters),
+    staleTime: 5 * 60_000,
+  });
+
+export const publicationsDetailQueryOptions = (id: number) =>
+  queryOptions({
+    queryKey: publicationsKeys.detail(id),
+    queryFn: () => publicationsService.getById(id),
+    enabled: id > 0,
+    staleTime: 5 * 60_000,
+  });
+
+export const publicationsVolumesQueryOptions = () =>
+  queryOptions({
+    queryKey: publicationsKeys.volumes(),
+    queryFn: () => publicationsService.getVolumes(),
+    staleTime: 10 * 60_000,
+  });
+
+
+----------------------------------------------------------------
+FILE: features/publications/services/publications.service.ts
+----------------------------------------------------------------
+import { apiClient } from '@/shared/api/client';
+import { ensureCsrfCookie } from '@/shared/api/csrf';
+import { ENDPOINTS } from '@/shared/api/endpoints.constants';
+import type {
+  PublicationDetail,
+  PaginatedPublications,
+  PublicationFilters,
+  PublishArticlePayload,
+  Volume,
+} from '../types/Publication.types';
+
+const BASE = ENDPOINTS.PUBLICATIONS_BASE;
+const ARTICLES = ENDPOINTS.ARTICLES_BASE;
+
+export const publicationsService = {
+  getAll: async (filters?: PublicationFilters): Promise<PaginatedPublications> => {
+    const { data } = await apiClient.get<PaginatedPublications>(BASE, { params: filters });
+    return data;
+  },
+
+  getById: async (id: number): Promise<PublicationDetail> => {
+    const { data } = await apiClient.get<{ data: PublicationDetail }>(`${BASE}/${id}`);
+    return data.data;
+  },
+
+  getVolumes: async (): Promise<Volume[]> => {
+    const { data } = await apiClient.get<{ data: Volume[] }>(`${BASE}/volumes`);
+    return data.data;
+  },
+
+  download: async (id: number): Promise<Blob> => {
+    const { data } = await apiClient.get<Blob>(`${BASE}/${id}/download`, {
+      responseType: 'blob',
+    });
+    return data;
+  },
+
+  publish: async (
+    articleId: number,
+    payload: PublishArticlePayload
+  ): Promise<{
+    id: number;
+    article_id: number;
+    article_version_id: number;
+    published_at: string;
+    doi: string | null;
+    volume: string | null;
+    issue: string | null;
+    created_at: string;
+    updated_at: string;
+  }> => {
+    await ensureCsrfCookie();
+    const { data } = await apiClient.post<{
+      message: string;
+      data: {
+        id: number;
+        article_id: number;
+        article_version_id: number;
+        published_at: string;
+        doi: string | null;
+        volume: string | null;
+        issue: string | null;
+        created_at: string;
+        updated_at: string;
+      };
+    }>(`${ARTICLES}/${articleId}/publish`, payload);
+    return data.data;
+  },
+} as const;
+
+
+----------------------------------------------------------------
+FILE: features/publications/types/Publication.types.ts
+----------------------------------------------------------------
+export interface PaginatorLinks {
+  first: string | null;
+  last: string | null;
+  prev: string | null;
+  next: string | null;
+}
+
+export interface PaginatorMeta {
+  current_page: number;
+  from: number | null;
+  last_page: number;
+  path: string;
+  per_page: number;
+  to: number | null;
+  total: number;
+}
+
+export interface PublicationListItem {
+  id: number;
+  published_at: string;
+  doi: string | null;
+  volume: string | null;
+  issue: string | null;
+  article_id: number;
+  title: string;
+  abstract: string;
+  keywords: string;
+  category_name: string;
+  category_slug: string;
+  author_name?: string;
+}
+
+export interface PublicationDetail {
+  id: number;
+  published_at: string;
+  doi: string | null;
+  volume: string | null;
+  issue: string | null;
+  article_version_id: number;
+  article_id: number;
+  title: string;
+  abstract: string;
+  keywords: string;
+  category_name: string;
+  category_slug: string;
+  author_name: string;
+}
+
+export interface Volume {
+  volume: string | null;
+  issue: string | null;
+  year: number;
+}
+
+export interface PublicationFilters {
+  search?: string;
+  category?: string;
+  volume?: string;
+  issue?: string;
+  year?: number;
+  author?: string;
+  page?: number;
+}
+
+export interface PaginatedPublications {
+  data: {
+    current_page: number;
+    data: PublicationListItem[];
+    first_page_url: string;
+    last_page_url: string;
+    links: PaginatorLinks;
+    meta: PaginatorMeta;
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    total: number;
+  };
+}
+
+export interface PublishArticlePayload {
+  published_at?: string | null;
+  doi?: string | null;
+  volume?: string | null;
+  issue?: string | null;
+}
+
+
+----------------------------------------------------------------
+FILE: features/reviews/components/ReviewsPage.tsx
+----------------------------------------------------------------
+'use client';
+
+import { Star } from 'lucide-react';
+import { PageHeader, Card, EmptyState } from '@/shared/components/ui';
+
+export function ReviewsPage() {
+  return (
+    <div>
+      <PageHeader
+        title="Reviews"
+        description="Submitted and draft reviews"
+      />
+      <Card padding="none">
+        <EmptyState
+          icon={<Star className="w-6 h-6" />}
+          title="No reviews yet"
+          description="Submitted reviews will appear here."
+          className="py-16"
+        />
+      </Card>
+    </div>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: features/reviews/hooks/useReview.ts
+----------------------------------------------------------------
+/**
+ * useReview hook
+ *
+ * Fetches a single review by ID.
+ */
+
+import { useQuery } from '@tanstack/react-query';
+import { reviewsDetailQueryOptions } from '../queries/reviews.queries';
+
+export function useReview(assignmentId: number) {
+  return useQuery(reviewsDetailQueryOptions(assignmentId));
+}
+
+
+----------------------------------------------------------------
+FILE: features/reviews/hooks/useReviews.ts
+----------------------------------------------------------------
+/**
+ * useReviews hook
+ *
+ * Composes query options + useQuery for listing reviews.
+ * This is what components import — never useQuery directly.
+ */
+
+import { useQuery } from '@tanstack/react-query';
+import { reviewsListQueryOptions } from '../queries/reviews.queries';
+import type { ReviewFilters } from '../types/Review.types';
+
+export function useReviews(filters: ReviewFilters) {
+  return useQuery(reviewsListQueryOptions(filters));
+}
+
+
+----------------------------------------------------------------
+FILE: features/reviews/index.ts
+----------------------------------------------------------------
+/**
+ * Review Feature — Public API
+ *
+ * Only export what consumers of this feature need.
+ * Internal implementation details remain private.
+ */
+
+// Types
+export type {
+  Review,
+  ReviewDraft,
+  ReviewUpdatePayload,
+  ReviewFilters,
+  ReviewsResponse,
+} from './types/Review.types';
+
+// Hooks (primary interface for components)
+export { useReviews } from './hooks/useReviews';
+export { useReview } from './hooks/useReview';
+
+// Mutations
+export {
+  useCreateReviewMutation,
+  useUpdateReviewMutation,
+} from './mutations/reviews.mutations';
+
+// Query options (for prefetching in loaders/server components)
+export {
+  reviewsListQueryOptions,
+  reviewsDetailQueryOptions,
+} from './queries/reviews.queries';
+
+// Query keys (for targeted invalidation from other features via shared/)
+export { reviewsKeys } from './queries/reviews.keys';
+
+
+----------------------------------------------------------------
+FILE: features/reviews/mutations/reviews.mutations.ts
+----------------------------------------------------------------
+/**
+ * Review Mutations
+ *
+ * TanStack Query mutation factories.
+ * Each mutation handles cache invalidation automatically.
+ */
+
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { reviewsService } from '../services/reviews.service';
+import { reviewsKeys } from '../queries/reviews.keys';
+import type {
+  ReviewDraft,
+  ReviewUpdatePayload,
+} from '../types/Review.types';
+
+/**
+ * Create a new review.
+ */
+export function useCreateReviewMutation(assignmentId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: ReviewDraft) => reviewsService.create(assignmentId, payload),
+    onSuccess: (created) => {
+      queryClient.invalidateQueries({ queryKey: reviewsKeys.lists() });
+      queryClient.setQueryData(reviewsKeys.detail(created.assignment_id), created);
+    },
+  });
+}
+
+/**
+ * Update an existing review.
+ */
+export function useUpdateReviewMutation(assignmentId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: ReviewUpdatePayload) => reviewsService.update(assignmentId, payload),
+    onSuccess: (updated) => {
+      queryClient.invalidateQueries({ queryKey: reviewsKeys.lists() });
+      queryClient.setQueryData(reviewsKeys.detail(updated.assignment_id), updated);
+    },
+  });
+}
+
+
+----------------------------------------------------------------
+FILE: features/reviews/queries/reviews.keys.ts
+----------------------------------------------------------------
+/**
+ * Review Query Keys
+ *
+ * Centralized, typed query key factory for TanStack Query.
+ * All reviews queries/mutations reference keys from here.
+ */
+
+import type { ReviewFilters } from '../types/Review.types';
+
+export const reviewsKeys = {
+  /** Base key for all reviews queries */
+  all: ['reviews'] as const,
+
+  /** All list variants */
+  lists: () => [...reviewsKeys.all, 'list'] as const,
+
+  /** Specific list with filters */
+  list: (filters?: ReviewFilters) =>
+    [...reviewsKeys.lists(), { filters }] as const,
+
+  /** All detail variants */
+  details: () => [...reviewsKeys.all, 'detail'] as const,
+
+  /** Single item detail */
+  detail: (assignmentId: number) => [...reviewsKeys.details(), assignmentId] as const,
+} as const;
+
+
+----------------------------------------------------------------
+FILE: features/reviews/queries/reviews.queries.ts
+----------------------------------------------------------------
+/**
+ * Review Query Options
+ *
+ * TanStack Query queryOptions factories.
+ * Compose these inside hooks — never call useQuery directly in components.
+ */
+
+import { queryOptions } from '@tanstack/react-query';
+import { reviewsService } from '../services/reviews.service';
+import { reviewsKeys } from './reviews.keys';
+import type { ReviewFilters } from '../types/Review.types';
+
+/**
+ * Query options for fetching reviews for a specific article.
+ */
+export const reviewsListQueryOptions = (filters?: ReviewFilters) =>
+  queryOptions({
+    queryKey: reviewsKeys.list(filters),
+    queryFn: () => reviewsService.getAll(filters),
+    enabled: Boolean(filters?.article_id),
+    staleTime: 60_000,
+  });
+
+/**
+ * Query options for fetching a single review by assignment ID.
+ */
+export const reviewsDetailQueryOptions = (assignmentId: number) =>
+  queryOptions({
+    queryKey: reviewsKeys.detail(assignmentId),
+    queryFn: () => reviewsService.getById(assignmentId),
+    enabled: assignmentId > 0,
+    staleTime: 60_000,
+  });
+
+
+----------------------------------------------------------------
+FILE: features/reviews/services/reviews.service.ts
+----------------------------------------------------------------
+/**
+ * Review Service
+ *
+ * This is the ONLY place where API calls for the reviews feature are made.
+ * Uses the shared Axios client — never instantiate Axios directly here.
+ */
+
+import { apiClient } from '@/shared/api/client';
+import { ensureCsrfCookie } from '@/shared/api/csrf';
+import { ENDPOINTS } from '@/shared/api/endpoints.constants';
+import type {
+  Review,
+  ReviewDraft,
+  ReviewUpdatePayload,
+  ReviewFilters,
+  ReviewsResponse,
+} from '../types/Review.types';
+
+const ASSIGNMENTS = ENDPOINTS.ASSIGNMENTS_BASE;
+const ARTICLES = ENDPOINTS.ARTICLES_BASE;
+
+export const reviewsService = {
+  /**
+   * Fetch reviews for a given article.
+   */
+  getAll: async (filters?: ReviewFilters): Promise<ReviewsResponse> => {
+    if (!filters?.article_id) {
+      return [];
+    }
+    const { data } = await apiClient.get<ReviewsResponse>(`${ARTICLES}/${filters.article_id}/reviews`);
+    return data;
+  },
+
+  /**
+   * Fetch a review by assignment ID.
+   */
+  getById: async (assignmentId: number): Promise<Review> => {
+    const { data } = await apiClient.get<Review>(`${ASSIGNMENTS}/${assignmentId}/review`);
+    return data;
+  },
+
+  /**
+   * Submit (or save draft) review for an assignment.
+   */
+  create: async (assignmentId: number, payload: ReviewDraft): Promise<Review> => {
+    await ensureCsrfCookie();
+    const { data } = await apiClient.post<Review>(`${ASSIGNMENTS}/${assignmentId}/review`, payload);
+    return data;
+  },
+
+  /**
+   * Submit updated review content for an assignment.
+   */
+  update: async (assignmentId: number, payload: ReviewUpdatePayload): Promise<Review> => {
+    await ensureCsrfCookie();
+    const { data } = await apiClient.post<Review>(`${ASSIGNMENTS}/${assignmentId}/review`, payload);
+    return data;
+  },
+} as const;
+
+
+----------------------------------------------------------------
+FILE: features/reviews/types/Review.types.ts
+----------------------------------------------------------------
+/**
+ * Review Domain Types
+ *
+ * All types for the reviews feature live here.
+ * Do NOT import types from other features — use shared/types if needed.
+ */
+
+export type ReviewRecommendation = 'accept' | 'reject' | 'minor_revision' | 'major_revision';
+
+export interface Review {
+  id: number;
+  assignment_id: number;
+  article_version_id: number;
+  originality_score?: number | null;
+  methodology_score?: number | null;
+  clarity_score?: number | null;
+  overall_score?: number | null;
+  comments: string;
+  recommendation?: ReviewRecommendation;
+  is_draft: boolean;
+  is_submitted: boolean;
+  submitted_at?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReviewDraft {
+  assignment_id: number;
+  is_draft: boolean;
+  comments?: string;
+  originality_score?: number;
+  methodology_score?: number;
+  clarity_score?: number;
+  overall_score?: number;
+  recommendation?: ReviewRecommendation;
+}
+
+export interface ReviewUpdatePayload {
+  is_draft?: boolean | null;
+  comments?: string;
+  originality_score?: number;
+  methodology_score?: number;
+  clarity_score?: number;
+  overall_score?: number;
+  recommendation?: ReviewRecommendation;
+}
+
+export interface ReviewFilters {
+  article_id: number;
+}
+
+export type ReviewsResponse = Review[];
+
+
+----------------------------------------------------------------
+FILE: features/users/components/UsersPage.tsx
+----------------------------------------------------------------
+'use client';
+
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { UserPlus, Trash2, X } from 'lucide-react';
+import {
+  PageHeader,
+  Card,
+  EmptyState,
+  LoadingState,
+  ErrorState,
+  SearchInput,
+  Pagination,
+  TableContainer,
+  TableFilterBar,
+  TableWrapper,
+  TableHead,
+  Th,
+  TableBody,
+  Tr,
+  Td,
+  Button,
+  FormField,
+  Input,
+  Select,
+  RoleBadge,
+} from '@/shared/components/ui';
+import { getLaravelFieldErrors, getErrorMessage } from '@/shared/utils/errors';
+import { useUsers } from '../hooks/useUsers';
+import { useCreateUserMutation, useDeleteUserMutation, useAssignRoleMutation } from '../mutations/users.mutations';
+import type { User, UserRole } from '../types/User.types';
+const ROLES: UserRole[] = ['admin', 'editor', 'reviewer', 'author', 'reader'];
+
+const createSchema = z.object({
+  name:                 z.string().min(2, 'Name must be at least 2 characters'),
+  email:                z.string().email('Enter a valid email address'),
+  password:             z.string().min(8, 'Password must be at least 8 characters'),
+  password_confirmation: z.string().min(8, 'Please confirm the password'),
+  role:                 z.enum(['admin', 'editor', 'reviewer', 'author', 'reader']),
+});
+type CreateFormData = z.infer<typeof createSchema>;
+
+function CreateUserModal({ onClose }: { onClose: () => void }) {
+  const createUser = useCreateUserMutation();
+  const [generalError, setGeneralError] = useState('');
+
+  const { register, handleSubmit, setError, formState: { errors, isSubmitting } } =
+    useForm<CreateFormData>({ resolver: zodResolver(createSchema) });
+
+  const onSubmit = (data: CreateFormData) => {
+    setGeneralError('');
+    createUser.mutate(data, {
+      onSuccess: onClose,
+      onError: (error) => {
+        const fieldErrors = getLaravelFieldErrors(error);
+        if (Object.keys(fieldErrors).length > 0) {
+          for (const [field, message] of Object.entries(fieldErrors)) {
+            setError(field as keyof CreateFormData, { message });
+          }
+        } else {
+          setGeneralError(getErrorMessage(error));
+        }
+      },
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative bg-surface rounded-lg shadow-dialog w-full max-w-md p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-semibold text-primary">Create User</h2>
+          <button type="button" onClick={onClose} className="p-1.5 rounded text-muted hover:text-secondary hover:bg-muted transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+          {generalError && (
+            <div role="alert" className="px-3 py-2.5 rounded-md bg-red-50 border border-red-200 text-sm text-danger">
+              {generalError}
+            </div>
+          )}
+
+          <FormField id="name" label="Full name" required error={errors.name?.message}>
+            <Input id="name" type="text" placeholder="Jane Doe" error={!!errors.name} {...register('name')} />
+          </FormField>
+
+          <FormField id="email" label="Email address" required error={errors.email?.message}>
+            <Input id="email" type="email" placeholder="you@example.com" error={!!errors.email} {...register('email')} />
+          </FormField>
+
+          <FormField id="password" label="Password" required error={errors.password?.message} hint="Min. 8 characters">
+            <Input id="password" type="password" placeholder="••••••••" error={!!errors.password} {...register('password')} />
+          </FormField>
+
+          <FormField id="password_confirmation" label="Confirm password" required error={errors.password_confirmation?.message}>
+            <Input
+              id="password_confirmation"
+              type="password"
+              placeholder="••••••••"
+              error={!!errors.password_confirmation}
+              {...register('password_confirmation')}
+            />
+          </FormField>
+
+          <FormField id="role" label="Role" required error={errors.role?.message}>
+            <Select id="role" error={!!errors.role} {...register('role')}>
+              <option value="">Select a role…</option>
+              {ROLES.map((r) => (
+                <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
+              ))}
+            </Select>
+          </FormField>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
+            <Button type="submit" variant="primary" loading={isSubmitting || createUser.isPending}>
+              Create User
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function RoleSelectCell({ user }: { user: User }) {
+  const assignRole = useAssignRoleMutation(user.id);
+  const currentRole = user.roles[0] ?? 'reader';
+
+  return (
+    <select
+      value={currentRole}
+      onChange={(e) => assignRole.mutate({ role: e.target.value as UserRole })}
+      disabled={assignRole.isPending}
+      className="text-xs border border-strong rounded px-2 py-1 bg-surface text-primary focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-50"
+    >
+      {ROLES.map((r) => (
+        <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
+      ))}
+    </select>
+  );
+}
+
+export function UsersPage() {
+  const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState<UserRole | ''>('');
+  const [page, setPage] = useState(1);
+  const [showCreate, setShowCreate] = useState(false);
+
+  const { data, isLoading, isError, refetch } = useUsers({
+    search: search || undefined,
+    role: roleFilter || undefined,
+    page,
+  });
+  const deleteUser = useDeleteUserMutation();
+
+  const users = data?.data?.data ?? [];
+  const total = data?.data?.meta?.total ?? 0;
+  const lastPage = data?.data?.meta?.last_page ?? 1;
+  const perPage = data?.data?.meta?.per_page ?? 15;
+
+  return (
+    <div>
+      {showCreate && <CreateUserModal onClose={() => setShowCreate(false)} />}
+
+      <PageHeader
+        title="Users"
+        description="Manage platform users and roles"
+        action={
+          <button
+            type="button"
+            onClick={() => setShowCreate(true)}
+            className="inline-flex items-center gap-2 h-10 px-4 text-sm rounded bg-brand-600 text-white font-semibold hover:bg-brand-700 transition-colors"
+          >
+            <UserPlus className="w-4 h-4" /> Add User
+          </button>
+        }
+      />
+
+      <Card padding="none">
+        <TableFilterBar>
+          <SearchInput
+            value={search}
+            onChange={(v) => { setSearch(v); setPage(1); }}
+            placeholder="Search users…"
+          />
+          <select
+            value={roleFilter}
+            onChange={(e) => { setRoleFilter(e.target.value as UserRole | ''); setPage(1); }}
+            className="h-9 px-3 text-sm border border-strong rounded bg-surface text-primary focus:outline-none focus:ring-2 focus:ring-brand-500"
+          >
+            <option value="">All roles</option>
+            {ROLES.map((r) => (
+              <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
+            ))}
+          </select>
+        </TableFilterBar>
+
+        {isLoading && <LoadingState variant="table" rows={6} />}
+
+        {isError && (
+          <ErrorState message="Could not load users." onRetry={() => refetch()} className="py-12" />
+        )}
+
+        {!isLoading && !isError && users.length === 0 && (
+          <EmptyState
+            icon={<UserPlus className="w-6 h-6" />}
+            title="No users found"
+            description={search || roleFilter ? 'Try adjusting your filters.' : 'No users registered yet.'}
+            className="py-16"
+          />
+        )}
+
+        {!isLoading && !isError && users.length > 0 && (
+          <TableContainer>
+            <TableWrapper>
+              <TableHead>
+                <tr>
+                  <Th>Name</Th>
+                  <Th>Email</Th>
+                  <Th>Role</Th>
+                  <Th>Joined</Th>
+                  <Th> </Th>
+                </tr>
+              </TableHead>
+              <TableBody>
+                {users.map((user) => (
+                  <Tr key={user.id}>
+                    <Td className="font-medium text-primary">{user.name}</Td>
+                    <Td className="text-muted">{user.email}</Td>
+                    <Td>
+                      <div className="flex items-center gap-2">
+                        {user.roles.map((r) => <RoleBadge key={r} role={r} />)}
+                      </div>
+                    </Td>
+                    <Td className="text-muted text-sm">
+                      {new Date(user.created_at).toLocaleDateString()}
+                    </Td>
+                    <Td>
+                      <div className="flex items-center gap-2">
+                        <RoleSelectCell user={user} />
+                        <button
+                          type="button"
+                          onClick={() => deleteUser.mutate(user.id)}
+                          disabled={deleteUser.isPending}
+                          className="p-1.5 rounded text-muted hover:text-danger hover:bg-red-50 transition-colors disabled:opacity-50"
+                          aria-label={`Delete ${user.name}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </Td>
+                  </Tr>
+                ))}
+              </TableBody>
+            </TableWrapper>
+          </TableContainer>
+        )}
+
+        {!isLoading && !isError && total > perPage && (
+          <div className="px-4 py-3 border-t border-subtle">
+            <Pagination
+              page={page}
+              lastPage={lastPage}
+              total={total}
+              from={(page - 1) * perPage + 1}
+              to={Math.min(page * perPage, total)}
+              onPageChange={setPage}
+            />
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: features/users/hooks/useUser.ts
+----------------------------------------------------------------
+import { useUsers } from './useUsers';
+
+export function useUser(id: number) {
+  const { data } = useUsers();
+  return data?.data.data.find((u) => u.id === id) ?? null;
+}
+
+
+----------------------------------------------------------------
+FILE: features/users/hooks/useUsers.ts
+----------------------------------------------------------------
+/**
+ * useUsers hook
+ *
+ * Composes query options + useQuery for listing users.
+ * This is what components import — never useQuery directly.
+ */
+
+import { useQuery } from '@tanstack/react-query';
+import { usersListQueryOptions } from '../queries/users.queries';
+import type { UserFilters } from '../types/User.types';
+
+export function useUsers(filters?: UserFilters) {
+  return useQuery(usersListQueryOptions(filters));
+}
+
+
+----------------------------------------------------------------
+FILE: features/users/index.ts
+----------------------------------------------------------------
+export type {
+  User,
+  UserRole,
+  UserFilters,
+  PaginatedUsers,
+  CreateUserPayload,
+  UpdateUserPayload,
+  AssignRolePayload,
+} from './types/User.types';
+
+export { useUsers } from './hooks/useUsers';
+export {
+  useCreateUserMutation,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+  useAssignRoleMutation,
+} from './mutations/users.mutations';
+export { usersListQueryOptions } from './queries/users.queries';
+export { usersKeys } from './queries/users.keys';
+
+
+----------------------------------------------------------------
+FILE: features/users/mutations/users.mutations.ts
+----------------------------------------------------------------
+'use client';
+
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { usersService } from '../services/users.service';
+import { usersKeys } from '../queries/users.keys';
+import type { CreateUserPayload, UpdateUserPayload, AssignRolePayload } from '../types/User.types';
+
+export function useCreateUserMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateUserPayload) => usersService.create(payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: usersKeys.lists() }),
+  });
+}
+
+export function useUpdateUserMutation(id: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: UpdateUserPayload) => usersService.update(id, payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: usersKeys.lists() }),
+  });
+}
+
+export function useDeleteUserMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => usersService.delete(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: usersKeys.lists() }),
+  });
+}
+
+export function useAssignRoleMutation(id: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: AssignRolePayload) => usersService.assignRole(id, payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: usersKeys.lists() }),
+  });
+}
+
+
+----------------------------------------------------------------
+FILE: features/users/queries/users.keys.ts
+----------------------------------------------------------------
+import type { UserFilters } from '../types/User.types';
+
+export const usersKeys = {
+  all: ['users'] as const,
+  lists: () => [...usersKeys.all, 'list'] as const,
+  list: (filters?: UserFilters) => [...usersKeys.lists(), { filters }] as const,
+} as const;
+
+
+----------------------------------------------------------------
+FILE: features/users/queries/users.queries.ts
+----------------------------------------------------------------
+import { queryOptions } from '@tanstack/react-query';
+import { usersService } from '../services/users.service';
+import { usersKeys } from './users.keys';
+import type { UserFilters } from '../types/User.types';
+
+export const usersListQueryOptions = (filters?: UserFilters) =>
+  queryOptions({
+    queryKey: usersKeys.list(filters),
+    queryFn: () => usersService.getAll(filters),
+    staleTime: 60_000,
+  });
+
+
+----------------------------------------------------------------
+FILE: features/users/services/users.service.ts
+----------------------------------------------------------------
+import { apiClient } from '@/shared/api/client';
+import { ensureCsrfCookie } from '@/shared/api/csrf';
+import { ENDPOINTS } from '@/shared/api/endpoints.constants';
+import type {
+  User,
+  UserFilters,
+  PaginatedUsers,
+  CreateUserPayload,
+  UpdateUserPayload,
+  AssignRolePayload,
+  PaginatedResponse,
+} from '../types/User.types';
+
+const BASE = ENDPOINTS.USERS_BASE;
+
+export const usersService = {
+  getAll: async (filters?: UserFilters): Promise<PaginatedUsers> => {
+    const { data } = await apiClient.get<{ data: PaginatedResponse<User> }>(BASE, { params: filters });
+    return { data: data.data };
+  },
+
+  getById: async (id: number): Promise<User> => {
+    const { data } = await apiClient.get<{ data: User }>(`${BASE}/${id}`);
+    return data.data;
+  },
+
+  create: async (payload: CreateUserPayload): Promise<User> => {
+    await ensureCsrfCookie();
+    const { data } = await apiClient.post<{ message: string; data: User }>(BASE, payload);
+    return data.data;
+  },
+
+  update: async (id: number, payload: UpdateUserPayload): Promise<User> => {
+    await ensureCsrfCookie();
+    const { data } = await apiClient.put<{ message: string; data: User }>(`${BASE}/${id}`, payload);
+    return data.data;
+  },
+
+  delete: async (id: number): Promise<void> => {
+    await ensureCsrfCookie();
+    await apiClient.delete(`${BASE}/${id}`);
+  },
+
+  assignRole: async (id: number, payload: AssignRolePayload): Promise<User> => {
+    await ensureCsrfCookie();
+    const { data } = await apiClient.post<{ message: string; data: User }>(`${BASE}/${id}/assign-role`, payload);
+    return data.data;
+  },
+} as const;
+
+
+----------------------------------------------------------------
+FILE: features/users/types/User.types.ts
+----------------------------------------------------------------
+export type UserRole = 'admin' | 'editor' | 'reviewer' | 'author' | 'reader';
+
+export interface PaginatorLinks {
+  first: string | null;
+  last: string | null;
+  prev: string | null;
+  next: string | null;
+}
+
+export interface PaginatorMeta {
+  current_page: number;
+  from: number | null;
+  last_page: number;
+  path: string;
+  per_page: number;
+  to: number | null;
+  total: number;
+}
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  roles: UserRole[];
+  email_verified_at: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface UserFilters {
+  search?: string;
+  role?: UserRole;
+  sort_by?: string;
+  sort_direction?: 'asc' | 'desc';
+  page?: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  links: PaginatorLinks;
+  meta: PaginatorMeta;
+}
+
+export interface PaginatedUsers {
+  data: PaginatedResponse<User>;
+}
+
+export interface CreateUserPayload {
+  name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  role: UserRole;
+}
+
+export interface UpdateUserPayload {
+  name?: string;
+  email?: string;
+  password?: string;
+  password_confirmation?: string;
+}
+
+export interface AssignRolePayload {
+  role: UserRole;
+}
+
+
+----------------------------------------------------------------
+FILE: shared/api/client.ts
+----------------------------------------------------------------
+/**
+ * Shared Axios Client
+ *
+ * Single Axios instance for the entire application.
+ * ALL features must use this — never instantiate Axios directly.
+ *
+ * Interceptors:
+ *  - Request: reserved for shared request shaping
+ *  - Response: normalizes errors through AppError
+ */
+
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { AppError } from '../errors/app.error';
+
+export const apiClient = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1',
+  withCredentials: true,
+  timeout: 10000,
+  xsrfCookieName: 'XSRF-TOKEN',
+  xsrfHeaderName: 'X-XSRF-TOKEN',
+  headers: {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  },
+});
+
+// ── Request interceptor ────────────────────────────────────────────────────────
+apiClient.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    // [zakarya:inject:request-interceptor]
+    return config;
+  },
+  (error: unknown) => Promise.reject(error)
+);
+
+// ── Response interceptor ───────────────────────────────────────────────────────
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError<{ message?: string; errors?: unknown }>) => {
+    const status = error.response?.status ?? 0;
+    const serverMessage = error.response?.data?.message ?? error.message;
+
+    // [zakarya:inject:response-interceptor]
+
+    // Do not perform a global redirect here — let the UI layer decide how to
+    // handle authentication state. Redirecting from the interceptor causes
+    // navigation loops during auth hydration (/auth/me calls). Simply wrap
+    // the server error in an AppError and reject so callers can handle 401.
+    throw new AppError(serverMessage, status, error.response?.data?.errors);
+  }
+);
+
+
+----------------------------------------------------------------
+FILE: shared/api/csrf.ts
+----------------------------------------------------------------
+import { apiClient } from './client';
+
+let csrfPromise: Promise<void> | null = null;
+
+export async function ensureCsrfCookie(): Promise<void> {
+  if (!csrfPromise) {
+    csrfPromise = apiClient
+      .get('/sanctum/csrf-cookie')
+      .then(() => undefined)
+      .catch((error) => {
+        csrfPromise = null;
+        throw error;
+      });
+  }
+
+  return csrfPromise;
+}
+
+export function resetCsrfCookieCache(): void {
+  csrfPromise = null;
+}
+
+----------------------------------------------------------------
+FILE: shared/api/endpoints.constants.ts
+----------------------------------------------------------------
+/**
+ * API Endpoints
+ *
+ * All endpoint base paths in one place.
+ * Generated by zakarya — add new endpoints here or run:
+ *   zakarya generate feature <name>
+ */
+
+export const ENDPOINTS = {
+  // [zakarya:inject:endpoints]
+  ASSIGNMENTS_BASE: '/assignments',
+  PUBLICATIONS_BASE: '/publications',
+  NOTIFICATIONS_BASE: '/notifications',
+  DASHBOARD_BASE: '/dashboard/summary',
+  CATEGORIES_BASE: '/categories',
+  AUTH_BASE: '/auth',
+  USERS_BASE: '/users',
+  ARTICLES_BASE: '/articles',
+  AUTH: '/auth',
+} as const;
+
+export type EndpointKey = keyof typeof ENDPOINTS;
+
+
+----------------------------------------------------------------
+FILE: shared/components/ErrorBoundary.tsx
+----------------------------------------------------------------
+'use client';
+
+import { Component, type ReactNode } from 'react';
+
+interface Props {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+  message: string;
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false, message: '' };
+  }
+
+  static getDerivedStateFromError(error: unknown): State {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
+    return { hasError: true, message };
+  }
+
+  override render() {
+    if (this.state.hasError) {
+      return this.props.fallback ?? (
+        <div className="min-h-screen flex items-center justify-center p-8">
+          <div className="text-center max-w-md">
+            <p className="text-4xl mb-4">⚠️</p>
+            <h1 className="text-xl font-semibold text-primary mb-2">Something went wrong</h1>
+            <p className="text-sm text-muted mb-6">{this.state.message}</p>
+            <button
+              type="button"
+              onClick={() => { this.setState({ hasError: false, message: '' }); window.location.reload(); }}
+              className="inline-flex items-center h-10 px-4 text-sm rounded bg-brand-600 text-white font-semibold hover:bg-brand-700 transition-colors"
+            >
+              Reload page
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/layout/AppShell.tsx
+----------------------------------------------------------------
+'use client';
+
+import { useState } from 'react';
+import { Sidebar } from './Sidebar';
+import { Topbar } from './Topbar';
+import { MobileSidebar } from './MobileSidebar';
+import type { CurrentUser } from './UserMenu';
+
+export interface AppShellProps {
+  children: React.ReactNode;
+  user?: CurrentUser | null;
+  unreadNotifications?: number;
+  onLogout?: () => void;
+}
+
+export function AppShell({
+  children,
+  user,
+  unreadNotifications = 0,
+  onLogout,
+}: AppShellProps) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const userRoles = user?.roles ?? [];
+
+  return (
+    <div className="flex h-screen bg-app overflow-hidden">
+      {/* Desktop sidebar */}
+      <div className="hidden md:flex md:shrink-0">
+        <Sidebar userRoles={userRoles} />
+      </div>
+
+      {/* Mobile sidebar drawer */}
+      <MobileSidebar
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        userRoles={userRoles}
+      />
+
+      {/* Main area */}
+      <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
+        <Topbar
+          user={user}
+          unreadNotifications={unreadNotifications}
+          onMenuClick={() => setMobileOpen(true)}
+          onLogout={onLogout}
+        />
+        <main className="flex-1 overflow-y-auto px-4 sm:px-5 lg:px-6 py-6">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/layout/AuthShell.tsx
+----------------------------------------------------------------
+import { cn } from '@/shared/utils/cn';
+
+export interface AuthShellProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export function AuthShell({ children, className }: AuthShellProps) {
+  return (
+    <div className="min-h-screen bg-muted flex items-center justify-center px-4 py-8">
+      <div className={cn('w-full max-w-md', className)}>
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-primary font-primary">DevWeb Journal</h1>
+          <p className="text-sm text-muted mt-1">Academic Journal Editorial System</p>
+        </div>
+        <div className="bg-surface border border-subtle rounded-xl p-6 md:p-8 shadow-card">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/layout/DashboardLayout.tsx
+----------------------------------------------------------------
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
+import { useLogoutMutation } from '@/features/auth/mutations/auth.mutations';
+import { useNotificationsUnreadCount } from '@/features/notifications/hooks/useNotificationsUnreadCount';
+import { AppError } from '@/shared/errors/app.error';
+import { LoadingState } from '@/shared/components/ui';
+import { AppShell } from './AppShell';
+
+export function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const { data: user, isLoading, isFetching, isError, error } = useCurrentUser();
+  const logout = useLogoutMutation();
+  const { data: unreadCount = 0 } = useNotificationsUnreadCount(!!user);
+
+  useEffect(() => {
+    // Wait until the initial load and any active refetches finish before
+    // making a navigation decision. This avoids redirecting while `/auth/me`
+    // is still resolving.
+    if (isLoading || isFetching) return;
+    if (isError && error instanceof AppError && error.isUnauthorized) {
+      router.replace('/login');
+    }
+  }, [isLoading, isFetching, isError, error, router]);
+
+  if (isLoading && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-app">
+        <LoadingState rows={3} />
+      </div>
+    );
+  }
+
+  if (isError && error instanceof AppError && error.isUnauthorized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-app">
+        <LoadingState rows={2} />
+      </div>
+    );
+  }
+
+  return (
+    <AppShell
+      user={user ?? null}
+      unreadNotifications={unreadCount}
+      onLogout={() => logout.mutate(undefined, { onSettled: () => router.replace('/login') })}
+    >
+      {children}
+    </AppShell>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/layout/index.ts
+----------------------------------------------------------------
+export * from './AppShell';
+export * from './DashboardLayout';
+export * from './AuthShell';
+export * from './MobileSidebar';
+export * from './NavigationItem';
+export * from './NotificationButton';
+export * from './PublicShell';
+export * from './Sidebar';
+export * from './Topbar';
+export * from './UserMenu';
+
+
+----------------------------------------------------------------
+FILE: shared/components/layout/MobileSidebar.tsx
+----------------------------------------------------------------
+'use client';
+
+import { useEffect } from 'react';
+import { X } from 'lucide-react';
+import { cn } from '@/shared/utils/cn';
+import { Sidebar } from './Sidebar';
+
+export interface MobileSidebarProps {
+  open: boolean;
+  onClose: () => void;
+  userRoles?: string[];
+}
+
+export function MobileSidebar({ open, onClose, userRoles }: MobileSidebarProps) {
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
+
+  useEffect(() => {
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
+  return (
+    <>
+      {/* Overlay */}
+      <div
+        aria-hidden="true"
+        onClick={onClose}
+        className={cn(
+          'fixed inset-0 z-40 bg-black/50 transition-opacity duration-200 md:hidden',
+          open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        )}
+      />
+
+      {/* Drawer */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
+        className={cn(
+          'fixed inset-y-0 left-0 z-50 flex flex-col w-64',
+          'transition-transform duration-200 md:hidden',
+          open ? 'translate-x-0' : '-translate-x-full'
+        )}
+      >
+        <div className="relative flex-1 flex flex-col">
+          {/* Close button */}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close navigation menu"
+            className="absolute top-4 right-3 z-10 p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          <Sidebar userRoles={userRoles} onNavClick={onClose} className="h-full" />
+        </div>
+      </div>
+    </>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/layout/NavigationItem.tsx
+----------------------------------------------------------------
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/shared/utils/cn';
+
+export interface NavigationItemProps {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  onClick?: () => void;
+  exact?: boolean;
+}
+
+export function NavigationItem({ href, label, icon, onClick, exact = false }: NavigationItemProps) {
+  const pathname = usePathname();
+  const isActive = exact ? pathname === href : pathname === href || pathname.startsWith(href + '/');
+
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={cn(
+        'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors duration-150',
+        isActive
+          ? 'bg-brand-600 text-inverse'
+          : 'text-slate-300 hover:bg-white/10 hover:text-white'
+      )}
+      aria-current={isActive ? 'page' : undefined}
+    >
+      <span className="w-5 h-5 shrink-0 flex items-center justify-center" aria-hidden="true">
+        {icon}
+      </span>
+      <span className="truncate">{label}</span>
+    </Link>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/layout/NotificationButton.tsx
+----------------------------------------------------------------
+'use client';
+
+import { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
+import { Bell } from 'lucide-react';
+import { cn } from '@/shared/utils/cn';
+import { notificationsListQueryOptions } from '@/features/notifications/queries/notifications.queries';
+import { useMarkReadMutation } from '@/features/notifications/mutations/notifications.mutations';
+import type { Notification } from '@/features/notifications/types/Notification.types';
+
+export interface NotificationButtonProps {
+  unreadCount?: number;
+  className?: string;
+}
+
+export function NotificationButton({ unreadCount = 0, className }: NotificationButtonProps) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const markRead = useMarkReadMutation();
+
+  const { data: listData, isFetching } = useQuery({
+    ...notificationsListQueryOptions({ page: 1 }),
+    enabled: open,
+  });
+
+  const recent = listData?.data?.data?.slice(0, 8) ?? [];
+
+  const handleClickOutside = useCallback((event: MouseEvent) => {
+    if (!rootRef.current?.contains(event.target as Node)) {
+      setOpen(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open, handleClickOutside]);
+
+  return (
+    <div ref={rootRef} className={cn('relative', className)}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : 'Notifications'}
+        className={cn(
+          'relative p-2 rounded-md text-muted hover:bg-muted hover:text-primary transition-colors duration-150',
+          open && 'bg-muted text-primary'
+        )}
+      >
+        <Bell className="w-5 h-5" aria-hidden="true" />
+        {unreadCount > 0 && (
+          <span
+            className="absolute top-1 right-1 min-w-[0.5rem] h-2 px-0.5 rounded-full bg-danger text-[10px] leading-none text-white flex items-center justify-center font-medium"
+            aria-hidden="true"
+          >
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-lg border border-subtle bg-surface shadow-panel z-50 overflow-hidden"
+        >
+          <div className="flex items-center justify-between px-3 py-2 border-b border-subtle bg-muted/40">
+            <span className="text-sm font-semibold text-primary">Notifications</span>
+            <Link
+              href="/notifications"
+              className="text-xs font-medium text-brand-600 hover:underline"
+              onClick={() => setOpen(false)}
+            >
+              View all
+            </Link>
+          </div>
+
+          <div className="max-h-80 overflow-y-auto">
+            {isFetching && (
+              <p className="px-3 py-4 text-sm text-muted text-center">Loading…</p>
+            )}
+            {!isFetching && recent.length === 0 && (
+              <p className="px-3 py-4 text-sm text-muted text-center">No notifications yet.</p>
+            )}
+            {!isFetching &&
+              recent.map((n: Notification) => (
+                <button
+                  key={n.id}
+                  type="button"
+                  role="menuitem"
+                  className={cn(
+                    'w-full text-left px-3 py-2.5 border-b border-subtle/60 last:border-0 hover:bg-muted/60 transition-colors',
+                    !n.read_at && 'bg-brand-50/40'
+                  )}
+                  onClick={() => {
+                    if (!n.read_at) {
+                      markRead.mutate(n.id);
+                    }
+                    setOpen(false);
+                  }}
+                >
+                  <p className="text-sm font-medium text-primary line-clamp-1">{n.title}</p>
+                  <p className="text-xs text-muted line-clamp-2 mt-0.5">{n.body}</p>
+                </button>
+              ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/layout/PublicShell.tsx
+----------------------------------------------------------------
+import Link from 'next/link';
+import { cn } from '@/shared/utils/cn';
+
+export interface PublicShellProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export function PublicShell({ children, className }: PublicShellProps) {
+  return (
+    <div className="min-h-screen bg-app flex flex-col">
+      <PublicHeader />
+      <main className={cn('flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8 md:py-10', className)}>
+        {children}
+      </main>
+      <PublicFooter />
+    </div>
+  );
+}
+
+function PublicHeader() {
+  return (
+    <header className="bg-surface border-b border-subtle sticky top-0 z-30">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+        <Link href="/" className="text-lg font-bold text-primary font-primary hover:text-brand-600 transition-colors">
+          DevWeb Journal
+        </Link>
+        <nav className="flex items-center gap-4 text-sm">
+          <Link href="/journal" className="text-secondary hover:text-primary transition-colors">
+            Journal
+          </Link>
+          <Link
+            href="/login"
+            className="px-3 py-1.5 rounded bg-brand-600 text-inverse text-sm font-medium hover:bg-brand-700 transition-colors"
+          >
+            Sign In
+          </Link>
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+function PublicFooter() {
+  return (
+    <footer className="border-t border-subtle bg-surface">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 text-center text-sm text-muted">
+        © {new Date().getFullYear()} DevWeb Journal. Academic Journal Editorial System.
+      </div>
+    </footer>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/layout/Sidebar.tsx
+----------------------------------------------------------------
+import {
+  LayoutDashboard,
+  FileText,
+  ClipboardCheck,
+  BookOpen,
+  Tag,
+  Users,
+  Bell,
+  User,
+  Star,
+} from 'lucide-react';
+import { NavigationItem } from './NavigationItem';
+import { cn } from '@/shared/utils/cn';
+
+export interface SidebarProps {
+  userRoles?: string[];
+  onNavClick?: () => void;
+  className?: string;
+}
+
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  roles?: string[];
+  exact?: boolean;
+}
+
+const NAV_ITEMS: NavItem[] = [
+  {
+    href:  '/dashboard',
+    label: 'Dashboard',
+    icon:  <LayoutDashboard className="w-5 h-5" />,
+    exact: true,
+  },
+  {
+    href:  '/articles',
+    label: 'Articles',
+    icon:  <FileText className="w-5 h-5" />,
+    roles: ['admin', 'editor', 'author', 'reviewer'],
+  },
+  {
+    href:  '/assignments',
+    label: 'Assignments',
+    icon:  <ClipboardCheck className="w-5 h-5" />,
+    roles: ['reviewer', 'editor', 'admin'],
+  },
+  {
+    href:  '/reviews',
+    label: 'Reviews',
+    icon:  <Star className="w-5 h-5" />,
+    roles: ['reviewer', 'editor', 'admin'],
+  },
+  {
+    href:  '/journal',
+    label: 'Publications',
+    icon:  <BookOpen className="w-5 h-5" />,
+  },
+  {
+    href:  '/categories',
+    label: 'Categories',
+    icon:  <Tag className="w-5 h-5" />,
+    roles: ['admin', 'editor'],
+  },
+  {
+    href:  '/users',
+    label: 'Users',
+    icon:  <Users className="w-5 h-5" />,
+    roles: ['admin'],
+  },
+  {
+    href:  '/notifications',
+    label: 'Notifications',
+    icon:  <Bell className="w-5 h-5" />,
+  },
+  {
+    href:  '/profile',
+    label: 'Profile',
+    icon:  <User className="w-5 h-5" />,
+  },
+];
+
+export function Sidebar({ userRoles = [], onNavClick, className }: SidebarProps) {
+  const visibleItems = NAV_ITEMS.filter((item) => {
+    if (!item.roles) return true;
+    return item.roles.some((r) => userRoles.includes(r));
+  });
+
+  return (
+    <aside
+      className={cn(
+        'w-64 h-full bg-brand-900 border-r border-white/10 flex flex-col',
+        className
+      )}
+    >
+      {/* Logo */}
+      <div className="px-5 py-5 border-b border-white/10 shrink-0">
+        <span className="text-lg font-bold text-white font-primary">DevWeb Journal</span>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto" aria-label="Main navigation">
+        {visibleItems.map((item) => (
+          <NavigationItem
+            key={item.href}
+            href={item.href}
+            label={item.label}
+            icon={item.icon}
+            exact={item.exact}
+            onClick={onNavClick}
+          />
+        ))}
+      </nav>
+    </aside>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/layout/Topbar.tsx
+----------------------------------------------------------------
+'use client';
+
+import { Menu } from 'lucide-react';
+import { cn } from '@/shared/utils/cn';
+import { UserMenu, type CurrentUser } from './UserMenu';
+import { NotificationButton } from './NotificationButton';
+
+export interface TopbarProps {
+  user?: CurrentUser | null;
+  unreadNotifications?: number;
+  onMenuClick?: () => void;
+  onLogout?: () => void;
+  className?: string;
+}
+
+export function Topbar({
+  user,
+  unreadNotifications = 0,
+  onMenuClick,
+  onLogout,
+  className,
+}: TopbarProps) {
+  return (
+    <header
+      className={cn(
+        'h-14 px-4 md:px-6 flex items-center justify-between',
+        'bg-surface border-b border-subtle sticky top-0 z-30 shrink-0',
+        className
+      )}
+    >
+      {/* Left: hamburger (mobile) */}
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onMenuClick}
+          aria-label="Open navigation menu"
+          className="md:hidden p-2 rounded-md text-muted hover:bg-muted hover:text-primary transition-colors"
+        >
+          <Menu className="w-5 h-5" aria-hidden="true" />
+        </button>
+
+        {/* Desktop: logo hint / breadcrumb placeholder */}
+        <span className="hidden md:block text-sm font-semibold text-primary font-primary">
+          DevWeb Journal
+        </span>
+      </div>
+
+      {/* Right: notifications + user */}
+      <div className="flex items-center gap-1 md:gap-2">
+        <NotificationButton unreadCount={unreadNotifications} />
+        {user && <UserMenu user={user} onLogout={onLogout} />}
+      </div>
+    </header>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/layout/UserMenu.tsx
+----------------------------------------------------------------
+'use client';
+
+import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
+import { ChevronDown, User, LogOut, Settings } from 'lucide-react';
+import { cn } from '@/shared/utils/cn';
+
+export interface CurrentUser {
+  id: number | string;
+  name: string;
+  email: string;
+  roles: string[];
+}
+
+export interface UserMenuProps {
+  user: CurrentUser;
+  onLogout?: () => void;
+}
+
+export function UserMenu({ user, onLogout }: UserMenuProps) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const initials = user.name
+    .split(' ')
+    .slice(0, 2)
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase();
+
+  const primaryRole = user.roles?.[0] ?? 'reader';
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, []);
+
+  return (
+    <div ref={menuRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label="User menu"
+        className="flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-muted transition-colors duration-150"
+      >
+        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+          <span className="text-xs font-semibold text-brand-700">{initials}</span>
+        </div>
+        <div className="text-left hidden sm:block min-w-0">
+          <p className="text-sm font-medium text-primary leading-none truncate max-w-[120px]">
+            {user.name}
+          </p>
+          <p className="text-xs text-muted mt-0.5 capitalize">{primaryRole}</p>
+        </div>
+        <ChevronDown
+          className={cn('w-4 h-4 text-muted transition-transform duration-150 hidden sm:block', open && 'rotate-180')}
+          aria-hidden="true"
+        />
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className={cn(
+            'absolute right-0 top-full mt-1.5 w-48 bg-surface border border-subtle rounded-lg shadow-panel',
+            'py-1 z-50'
+          )}
+        >
+          <div className="px-3 py-2 border-b border-subtle mb-1">
+            <p className="text-xs font-semibold text-primary truncate">{user.name}</p>
+            <p className="text-xs text-muted truncate">{user.email}</p>
+          </div>
+
+          <MenuItem href="/profile" icon={<User className="w-4 h-4" />} onClick={() => setOpen(false)}>
+            Profile
+          </MenuItem>
+          <MenuItem href="/settings" icon={<Settings className="w-4 h-4" />} onClick={() => setOpen(false)}>
+            Settings
+          </MenuItem>
+
+          <div className="border-t border-subtle mt-1 pt-1">
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => { setOpen(false); onLogout?.(); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-danger hover:bg-red-50 transition-colors"
+            >
+              <LogOut className="w-4 h-4 shrink-0" aria-hidden="true" />
+              Sign out
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MenuItem({
+  href,
+  icon,
+  children,
+  onClick,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  onClick?: () => void;
+}) {
+  return (
+    <Link
+      href={href}
+      role="menuitem"
+      onClick={onClick}
+      className="flex items-center gap-2.5 px-3 py-2 text-sm text-secondary hover:bg-muted hover:text-primary transition-colors"
+    >
+      <span className="shrink-0" aria-hidden="true">{icon}</span>
+      {children}
+    </Link>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/ui/Badge.tsx
+----------------------------------------------------------------
+import { cn } from '@/shared/utils/cn';
+
+export interface BadgeProps {
+  children: React.ReactNode;
+  className?: string;
+  pill?: boolean;
+}
+
+export function Badge({ children, className, pill = false }: BadgeProps) {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center px-2 py-0.5 text-xs font-semibold',
+        pill ? 'rounded-full' : 'rounded',
+        className
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/ui/Button.tsx
+----------------------------------------------------------------
+'use client';
+
+import { forwardRef, type ButtonHTMLAttributes } from 'react';
+import { cn } from '@/shared/utils/cn';
+
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive';
+export type ButtonSize = 'sm' | 'md' | 'lg';
+
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  loading?: boolean;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
+}
+
+const variantClasses: Record<ButtonVariant, string> = {
+  primary:     'bg-brand-600 text-inverse hover:bg-brand-700 font-semibold',
+  secondary:   'bg-surface text-secondary border border-strong hover:bg-muted',
+  ghost:       'bg-transparent text-secondary hover:bg-muted',
+  destructive: 'bg-danger text-inverse hover:bg-red-700 font-semibold',
+};
+
+const sizeClasses: Record<ButtonSize, string> = {
+  sm: 'h-9  px-3   py-1.5 text-sm',
+  md: 'h-10 px-4   py-2   text-sm',
+  lg: 'h-11 px-5   py-2.5 text-base',
+};
+
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      variant = 'primary',
+      size = 'md',
+      loading = false,
+      leftIcon,
+      rightIcon,
+      className,
+      disabled,
+      children,
+      type = 'button',
+      ...props
+    },
+    ref
+  ) => (
+    <button
+      ref={ref}
+      type={type}
+      disabled={disabled || loading}
+      className={cn(
+        'inline-flex items-center justify-center gap-2 rounded font-primary font-medium',
+        'transition-colors duration-150',
+        'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1',
+        'disabled:opacity-50 disabled:cursor-not-allowed',
+        loading && 'cursor-wait',
+        variantClasses[variant],
+        sizeClasses[size],
+        className
+      )}
+      {...props}
+    >
+      {loading ? (
+        <svg
+          className="animate-spin w-4 h-4 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+        </svg>
+      ) : leftIcon ? (
+        <span className="shrink-0 flex items-center" aria-hidden="true">{leftIcon}</span>
+      ) : null}
+      {children}
+      {!loading && rightIcon && (
+        <span className="shrink-0 flex items-center" aria-hidden="true">{rightIcon}</span>
+      )}
+    </button>
+  )
+);
+
+Button.displayName = 'Button';
+
+
+----------------------------------------------------------------
+FILE: shared/components/ui/Card.tsx
+----------------------------------------------------------------
+import { cn } from '@/shared/utils/cn';
+
+export interface CardProps {
+  children: React.ReactNode;
+  className?: string;
+  padding?: 'sm' | 'md' | 'lg' | 'none';
+}
+
+const paddingMap = {
+  none: '',
+  sm:   'p-4',
+  md:   'p-5',
+  lg:   'p-6',
+};
+
+export function Card({ children, className, padding = 'lg' }: CardProps) {
+  return (
+    <div
+      className={cn(
+        'bg-surface border border-subtle rounded-lg shadow-card',
+        paddingMap[padding],
+        className
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function CardHeader({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={cn('flex items-center justify-between mb-4', className)}>
+      {children}
+    </div>
+  );
+}
+
+export function CardFooter({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={cn('flex items-center gap-3 mt-4 pt-4 border-t border-subtle', className)}>
+      {children}
+    </div>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/ui/EmptyState.tsx
+----------------------------------------------------------------
+import { cn } from '@/shared/utils/cn';
+
+export interface EmptyStateProps {
+  icon?: React.ReactNode;
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
+  className?: string;
+}
+
+export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
+  return (
+    <div className={cn('flex flex-col items-center justify-center py-16 text-center', className)}>
+      {icon && (
+        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4 text-muted">
+          {icon}
+        </div>
+      )}
+      <h3 className="text-base font-semibold text-primary mb-1">{title}</h3>
+      {description && (
+        <p className="text-sm text-muted max-w-sm">{description}</p>
+      )}
+      {action && <div className="mt-4">{action}</div>}
+    </div>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/ui/ErrorState.tsx
+----------------------------------------------------------------
+'use client';
+
+import { AlertCircle } from 'lucide-react';
+import { cn } from '@/shared/utils/cn';
+import { Button } from './Button';
+
+export interface ErrorStateProps {
+  title?: string;
+  message?: string;
+  onRetry?: () => void;
+  className?: string;
+}
+
+export function ErrorState({
+  title = 'Something went wrong',
+  message,
+  onRetry,
+  className,
+}: ErrorStateProps) {
+  return (
+    <div className={cn('flex flex-col items-center justify-center py-12 text-center', className)}>
+      <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4">
+        <AlertCircle className="w-6 h-6 text-danger" aria-hidden="true" />
+      </div>
+      <h3 className="text-base font-semibold text-primary mb-1">{title}</h3>
+      {message && <p className="text-sm text-muted mb-4 max-w-sm">{message}</p>}
+      {onRetry && (
+        <Button variant="secondary" onClick={onRetry}>
+          Try again
+        </Button>
+      )}
+    </div>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/ui/FileUpload.tsx
+----------------------------------------------------------------
+'use client';
+
+import { useRef, useState, type DragEvent, type ChangeEvent } from 'react';
+import { Upload, X, FileText } from 'lucide-react';
+import { cn } from '@/shared/utils/cn';
+
+export interface FileUploadProps {
+  accept?: string;
+  maxSizeMB?: number;
+  value?: File | null;
+  onChange: (file: File | null) => void;
+  error?: string;
+  label?: string;
+  hint?: string;
+  disabled?: boolean;
+}
+
+export function FileUpload({
+  accept = '.pdf',
+  maxSizeMB = 20,
+  value,
+  onChange,
+  error,
+  label = 'Drop your file here, or click to browse',
+  hint,
+  disabled = false,
+}: FileUploadProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [sizeError, setSizeError] = useState<string | null>(null);
+
+  const displayHint = hint ?? `${accept.replace('.', '').toUpperCase()} only · Max ${maxSizeMB}MB`;
+
+  function handleFile(file: File) {
+    setSizeError(null);
+    if (file.size > maxSizeMB * 1024 * 1024) {
+      setSizeError(`File exceeds ${maxSizeMB}MB limit.`);
+      return;
+    }
+    onChange(file);
+  }
+
+  function handleChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
+    e.target.value = '';
+  }
+
+  function handleDrop(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFile(file);
+  }
+
+  function handleDragOver(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDragging(true);
+  }
+
+  const currentError = error ?? sizeError;
+
+  if (value) {
+    return (
+      <div className="flex items-center gap-3 p-4 border border-subtle rounded-lg bg-soft-blue">
+        <FileText className="w-8 h-8 text-brand-600 shrink-0" aria-hidden="true" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-primary truncate">{value.name}</p>
+          <p className="text-xs text-muted">{(value.size / 1024 / 1024).toFixed(2)} MB</p>
+        </div>
+        {!disabled && (
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            aria-label="Remove file"
+            className="p-1 rounded text-muted hover:text-secondary hover:bg-muted transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div
+        role="button"
+        tabIndex={disabled ? -1 : 0}
+        aria-label="Upload file"
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={() => setIsDragging(false)}
+        onClick={() => !disabled && inputRef.current?.click()}
+        onKeyDown={(e) => e.key === 'Enter' && !disabled && inputRef.current?.click()}
+        className={cn(
+          'border-2 border-dashed rounded-lg p-8 text-center transition-colors duration-150',
+          disabled
+            ? 'opacity-50 cursor-not-allowed border-strong'
+            : 'cursor-pointer',
+          isDragging && !disabled
+            ? 'border-brand-500 bg-soft-blue'
+            : !disabled && 'border-strong hover:border-brand-500 hover:bg-soft-blue',
+          currentError && 'border-danger'
+        )}
+      >
+        <Upload className="w-10 h-10 text-muted mx-auto mb-3" aria-hidden="true" />
+        <p className="text-sm font-medium text-primary mb-1">{label}</p>
+        <p className="text-xs text-muted">{displayHint}</p>
+        <input
+          ref={inputRef}
+          type="file"
+          accept={accept}
+          className="hidden"
+          onChange={handleChange}
+          disabled={disabled}
+          aria-hidden="true"
+        />
+      </div>
+      {currentError && (
+        <p className="mt-1.5 text-xs text-danger" role="alert">{currentError}</p>
+      )}
+    </div>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/ui/FormField.tsx
+----------------------------------------------------------------
+import { cn } from '@/shared/utils/cn';
+import { Label } from './Label';
+
+export interface FormFieldProps {
+  id: string;
+  label: string;
+  required?: boolean;
+  hint?: string;
+  error?: string;
+  className?: string;
+  children: React.ReactNode;
+}
+
+export function FormField({
+  id,
+  label,
+  required,
+  hint,
+  error,
+  className,
+  children,
+}: FormFieldProps) {
+  return (
+    <div className={cn('flex flex-col gap-1.5', className)}>
+      <Label htmlFor={id} required={required}>
+        {label}
+      </Label>
+      {children}
+      {hint && !error && (
+        <p className="text-xs text-muted">{hint}</p>
+      )}
+      {error && (
+        <p className="text-xs text-danger" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/ui/index.ts
+----------------------------------------------------------------
+export * from './Badge';
+export * from './Button';
+export * from './Card';
+export * from './EmptyState';
+export * from './ErrorState';
+export * from './FileUpload';
+export * from './FormField';
+export * from './Input';
+export * from './Label';
+export * from './LoadingState';
+export * from './PageHeader';
+export * from './Pagination';
+export * from './RoleBadge';
+export * from './SearchInput';
+export * from './SectionHeader';
+export * from './Select';
+export * from './StatusBadge';
+export * from './Table';
+export * from './Textarea';
+
+
+----------------------------------------------------------------
+FILE: shared/components/ui/Input.tsx
+----------------------------------------------------------------
+'use client';
+
+import { forwardRef, type InputHTMLAttributes } from 'react';
+import { cn } from '@/shared/utils/cn';
+
+export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  error?: boolean;
+}
+
+export const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ error, className, ...props }, ref) => (
+    <input
+      ref={ref}
+      className={cn(
+        'w-full h-10 px-3 rounded-md border bg-surface text-sm text-primary font-primary',
+        'placeholder:text-muted',
+        'transition-colors duration-150',
+        'focus:outline-none focus:ring-2 focus:ring-offset-0',
+        'disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-muted',
+        error
+          ? 'border-danger focus:ring-danger focus:border-danger'
+          : 'border-subtle focus:ring-brand-500 focus:border-brand-500',
+        className
+      )}
+      {...props}
+    />
+  )
+);
+
+Input.displayName = 'Input';
+
+
+----------------------------------------------------------------
+FILE: shared/components/ui/Label.tsx
+----------------------------------------------------------------
+import { cn } from '@/shared/utils/cn';
+
+export interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
+  required?: boolean;
+}
+
+export function Label({ children, required, className, ...props }: LabelProps) {
+  return (
+    <label
+      className={cn('block text-sm font-medium text-secondary', className)}
+      {...props}
+    >
+      {children}
+      {required && (
+        <span className="text-danger ml-0.5" aria-hidden="true">
+          *
+        </span>
+      )}
+    </label>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/ui/LoadingState.tsx
+----------------------------------------------------------------
+import { cn } from '@/shared/utils/cn';
+
+export interface LoadingStateProps {
+  rows?: number;
+  className?: string;
+  variant?: 'card' | 'table' | 'list';
+}
+
+export function LoadingState({ rows = 3, className, variant = 'card' }: LoadingStateProps) {
+  if (variant === 'table') {
+    return (
+      <div className={cn('animate-pulse space-y-0', className)}>
+        {Array.from({ length: rows }).map((_, i) => (
+          <div key={i} className="flex gap-4 px-4 py-3 border-b border-subtle">
+            <div className="h-4 bg-muted rounded flex-1" />
+            <div className="h-4 bg-muted rounded w-24" />
+            <div className="h-4 bg-muted rounded w-20" />
+            <div className="h-4 bg-muted rounded w-16" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (variant === 'list') {
+    return (
+      <div className={cn('animate-pulse space-y-3', className)}>
+        {Array.from({ length: rows }).map((_, i) => (
+          <div key={i} className="flex gap-3 items-start p-4 border border-subtle rounded-lg">
+            <div className="w-8 h-8 bg-muted rounded-full shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-muted rounded w-3/4" />
+              <div className="h-3 bg-muted rounded w-1/2" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn('animate-pulse space-y-4', className)}>
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="bg-surface border border-subtle rounded-lg p-5 space-y-3">
+          <div className="h-4 bg-muted rounded w-3/4" />
+          <div className="h-4 bg-muted rounded w-1/2" />
+          <div className="h-4 bg-muted rounded w-2/3" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function SkeletonText({ className }: { className?: string }) {
+  return <div className={cn('h-4 bg-muted rounded animate-pulse', className)} />;
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/ui/PageHeader.tsx
+----------------------------------------------------------------
+import { cn } from '@/shared/utils/cn';
+
+export interface PageHeaderProps {
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
+  className?: string;
+}
+
+export function PageHeader({ title, description, action, className }: PageHeaderProps) {
+  return (
+    <div
+      className={cn(
+        'flex flex-col gap-3 md:flex-row md:items-start md:justify-between mb-6',
+        className
+      )}
+    >
+      <div className="min-w-0">
+        <h1 className="text-2xl font-bold text-primary truncate">{title}</h1>
+        {description && (
+          <p className="text-sm text-muted mt-0.5">{description}</p>
+        )}
+      </div>
+      {action && <div className="shrink-0">{action}</div>}
+    </div>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/ui/Pagination.tsx
+----------------------------------------------------------------
+'use client';
+
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '@/shared/utils/cn';
+
+export interface PaginationProps {
+  page: number;
+  lastPage: number;
+  from?: number;
+  to?: number;
+  total?: number;
+  onPageChange: (page: number) => void;
+  className?: string;
+}
+
+export function Pagination({
+  page,
+  lastPage,
+  from,
+  to,
+  total,
+  onPageChange,
+  className,
+}: PaginationProps) {
+  return (
+    <div className={cn('flex items-center justify-between text-sm px-4 py-3', className)}>
+      {typeof from !== 'undefined' && typeof to !== 'undefined' && typeof total !== 'undefined' ? (
+        <span className="text-muted">
+          Showing {from}–{to} of {total}
+        </span>
+      ) : (
+        <span className="text-muted">Page {page} of {lastPage}</span>
+      )}
+
+      <div className="flex items-center gap-1">
+        <PageButton
+          onClick={() => onPageChange(page - 1)}
+          disabled={page <= 1}
+          aria-label="Previous page"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </PageButton>
+        <PageButton
+          onClick={() => onPageChange(page + 1)}
+          disabled={page >= lastPage}
+          aria-label="Next page"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </PageButton>
+      </div>
+    </div>
+  );
+}
+
+function PageButton({
+  children,
+  disabled,
+  onClick,
+  'aria-label': ariaLabel,
+}: {
+  children: React.ReactNode;
+  disabled?: boolean;
+  onClick: () => void;
+  'aria-label': string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      className={cn(
+        'w-8 h-8 inline-flex items-center justify-center rounded border border-subtle text-secondary',
+        'transition-colors duration-150',
+        'hover:bg-muted hover:text-primary',
+        'disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent'
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/ui/RoleBadge.tsx
+----------------------------------------------------------------
+import { Badge } from './Badge';
+
+export type Role = 'admin' | 'editor' | 'reviewer' | 'author' | 'reader';
+
+const roleConfig: Record<Role, { label: string; className: string }> = {
+  admin:    { label: 'Admin',    className: 'bg-purple-100 text-purple-700' },
+  editor:   { label: 'Editor',   className: 'bg-blue-100   text-blue-700'   },
+  reviewer: { label: 'Reviewer', className: 'bg-teal-100   text-teal-700'   },
+  author:   { label: 'Author',   className: 'bg-orange-100 text-orange-700' },
+  reader:   { label: 'Reader',   className: 'bg-slate-100  text-slate-600'  },
+};
+
+export interface RoleBadgeProps {
+  role: Role;
+  pill?: boolean;
+}
+
+export function RoleBadge({ role, pill = false }: RoleBadgeProps) {
+  const config = roleConfig[role] ?? roleConfig.reader;
+  return (
+    <Badge className={config.className} pill={pill}>
+      {config.label}
+    </Badge>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/ui/SearchInput.tsx
+----------------------------------------------------------------
+'use client';
+
+import { Search, X } from 'lucide-react';
+import { cn } from '@/shared/utils/cn';
+
+export interface SearchInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  className?: string;
+}
+
+export function SearchInput({ value, onChange, placeholder = 'Search...', className }: SearchInputProps) {
+  return (
+    <div className={cn('relative', className)}>
+      <Search
+        className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none"
+        aria-hidden="true"
+      />
+      <input
+        type="search"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={cn(
+          'w-full h-9 pl-9 pr-8 rounded-md border border-subtle',
+          'bg-surface text-sm text-primary font-primary',
+          'placeholder:text-muted',
+          'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
+          'transition-colors duration-150'
+        )}
+      />
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange('')}
+          aria-label="Clear search"
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-secondary"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/ui/SectionHeader.tsx
+----------------------------------------------------------------
+import { cn } from '@/shared/utils/cn';
+
+export interface SectionHeaderProps {
+  title: string;
+  count?: number;
+  action?: React.ReactNode;
+  className?: string;
+}
+
+export function SectionHeader({ title, count, action, className }: SectionHeaderProps) {
+  return (
+    <div className={cn('flex items-center justify-between gap-2 mb-4', className)}>
+      <div className="flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-primary">{title}</h2>
+        {typeof count !== 'undefined' && (
+          <span className="text-xs text-muted">({count})</span>
+        )}
+      </div>
+      {action && <div className="shrink-0">{action}</div>}
+    </div>
+  );
+}
+
+
+----------------------------------------------------------------
+FILE: shared/components/ui/Select.tsx
+----------------------------------------------------------------
+'use client';
+
+import { forwardRef, type SelectHTMLAttributes } from 'react';
+import { ChevronDown } from 'lucide-react';
+import { cn } from '@/shared/utils/cn';
+
+export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+  error?: boolean;
+}
+
+export const Select = forwardRef<HTMLSelectElement, SelectProps>(
+  ({ error, className, children, ...props }, ref) => (
+    <div className="relative">
+      <select
+        ref={ref}
+        className={cn(
+          'w-full h-10 pl-3 pr-9 rounded-md border bg-surface text-sm text-primary font-primary',
+          'appearance-none cursor-pointer',
+          'transition-colors duration-150',
+          'focus:outline-none focus:ring-2 focus:ring-offset-0',
+          'disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-muted',
+          error
+            ? 'border-danger focus:ring-danger focus:border-danger'
+            : 'border-subtle focus:ring-brand-500 focus:border-brand-500',
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </select>
+      <ChevronDown
+        className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted"
+        aria-hidden="true"
+      />
+    </div>
+  )
+);
+
+Select.displayName = 'Select';
+
+
+----------------------------------------------------------------
+FILE: shared/components/ui/StatusBadge.tsx
+----------------------------------------------------------------
+import { Badge } from './Badge';
+
+export type ArticleStatus =
+  | 'submitted'
+  | 'under_review'
+  | 'revision_required'
+  | 'accepted'
+  | 'rejected'
+  | 'published';
+
+export type AssignmentStatus = 'pending' | 'accepted' | 'decline' | 'complete';
+
+const articleStatusConfig: Record<ArticleStatus, { label: string; className: string }> = {
+  submitted:         { label: 'Submitted',         className: 'bg-yellow-100 text-yellow-800'  },
+  under_review:      { label: 'Under Review',      className: 'bg-blue-100   text-blue-800'   },
+  revision_required: { label: 'Revision Required', className: 'bg-orange-100 text-orange-800' },
+  accepted:          { label: 'Accepted',          className: 'bg-green-100  text-green-800'  },
+  rejected:          { label: 'Rejected',          className: 'bg-red-100    text-red-800'    },
+  published:         { label: 'Published',         className: 'bg-purple-100 text-purple-800' },
+};
+
+const assignmentStatusConfig: Record<AssignmentStatus, { label: string; className: string }> = {
+  pending:  { label: 'Pending',   className: 'bg-amber-100 text-amber-700' },
+  accepted: { label: 'Accepted',  className: 'bg-green-100 text-green-700' },
+  decline:  { label: 'Declined',  className: 'bg-red-100   text-red-700'   },
+  complete: { label: 'Completed', className: 'bg-teal-100  text-teal-700'  },
+};
+
+export function ArticleStatusBadge({ status }: { status: ArticleStatus }) {
+  const config = articleStatusConfig[status];
+  return <Badge className={config.className}>{config.label}</Badge>;
+}
+
+export function AssignmentStatusBadge({ status }: { status: AssignmentStatus }) {
+  const config = assignmentStatusConfig[status];
+  return <Badge className={config.className}>{config.label}</Badge>;
+}
+
+export { articleStatusConfig, assignmentStatusConfig };
+
+
+----------------------------------------------------------------
+FILE: shared/components/ui/Table.tsx
+----------------------------------------------------------------
+import { cn } from '@/shared/utils/cn';
+
+export function TableContainer({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={cn('bg-surface border border-subtle rounded-lg overflow-hidden', className)}>
+      {children}
+    </div>
+  );
+}
+
+export function TableFilterBar({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={cn('flex flex-wrap items-center gap-3 px-4 py-3 border-b border-subtle bg-muted/50', className)}>
+      {children}
+    </div>
+  );
+}
+
+export function TableWrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm min-w-[600px]">
+        {children}
+      </table>
+    </div>
+  );
+}
+
+export function TableHead({ children }: { children: React.ReactNode }) {
+  return (
+    <thead>
+      <tr className="border-b border-subtle bg-muted/30">
+        {children}
+      </tr>
+    </thead>
+  );
+}
+
+export interface ThProps {
+  children: React.ReactNode;
+  className?: string;
+  align?: 'left' | 'center' | 'right';
+}
+
+export function Th({ children, className, align = 'left' }: ThProps) {
+  return (
+    <th
+      scope="col"
+      className={cn(
+        'px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide',
+        align === 'left'   && 'text-left',
+        align === 'center' && 'text-center',
+        align === 'right'  && 'text-right',
+        className
+      )}
+    >
+      {children}
+    </th>
+  );
+}
+
+export function TableBody({ children }: { children: React.ReactNode }) {
+  return <tbody className="divide-y divide-subtle">{children}</tbody>;
+}
+
+export interface TrProps {
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+}
+
+export function Tr({ children, className, onClick }: TrProps) {
+  return (
+    <tr
+      onClick={onClick}
+      className={cn(
+        'hover:bg-muted/40 transition-colors duration-150',
+        onClick && 'cursor-pointer',
+        className
+      )}
+    >
+      {children}
+    </tr>
+  );
+}
+
+export interface TdProps {
+  children?: React.ReactNode;
+  className?: string;
+  align?: 'left' | 'center' | 'right';
+}
+
+export function Td({ children, className, align = 'left' }: TdProps) {
+  return (
+    <td
+      className={cn(
+        'px-4 py-3 text-sm text-primary',
+        align === 'left'   && 'text-left',
+        align === 'center' && 'text-center',
+        align === 'right'  && 'text-right',
+        className
+      )}
+    >
+      {children}
+    </td>
+  );
 }
 
 

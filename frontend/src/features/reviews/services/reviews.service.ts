@@ -6,6 +6,7 @@
  */
 
 import { apiClient } from '@/shared/api/client';
+import { ensureCsrfCookie } from '@/shared/api/csrf';
 import { ENDPOINTS } from '@/shared/api/endpoints.constants';
 import type {
   Review,
@@ -42,6 +43,7 @@ export const reviewsService = {
    * Submit (or save draft) review for an assignment.
    */
   create: async (assignmentId: number, payload: ReviewDraft): Promise<Review> => {
+    await ensureCsrfCookie();
     const { data } = await apiClient.post<Review>(`${ASSIGNMENTS}/${assignmentId}/review`, payload);
     return data;
   },
@@ -50,6 +52,7 @@ export const reviewsService = {
    * Submit updated review content for an assignment.
    */
   update: async (assignmentId: number, payload: ReviewUpdatePayload): Promise<Review> => {
+    await ensureCsrfCookie();
     const { data } = await apiClient.post<Review>(`${ASSIGNMENTS}/${assignmentId}/review`, payload);
     return data;
   },

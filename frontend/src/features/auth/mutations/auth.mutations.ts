@@ -35,9 +35,12 @@ export function useLogoutMutation() {
   return useMutation({
     mutationFn: authService.logout,
     onSettled: () => {
+      // Remove only auth-related queries and clear current user cache.
+      // Do not perform a global redirect here — the UI layer should
+      // navigate after the mutation settles to avoid navigation races.
       if (isBrowser) {
-        queryClient.clear();
-        globalThis.window.location.href = '/login';
+        queryClient.removeQueries({ queryKey: authKeys.all });
+        queryClient.setQueryData(authKeys.me(), undefined);
       }
     },
   });
