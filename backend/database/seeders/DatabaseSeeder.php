@@ -19,9 +19,6 @@ class DatabaseSeeder extends Seeder
 
         $this->call(CategorySeeder::class);
 
-        // Demo accounts are useful for local/testing onboarding only.
-        if (app()->environment(['local', 'development', 'testing'])) {
-            $this->call(DemoDataSeeder::class);
-        }
+        $this->call(DemoDataSeeder::class);
     }
 }

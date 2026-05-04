@@ -18,6 +18,10 @@ function makeQueryClient() {
           if (error instanceof AppError && (error.isUnauthorized || error.isForbidden || error.isNotFound)) {
             return false; // Don't retry auth/permission/404 errors
           }
+          // CSRF token mismatch — retrying will not fix without a fresh cookie
+          if (error instanceof AppError && error.status === 419) {
+            return false;
+          }
           return failureCount < 1;
         },
         refetchOnWindowFocus: false,

@@ -32,7 +32,13 @@ export function LoginForm() {
   const onSubmit = (data: FormData) => {
     setGeneralError('');
     login.mutate(data, {
-      onSuccess: () => router.push('/dashboard'),
+      onSuccess: (user) => {
+        const roles = user.roles ?? [];
+        const isReaderOnly =
+          roles.includes('reader') &&
+          !roles.some((r) => ['admin', 'editor', 'author', 'reviewer'].includes(r));
+        router.push(isReaderOnly ? '/journal' : '/dashboard');
+      },
       onError: (error) => {
         const fieldErrors = getLaravelFieldErrors(error);
         if (Object.keys(fieldErrors).length > 0) {

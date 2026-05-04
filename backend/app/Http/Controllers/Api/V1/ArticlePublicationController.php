@@ -6,6 +6,7 @@ use App\Enums\ArticleStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Article;
 use App\Models\Publication;
+use App\Notifications\ArticlePublishedNotification;
 use App\Services\ArticleStatusService;
 use App\Services\NotificationService;
 use DomainException;
@@ -118,12 +119,13 @@ class ArticlePublicationController extends Controller
             ], 409);
         }
 
-        $this->notificationService->notifyAuthorArticlePublished(
-            authorId: (int) $article->author_id,
-            articleId: $article->id,
-            articleTitle: (string) $article->title,
-            publishedAt: $publishedAt,
-            actorId: $request->user()?->id,
+        ArticlePublishedNotification::notifyAuthor(
+            $this->notificationService,
+            (int) $article->author_id,
+            $article->id,
+            (string) $article->title,
+            $publishedAt,
+            $request->user()?->id,
         );
 
         return response()->json([

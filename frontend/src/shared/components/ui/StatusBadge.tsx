@@ -11,12 +11,12 @@ export type ArticleStatus =
 export type AssignmentStatus = 'pending' | 'accepted' | 'decline' | 'complete';
 
 const articleStatusConfig: Record<ArticleStatus, { label: string; className: string }> = {
-  submitted:         { label: 'Submitted',         className: 'bg-blue-100   text-blue-700'   },
-  under_review:      { label: 'Under Review',      className: 'bg-amber-100  text-amber-700'  },
-  revision_required: { label: 'Revision Required', className: 'bg-orange-100 text-orange-700' },
-  accepted:          { label: 'Accepted',          className: 'bg-green-100  text-green-700'  },
-  rejected:          { label: 'Rejected',          className: 'bg-red-100    text-red-700'    },
-  published:         { label: 'Published',         className: 'bg-teal-100   text-teal-700'   },
+  submitted:         { label: 'Submitted',         className: 'bg-yellow-100 text-yellow-800'  },
+  under_review:      { label: 'Under Review',      className: 'bg-blue-100   text-blue-800'   },
+  revision_required: { label: 'Revision Required', className: 'bg-orange-100 text-orange-800' },
+  accepted:          { label: 'Accepted',          className: 'bg-green-100  text-green-800'  },
+  rejected:          { label: 'Rejected',          className: 'bg-red-100    text-red-800'    },
+  published:         { label: 'Published',         className: 'bg-purple-100 text-purple-800' },
 };
 
 const assignmentStatusConfig: Record<AssignmentStatus, { label: string; className: string }> = {

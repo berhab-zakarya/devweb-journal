@@ -8,7 +8,7 @@ export function RegisterPage() {
     <>
       <h2 className="text-xl font-semibold text-primary mb-1">Create an account</h2>
       <p className="text-sm text-muted mb-6">
-        Join DevWeb Journal — you&apos;ll start as a reader
+        Join DevWeb Journal — choose whether you will submit articles as an author or browse as a reader.
       </p>
 
       <RegisterForm />

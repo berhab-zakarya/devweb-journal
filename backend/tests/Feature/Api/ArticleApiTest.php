@@ -45,6 +45,39 @@ class ArticleApiTest extends TestCase
         $this->getJson('/api/v1/articles')->assertUnauthorized();
     }
 
+    public function test_reader_articles_index_returns_only_published_with_publication(): void
+    {
+        $reader = User::factory()->create();
+        $reader->assignRole('reader');
+
+        $author = User::factory()->create();
+        $author->assignRole('author');
+
+        $this->createArticleFixture($author, 'Reader must not see draft');
+        $published = $this->createArticleFixture($author, 'Reader sees published');
+
+        DB::table('articles')->where('id', $published['article_id'])->update([
+            'status' => 'published',
+        ]);
+
+        DB::table('publications')->insert([
+            'article_id' => $published['article_id'],
+            'article_version_id' => $published['version_id'],
+            'published_at' => Carbon::now(),
+            'doi' => '10.0000/test.' . $published['article_id'],
+            'volume' => '1',
+            'issue' => '1',
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]);
+
+        $this->actingAs($reader)
+            ->getJson('/api/v1/articles')
+            ->assertOk()
+            ->assertJsonFragment(['title' => 'Reader sees published'])
+            ->assertJsonMissing(['title' => 'Reader must not see draft']);
+    }
+
     public function test_articles_index_returns_paginated_structure(): void
     {
         $admin = User::factory()->create();
@@ -106,6 +139,32 @@ class ArticleApiTest extends TestCase
 
         $this->assertNotNull($versionPath);
         Storage::disk('local')->assertExists((string) $versionPath);
+    }
+
+    public function test_editors_receive_in_app_notification_when_author_submits_article(): void
+    {
+        $editor = User::factory()->create();
+        $editor->assignRole('editor');
+
+        $author = User::factory()->create();
+        $author->assignRole('author');
+
+        $categoryId = $this->createCategory('notify-editors');
+
+        $this->actingAs($author)
+            ->postJson('/api/v1/articles', [
+                'category_id' => $categoryId,
+                'title' => 'Article pour notification',
+                'abstract' => 'Resume',
+                'keywords' => 'test',
+                'pdf' => UploadedFile::fake()->create('article.pdf', 200, 'application/pdf'),
+            ])
+            ->assertCreated();
+
+        $this->assertDatabaseHas('user_notifications', [
+            'user_id' => $editor->id,
+            'type' => 'article_submitted',
+        ]);
     }
 
     public function test_editeur_can_submit_article_with_pdf(): void

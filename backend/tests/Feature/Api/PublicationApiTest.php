@@ -153,6 +153,51 @@ class PublicationApiTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_public_articles_routes_mirror_publications_by_article_id(): void
+    {
+        $publicationId = $this->createPublicationFixture('Alias titre', 'published');
+        $articleId = (int) DB::table('publications')->where('id', $publicationId)->value('article_id');
+
+        $this->getJson('/api/v1/public/articles')
+            ->assertOk()
+            ->assertJsonFragment(['title' => 'Alias titre', 'article_id' => $articleId]);
+
+        $this->getJson('/api/v1/public/articles/' . $articleId)
+            ->assertOk()
+            ->assertJsonFragment(['title' => 'Alias titre', 'article_id' => $articleId]);
+
+        $this->get('/api/v1/public/articles/' . $articleId . '/download')
+            ->assertOk()
+            ->assertDownload('test.pdf');
+    }
+
+    public function test_publications_index_filters_by_year_and_author_name(): void
+    {
+        $this->createPublicationFixture(
+            title: 'Article 2024',
+            articleStatus: 'published',
+            publishedAt: Carbon::parse('2024-03-15 12:00:00'),
+            authorName: 'Dr. Dupont Chercheur',
+        );
+
+        $otherPubId = $this->createPublicationFixture(
+            title: 'Article 2026',
+            articleStatus: 'published',
+            publishedAt: Carbon::parse('2026-01-10 12:00:00'),
+            authorName: 'Autre Auteur',
+        );
+
+        $this->getJson('/api/v1/publications?year=2024')
+            ->assertOk()
+            ->assertJsonFragment(['title' => 'Article 2024'])
+            ->assertJsonMissing(['id' => $otherPubId]);
+
+        $this->getJson('/api/v1/publications?author=Dupont')
+            ->assertOk()
+            ->assertJsonFragment(['title' => 'Article 2024'])
+            ->assertJsonMissing(['title' => 'Article 2026']);
+    }
+
     private function createPublicationFixture(
         string $title,
         string $articleStatus,
@@ -160,10 +205,12 @@ class PublicationApiTest extends TestCase
         string $volume = '2026',
         string $issue = '1',
         bool $withFile = true,
-        ?Carbon $publishedAt = null
-    ): int
-    {
-        $author = User::factory()->create();
+        ?Carbon $publishedAt = null,
+        ?string $authorName = null,
+    ): int {
+        $author = User::factory()->create(
+            $authorName !== null ? ['name' => $authorName] : []
+        );
 
         $categoryId = DB::table('categories')->where('slug', $categorySlug)->value('id');
 

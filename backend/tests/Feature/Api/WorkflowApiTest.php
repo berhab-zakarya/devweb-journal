@@ -50,7 +50,7 @@ class WorkflowApiTest extends TestCase
             'reviewer_id' => $reviewer->id,
         ]);
 
-        $this->assertDatabaseHas('notifications', [
+        $this->assertDatabaseHas('user_notifications', [
             'user_id' => $reviewer->id,
             'type' => 'reviewer_assigned',
         ]);
@@ -281,10 +281,53 @@ class WorkflowApiTest extends TestCase
             'status' => 'complete',
         ]);
 
-        $this->assertDatabaseHas('notifications', [
+        $this->assertDatabaseHas('user_notifications', [
             'user_id' => $editor->id,
             'type' => 'review_submitted',
         ]);
+
+        $this->actingAs($reviewer)
+            ->getJson("/api/v1/assignments/{$assignmentId}/review")
+            ->assertOk()
+            ->assertJsonPath('data.comments', 'Evaluation complete.');
+    }
+
+    public function test_reviewer_cannot_show_another_reviewers_review(): void
+    {
+        $editor = User::factory()->create();
+        $editor->assignRole('editor');
+
+        $reviewerA = User::factory()->create();
+        $reviewerA->assignRole('reviewer');
+
+        $reviewerB = User::factory()->create();
+        $reviewerB->assignRole('reviewer');
+
+        $author = User::factory()->create();
+        $author->assignRole('author');
+
+        $fixture = $this->createArticleWithVersion($author, 'under_review');
+
+        $assignmentId = DB::table('reviewer_assignments')->insertGetId([
+            'article_id' => $fixture['article_id'],
+            'reviewer_id' => $reviewerA->id,
+            'assigned_by' => $editor->id,
+            'assigned_at' => Carbon::now(),
+            'status' => 'accepted',
+            'due_date' => null,
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]);
+
+        $this->actingAs($reviewerA)
+            ->postJson("/api/v1/assignments/{$assignmentId}/review", [
+                'comments' => 'Only A sees this.',
+            ])
+            ->assertCreated();
+
+        $this->actingAs($reviewerB)
+            ->getJson("/api/v1/assignments/{$assignmentId}/review")
+            ->assertForbidden();
     }
 
     public function test_reviewer_can_save_draft_before_final_submission(): void
@@ -328,7 +371,7 @@ class WorkflowApiTest extends TestCase
             'status' => 'accepted',
         ]);
 
-        $this->assertDatabaseMissing('notifications', [
+        $this->assertDatabaseMissing('user_notifications', [
             'user_id' => $editor->id,
             'type' => 'review_submitted',
         ]);
@@ -350,7 +393,7 @@ class WorkflowApiTest extends TestCase
             'status' => 'complete',
         ]);
 
-        $this->assertDatabaseHas('notifications', [
+        $this->assertDatabaseHas('user_notifications', [
             'user_id' => $editor->id,
             'type' => 'review_submitted',
         ]);
@@ -462,7 +505,7 @@ class WorkflowApiTest extends TestCase
             'stage' => 'finale',
         ]);
 
-        $this->assertDatabaseHas('notifications', [
+        $this->assertDatabaseHas('user_notifications', [
             'user_id' => $author->id,
             'type' => 'decision_made',
         ]);
@@ -484,6 +527,11 @@ class WorkflowApiTest extends TestCase
                 'comments' => 'Premiere decision finale.',
             ])
             ->assertCreated();
+
+        $this->assertDatabaseHas('user_notifications', [
+            'user_id' => $author->id,
+            'type' => 'correction_requested',
+        ]);
 
         $this->actingAs($editor)
             ->postJson("/api/v1/articles/{$fixture['article_id']}/decision", [
@@ -599,7 +647,7 @@ class WorkflowApiTest extends TestCase
             'article_version_id' => $fixture['version_id'],
         ]);
 
-        $this->assertDatabaseHas('notifications', [
+        $this->assertDatabaseHas('user_notifications', [
             'user_id' => $author->id,
             'type' => 'article_published',
         ]);
@@ -632,7 +680,7 @@ class WorkflowApiTest extends TestCase
             'article_version_id' => $fixture['version_id'],
         ]);
 
-        $this->assertDatabaseHas('notifications', [
+        $this->assertDatabaseHas('user_notifications', [
             'user_id' => $author->id,
             'type' => 'article_published',
         ]);

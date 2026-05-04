@@ -27,6 +27,7 @@ export interface PublicationListItem {
   keywords: string;
   category_name: string;
   category_slug: string;
+  author_name?: string;
 }
 
 export interface PublicationDetail {
@@ -56,6 +57,8 @@ export interface PublicationFilters {
   category?: string;
   volume?: string;
   issue?: string;
+  year?: number;
+  author?: string;
   page?: number;
 }
 

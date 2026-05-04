@@ -65,6 +65,7 @@ class PublicationController extends Controller
         $query = Publication::query()
             ->join('articles', 'articles.id', '=', 'publications.article_id')
             ->join('categories', 'categories.id', '=', 'articles.category_id')
+            ->join('users as authors', 'authors.id', '=', 'articles.author_id')
             ->select([
                 'publications.id',
                 'publications.published_at',
@@ -77,17 +78,31 @@ class PublicationController extends Controller
                 'articles.keywords',
                 'categories.name as category_name',
                 'categories.slug as category_slug',
+                'authors.name as author_name',
             ])
             ->where('articles.status', 'published')
             ->orderByDesc('publications.published_at');
 
         if ($search = trim((string) $request->query('search', ''))) {
-            $query->where(function ($inner) use ($search): void {
+            $escaped = addcslashes($search, '%_\\');
+            $like = '%' . $escaped . '%';
+            $query->where(function ($inner) use ($like): void {
                 $inner
-                    ->where('articles.title', 'like', '%' . $search . '%')
-                    ->orWhere('articles.keywords', 'like', '%' . $search . '%')
-                    ->orWhere('articles.abstract', 'like', '%' . $search . '%');
+                    ->where('articles.title', 'like', $like)
+                    ->orWhere('articles.keywords', 'like', $like)
+                    ->orWhere('articles.abstract', 'like', $like)
+                    ->orWhere('authors.name', 'like', $like);
             });
+        }
+
+        if ($author = trim((string) $request->query('author', ''))) {
+            $escaped = addcslashes($author, '%_\\');
+            $query->where('authors.name', 'like', '%' . $escaped . '%');
+        }
+
+        $year = (int) $request->query('year', 0);
+        if ($year > 0) {
+            $query->whereYear('publications.published_at', $year);
         }
 
         if ($category = trim((string) $request->query('category', ''))) {
@@ -174,6 +189,44 @@ class PublicationController extends Controller
         return response()->json([
             'data' => $record,
         ]);
+    }
+
+    /**
+     * Public detail resolved by article id (published articles only).
+     */
+    public function showByArticle(int $article): JsonResponse
+    {
+        $publication = Publication::query()
+            ->where('article_id', $article)
+            ->whereHas('article', static fn ($q) => $q->where('status', 'published'))
+            ->first();
+
+        if (!$publication) {
+            return response()->json([
+                'message' => 'Publication not found.',
+            ], 404);
+        }
+
+        return $this->show($publication);
+    }
+
+    /**
+     * Public download resolved by article id (published articles only).
+     */
+    public function downloadByArticle(int $article): BinaryFileResponse|JsonResponse
+    {
+        $publication = Publication::query()
+            ->where('article_id', $article)
+            ->whereHas('article', static fn ($q) => $q->where('status', 'published'))
+            ->first();
+
+        if (!$publication) {
+            return response()->json([
+                'message' => 'Publication not found.',
+            ], 404);
+        }
+
+        return $this->download($publication);
     }
 
     /**

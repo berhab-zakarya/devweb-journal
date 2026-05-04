@@ -1,20 +1,37 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { LayoutDashboard } from 'lucide-react';
 import { PageHeader, EmptyState, LoadingState, ErrorState } from '@/shared/components/ui';
+import { authKeys } from '@/features/auth/queries/auth.keys';
+import { AppError } from '@/shared/errors/app.error';
 import { useDashboard } from '../hooks/useDashboard';
 
 export function DashboardPage() {
-  const { data, isLoading, isError, refetch } = useDashboard();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { data, isLoading, isError, error, refetch } = useDashboard();
+
+  useEffect(() => {
+    if (!isError || !(error instanceof AppError) || !error.isUnauthorized) return;
+    queryClient.removeQueries({ queryKey: authKeys.me() });
+    router.replace('/login');
+  }, [isError, error, queryClient, router]);
 
   if (isLoading) return <LoadingState rows={4} />;
-  if (isError)
+  if (isError) {
+    if (error instanceof AppError && error.isUnauthorized) {
+      return <LoadingState rows={2} />;
+    }
     return (
       <ErrorState
         message="Could not load dashboard data."
         onRetry={() => refetch()}
       />
     );
+  }
 
   return (
     <div>

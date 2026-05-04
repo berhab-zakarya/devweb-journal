@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreArticleRequest;
 use App\Http\Resources\ArticleResource;
 use App\Models\Article;
+use App\Notifications\ArticleSubmittedNotification;
+use App\Services\NotificationService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -16,6 +19,12 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ArticleController extends Controller
 {
+    use AuthorizesRequests;
+
+    public function __construct(private readonly NotificationService $notificationService)
+    {
+    }
+
     /**
      * List articles based on the user's role.
      *
@@ -72,6 +81,7 @@ class ArticleController extends Controller
      *         )
      *     ),
      *     @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+     *     @OA\Response(response=403, description="Cannot list articles for this account", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
      *     @OA\Response(response=500, description="Server error")
      * )
      */
@@ -79,9 +89,16 @@ class ArticleController extends Controller
     {
         $user = $request->user();
 
+        $this->authorize('viewAny', Article::class);
+
         $query = Article::query()
             ->with(['author:id,name,email', 'category:id,name,slug', 'publication:id,article_id,published_at,doi,volume,issue'])
             ->orderByDesc('created_at');
+
+        // Readers only see published catalogue entries (matches ArticlePolicy::view).
+        if ($user->hasRole('reader') && !$user->hasAnyRole(['admin', 'editor', 'author', 'reviewer'])) {
+            $query->whereHas('publication');
+        }
 
         // An author can only see their own articles.
         if ($user->hasRole('author') && !$user->hasAnyRole(['admin', 'editor'])) {
@@ -170,6 +187,8 @@ class ArticleController extends Controller
      */
     public function store(StoreArticleRequest $request): JsonResponse
     {
+        $this->authorize('create', Article::class);
+
         $validated = $request->validated();
 
         $user = $request->user();
@@ -207,6 +226,13 @@ class ArticleController extends Controller
 
             return $article->fresh(['author:id,name,email', 'category:id,name,slug']);
         });
+
+        ArticleSubmittedNotification::notifyEditors(
+            $this->notificationService,
+            $article->id,
+            (string) $article->title,
+            $user->id,
+        );
 
         return response()->json([
             'message' => 'Article submitted successfully.',

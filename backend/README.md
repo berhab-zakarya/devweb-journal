@@ -53,13 +53,13 @@ php artisan route:list | Select-String "api/v1/users"
 # mot de passe: Admin@12345
 ```
 
-Note : `DatabaseSeeder` injecte `RolePermissionSeeder` systematiquement et `DemoDataSeeder` en environnements local/development/testing.
+Note : `DatabaseSeeder` injecte `RolePermissionSeeder` systematiquement et `DemoDataSeeder`.
 
 ## Variables d environnement essentielles
 Verifier dans `.env` :
 
 ```env
-APP_URL=http://localhost:8000
+APP_URL=http://127.0.0.1:8000
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
@@ -68,7 +68,13 @@ DB_USERNAME=root
 DB_PASSWORD=
 QUEUE_CONNECTION=database
 SESSION_DRIVER=database
-SANCTUM_STATEFUL_DOMAINS=localhost:5173
+
+# SPA (Next.js ou Vite) : origines autorisees pour les requetes avec cookies (CORS).
+# Inclure le meme scheme+host+port que le navigateur (ne pas melanger localhost et 127.0.0.1).
+CORS_ALLOWED_ORIGINS=http://127.0.0.1:3000,http://localhost:3000,http://127.0.0.1:5173,http://localhost:5173
+
+# Domaines stateful Sanctum (host:port du front, sans scheme). Aligner avec l URL du SPA.
+SANCTUM_STATEFUL_DOMAINS=127.0.0.1:3000,localhost:3000,127.0.0.1:5173,localhost:5173
 ```
 
 ## Demarrage en local

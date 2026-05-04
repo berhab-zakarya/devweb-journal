@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Article;
 use App\Models\ReviewerAssignment;
 use App\Models\User;
+use App\Notifications\ReviewerAssignedNotification;
 use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -167,12 +168,13 @@ class ReviewerAssignmentController extends Controller
                 );
 
                 if ($assignment->wasRecentlyCreated) {
-                    $this->notificationService->notifyReviewerAssigned(
-                        reviewerId: $reviewer->id,
-                        articleId: $article->id,
-                        articleTitle: (string) $article->title,
-                        dueDate: $assignment->due_date,
-                        actorId: $editor->id,
+                    ReviewerAssignedNotification::notifyReviewer(
+                        $this->notificationService,
+                        $reviewer->id,
+                        $article->id,
+                        (string) $article->title,
+                        $assignment->due_date,
+                        $editor->id,
                     );
                 }
 

@@ -28,6 +28,8 @@ class AuthController extends Controller
             'password.string' => 'The password is invalid.',
             'password.min' => 'The password must be at least 8 characters.',
             'password.confirmed' => 'The password confirmation does not match.',
+            'role.required' => 'Please choose whether you are registering as an author or a reader.',
+            'role.in' => 'The selected role is invalid.',
             'current_password.required_with' => 'The current password is required.',
             'token.required' => 'The reset token is required.',
         ];
@@ -41,16 +43,17 @@ class AuthController extends Controller
      *     tags={"Auth"},
      *     summary="Register a new user account",
      *     @OA\RequestBody(required=true,
-     *         @OA\JsonContent(required={"name","email","password","password_confirmation"},
+     *         @OA\JsonContent(required={"name","email","password","password_confirmation","role"},
      *             @OA\Property(property="name", type="string", maxLength=120, example="Jane Doe"),
      *             @OA\Property(property="email", type="string", format="email", maxLength=190, example="jane@example.com"),
      *             @OA\Property(property="password", type="string", format="password", minLength=8, example="secret12345"),
-     *             @OA\Property(property="password_confirmation", type="string", example="secret12345")
+     *             @OA\Property(property="password_confirmation", type="string", example="secret12345"),
+     *             @OA\Property(property="role", type="string", enum={"author","reader"}, example="reader")
      *         )
      *     ),
      *     @OA\Response(
      *         response=201,
-     *         description="Account created; user receives role `reader`",
+     *         description="Account created; user receives the selected role (`author` or `reader`)",
      *         @OA\JsonContent(
      *             @OA\Property(property="message", type="string", example="Account created successfully."),
      *             @OA\Property(property="data", type="object",
@@ -73,6 +76,7 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:190', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'role' => ['required', 'in:author,reader'],
         ], $this->authValidationMessages());
 
         $user = User::query()->create([
@@ -81,7 +85,11 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        $user->assignRole(RolePermissionSeeder::ensureReaderRole());
+        if ($validated['role'] === 'author') {
+            $user->assignRole(RolePermissionSeeder::ensureAuthorRole());
+        } else {
+            $user->assignRole(RolePermissionSeeder::ensureReaderRole());
+        }
 
         return response()->json([
             'message' => 'Account created successfully.',

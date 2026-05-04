@@ -67,4 +67,24 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserNotification::class, 'user_id');
     }
+
+    public function isAdmin(): bool
+    {
+        return $this->hasRole('admin');
+    }
+
+    public function isEditor(): bool
+    {
+        return $this->hasRole('editor');
+    }
+
+    public function isReviewer(): bool
+    {
+        return $this->hasRole('reviewer');
+    }
+
+    public function isAuthor(): bool
+    {
+        return $this->hasRole('author');
+    }
 }

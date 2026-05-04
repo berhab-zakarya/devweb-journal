@@ -18,13 +18,14 @@ class AuthApiTest extends TestCase
         $this->seed(RolePermissionSeeder::class);
     }
 
-    public function test_register_creates_user_and_assigns_lecteur_role(): void
+    public function test_register_creates_user_and_assigns_reader_role(): void
     {
         $this->postJson('/api/v1/auth/register', [
             'name' => 'Nouveau Lecteur',
             'email' => 'lecteur.test@example.com',
             'password' => 'Password@123',
             'password_confirmation' => 'Password@123',
+            'role' => 'reader',
         ])->assertCreated();
 
         $this->assertDatabaseHas('users', [
@@ -34,6 +35,31 @@ class AuthApiTest extends TestCase
 
         $user = User::query()->where('email', 'lecteur.test@example.com')->firstOrFail();
         $this->assertTrue($user->hasRole('reader'));
+    }
+
+    public function test_register_with_author_role_assigns_author(): void
+    {
+        $this->postJson('/api/v1/auth/register', [
+            'name' => 'Nouvel Auteur',
+            'email' => 'auteur.test@example.com',
+            'password' => 'Password@123',
+            'password_confirmation' => 'Password@123',
+            'role' => 'author',
+        ])->assertCreated();
+
+        $user = User::query()->where('email', 'auteur.test@example.com')->firstOrFail();
+        $this->assertTrue($user->hasRole('author'));
+    }
+
+    public function test_register_requires_role(): void
+    {
+        $this->postJson('/api/v1/auth/register', [
+            'name' => 'Sans Role',
+            'email' => 'sansrole@example.com',
+            'password' => 'Password@123',
+            'password_confirmation' => 'Password@123',
+        ])->assertUnprocessable()
+            ->assertJsonValidationErrors(['role']);
     }
 
     public function test_login_returns_user_payload_with_roles(): void

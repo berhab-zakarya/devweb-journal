@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { useRegisterMutation } from '../mutations/auth.mutations';
 import { getLaravelFieldErrors, getErrorMessage } from '@/shared/utils/errors';
-import { Button, FormField, Input } from '@/shared/components/ui';
+import { Button, FormField, Input, Select } from '@/shared/components/ui';
 
 const schema = z
   .object({
@@ -15,6 +15,7 @@ const schema = z
     email:                 z.string().email('Enter a valid email address'),
     password:              z.string().min(8, 'Password must be at least 8 characters'),
     password_confirmation: z.string().min(1, 'Please confirm your password'),
+    role:                  z.enum(['author', 'reader'], { required_error: 'Choose author or reader' }),
   })
   .refine((d) => d.password === d.password_confirmation, {
     message: "Passwords don't match",
@@ -33,7 +34,10 @@ export function RegisterForm() {
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({ resolver: zodResolver(schema) });
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: { role: 'reader' },
+  });
 
   const onSubmit = (data: FormData) => {
     setGeneralError('');
@@ -80,6 +84,13 @@ export function RegisterForm() {
           error={!!errors.email}
           {...field('email')}
         />
+      </FormField>
+
+      <FormField id="role" label="I am registering as" required error={errors.role?.message}>
+        <Select id="role" error={!!errors.role} {...field('role')}>
+          <option value="reader">Reader — browse published work</option>
+          <option value="author">Author — submit manuscripts</option>
+        </Select>
       </FormField>
 
       <FormField id="password" label="Password" required error={errors.password?.message}

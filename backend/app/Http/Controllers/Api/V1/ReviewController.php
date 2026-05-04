@@ -8,6 +8,7 @@ use App\Http\Resources\ReviewResource;
 use App\Models\Article;
 use App\Models\Review;
 use App\Models\ReviewerAssignment;
+use App\Notifications\ReviewSubmittedNotification;
 use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -140,12 +141,13 @@ class ReviewController extends Controller
         });
 
         if ($justSubmitted && $assignment->assigned_by) {
-            $this->notificationService->notifyEditorReviewSubmitted(
-                editorId: (int) $assignment->assigned_by,
-                articleId: $article->id,
-                articleTitle: (string) $article->title,
-                assignmentId: $assignment->id,
-                actorId: $user->id,
+            ReviewSubmittedNotification::notifyEditorOfReview(
+                $this->notificationService,
+                (int) $assignment->assigned_by,
+                $article->id,
+                (string) $article->title,
+                $assignment->id,
+                $user->id,
             );
 
             $pendingAssignmentsRemain = ReviewerAssignment::query()
@@ -155,11 +157,12 @@ class ReviewController extends Controller
                 ->exists();
 
             if (!$pendingAssignmentsRemain) {
-                $this->notificationService->notifyEditorAllReviewsSubmitted(
-                    editorId: (int) $assignment->assigned_by,
-                    articleId: $article->id,
-                    articleTitle: (string) $article->title,
-                    actorId: $user->id,
+                ReviewSubmittedNotification::notifyEditorAllReviewsComplete(
+                    $this->notificationService,
+                    (int) $assignment->assigned_by,
+                    $article->id,
+                    (string) $article->title,
+                    $user->id,
                 );
             }
         }

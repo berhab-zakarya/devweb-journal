@@ -37,6 +37,7 @@ const NAV_ITEMS: NavItem[] = [
     href:  '/articles',
     label: 'Articles',
     icon:  <FileText className="w-5 h-5" />,
+    roles: ['admin', 'editor', 'author', 'reviewer'],
   },
   {
     href:  '/assignments',

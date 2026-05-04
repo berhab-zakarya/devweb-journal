@@ -22,8 +22,8 @@ class ReviewPolicy
             return true;
         }
 
-        // Reviewer can view only their own review
-        if ($user->hasRole('reviewer') && $review->reviewer_id === $user->id) {
+        // Reviewer can view only their own review (reviewer is on the assignment, not on reviews row)
+        if ($user->hasRole('reviewer') && $this->reviewerUserId($review) === $user->id) {
             return true;
         }
 
@@ -44,7 +44,7 @@ class ReviewPolicy
     public function update(User $user, Review $review): bool
     {
         // Reviewer can update their own review before submission
-        if ($user->hasRole('reviewer') && $review->reviewer_id === $user->id) {
+        if ($user->hasRole('reviewer') && $this->reviewerUserId($review) === $user->id) {
             return !$review->isSubmitted();
         }
 
@@ -57,5 +57,14 @@ class ReviewPolicy
     public function saveDraft(User $user, Review $review): bool
     {
         return $this->update($user, $review);
+    }
+
+    private function reviewerUserId(Review $review): ?int
+    {
+        $id = $review->relationLoaded('assignment')
+            ? $review->assignment?->reviewer_id
+            : $review->assignment()->value('reviewer_id');
+
+        return $id !== null ? (int) $id : null;
     }
 }

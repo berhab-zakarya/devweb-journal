@@ -15,6 +15,54 @@ use Illuminate\Support\Facades\Mail;
 class NotificationService
 {
     /**
+     * Notify every user with the editor role that a new article was submitted.
+     */
+    public function notifyEditorsArticleSubmitted(
+        int $articleId,
+        string $articleTitle,
+        ?int $actorId = null
+    ): void {
+        $editorIds = User::query()
+            ->role('editor')
+            ->pluck('id');
+
+        foreach ($editorIds as $editorId) {
+            $this->notify(
+                userId: (int) $editorId,
+                type: 'article_submitted',
+                title: 'New Article Submitted',
+                body: sprintf('An author submitted "%s" for editorial handling.', $articleTitle),
+                data: [
+                    'article_id' => $articleId,
+                    'article_title' => $articleTitle,
+                ],
+                actorId: $actorId,
+            );
+        }
+    }
+
+    public function notifyAuthorCorrectionRequested(
+        int $authorId,
+        int $articleId,
+        string $articleTitle,
+        ?int $actorId = null
+    ): ?UserNotification {
+        $notification = $this->notify(
+            userId: $authorId,
+            type: 'correction_requested',
+            title: 'Corrections requested',
+            body: sprintf('The editorial team requested corrections for "%s".', $articleTitle),
+            data: [
+                'article_id' => $articleId,
+                'article_title' => $articleTitle,
+            ],
+            actorId: $actorId,
+        );
+
+        return $notification;
+    }
+
+    /**
      * Cree une notification applicative interne.
      */
     public function notify(

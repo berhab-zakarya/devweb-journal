@@ -11,11 +11,11 @@ class UserNotification extends Model
     use HasFactory;
 
     /**
-     * Table explicite pour eviter les collisions avec les notifications Laravel natives.
+     * Dedicated in-app feed table (renamed from `notifications` to avoid collision with Laravel's notifiable table).
      *
      * @var string
      */
-    protected $table = 'notifications';
+    protected $table = 'user_notifications';
 
     /**
      * The attributes that are mass assignable.

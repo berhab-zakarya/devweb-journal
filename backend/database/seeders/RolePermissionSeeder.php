@@ -41,6 +41,44 @@ class RolePermissionSeeder extends Seeder
         return $role;
     }
 
+    /** @return list<string> */
+    public static function authorPermissionNames(): array
+    {
+        return [
+            'articles.submit',
+            'articles.view.own',
+            'articles.update.own',
+            'articles.delete.own',
+            'notifications.view',
+        ];
+    }
+
+    /**
+     * Ensure the default `author` role exists (e.g. after migrate without db:seed).
+     */
+    public static function ensureAuthorRole(): Role
+    {
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
+        foreach (self::authorPermissionNames() as $permissionName) {
+            Permission::query()->firstOrCreate([
+                'name' => $permissionName,
+                'guard_name' => 'web',
+            ]);
+        }
+
+        $role = Role::query()->firstOrCreate([
+            'name' => 'author',
+            'guard_name' => 'web',
+        ]);
+
+        $role->syncPermissions(self::authorPermissionNames());
+
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
+        return $role;
+    }
+
     /**
      * Run the database seeds.
      */

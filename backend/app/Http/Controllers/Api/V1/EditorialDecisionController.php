@@ -6,6 +6,8 @@ use App\Enums\ArticleStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Article;
 use App\Models\EditorialDecision;
+use App\Notifications\ArticleDecisionNotification;
+use App\Notifications\CorrectionRequestedNotification;
 use App\Services\ArticleStatusService;
 use App\Services\NotificationService;
 use DomainException;
@@ -154,13 +156,24 @@ class EditorialDecisionController extends Controller
             ], 409);
         }
 
-        $this->notificationService->notifyAuthorDecisionMade(
-            authorId: (int) $article->author_id,
-            articleId: $article->id,
-            articleTitle: (string) $article->title,
-            decision: $validated['decision'],
-            actorId: $user->id,
-        );
+        if ($validated['decision'] === 'revision_required') {
+            CorrectionRequestedNotification::notifyAuthor(
+                $this->notificationService,
+                (int) $article->author_id,
+                $article->id,
+                (string) $article->title,
+                $user->id,
+            );
+        } else {
+            ArticleDecisionNotification::notifyAuthor(
+                $this->notificationService,
+                (int) $article->author_id,
+                $article->id,
+                (string) $article->title,
+                $validated['decision'],
+                $user->id,
+            );
+        }
 
         return response()->json([
             'message' => 'Final editorial decision recorded successfully.',
