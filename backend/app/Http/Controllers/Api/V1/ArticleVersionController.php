@@ -110,6 +110,32 @@ class ArticleVersionController extends Controller
 
     /**
      * List the version history of an article.
+     *
+     * @OA\Get(
+     *     path="/articles/{article}/versions",
+     *     tags={"Article Versions"},
+     *     summary="List all versions of an article",
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of article versions",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="article_id", type="integer"),
+     *                     @OA\Property(property="version_number", type="integer"),
+     *                     @OA\Property(property="pdf_original_name", type="string"),
+     *                     @OA\Property(property="pdf_size", type="integer"),
+     *                     @OA\Property(property="change_summary", type="string", nullable=true),
+     *                     @OA\Property(property="submitted_at", type="string", format="date-time")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Access denied")
+     * )
      */
     public function index(Request $request, Article $article): JsonResponse
     {
@@ -134,6 +160,24 @@ class ArticleVersionController extends Controller
 
     /**
      * Download a specific version of an article.
+     *
+     * @OA\Get(
+     *     path="/articles/{article}/versions/{versionId}/download",
+     *     tags={"Article Versions"},
+     *     summary="Download a specific PDF version of an article",
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="article", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="versionId", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(
+     *         response=200,
+     *         description="PDF file download",
+     *         @OA\MediaType(mediaType="application/pdf",
+     *             @OA\Schema(type="string", format="binary")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Access denied"),
+     *     @OA\Response(response=404, description="Version or file not found")
+     * )
      */
     public function download(Request $request, Article $article, int $versionId): BinaryFileResponse|JsonResponse
     {
