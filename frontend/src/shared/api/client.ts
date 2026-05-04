@@ -27,6 +27,14 @@ export const apiClient = axios.create({
 // ── Request interceptor ────────────────────────────────────────────────────────
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // Let the browser set multipart boundary; default `application/json` breaks FormData uploads.
+    if (config.data instanceof FormData && config.headers) {
+      if (typeof config.headers.delete === 'function') {
+        config.headers.delete('Content-Type');
+      } else {
+        delete (config.headers as Record<string, unknown>)['Content-Type'];
+      }
+    }
     // [zakarya:inject:request-interceptor]
     return config;
   },
@@ -46,6 +54,9 @@ apiClient.interceptors.response.use(
     if (status === 419 && cfg && !cfg.__csrfRetried) {
       cfg.__csrfRetried = true;
       try {
+        // Dynamic import avoids circular dependency (csrf.ts imports this client).
+        const { resetCsrfCookieCache } = await import('./csrf');
+        resetCsrfCookieCache();
         await apiClient.get('/sanctum/csrf-cookie');
       } catch {
         // ignore; original retry may still fail with 419

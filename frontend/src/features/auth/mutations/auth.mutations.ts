@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { resetCsrfCookieCache } from '@/shared/api/csrf';
 import { authService } from '../services/auth.service';
 import { authKeys } from '../queries/auth.keys';
 import type {
@@ -16,6 +17,8 @@ export function useLoginMutation() {
   return useMutation({
     mutationFn: (payload: LoginPayload) => authService.login(payload),
     onSuccess: (user) => {
+      // New session after login — allow the next `ensureCsrfCookie()` to hit the server again.
+      resetCsrfCookieCache();
       // Seed the current user cache immediately to avoid a race where the
       // UI navigates to a protected route then `/auth/me` fires and returns
       // 401 before the session cookie is fully established.
@@ -39,6 +42,7 @@ export function useLogoutMutation() {
       // Do not perform a global redirect here — the UI layer should
       // navigate after the mutation settles to avoid navigation races.
       if (isBrowser) {
+        resetCsrfCookieCache();
         queryClient.removeQueries({ queryKey: authKeys.all });
         queryClient.setQueryData(authKeys.me(), undefined);
       }
