@@ -14,8 +14,14 @@ use App\Http\Controllers\Api\V1\ReviewerAssignmentController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Session\Middleware\StartSession;
+use Laravel\Sanctum\Http\Controllers\CsrfCookieController;
 
 Route::prefix('v1')->group(function () {
+    // Same as Laravel's GET /sanctum/csrf-cookie, but under /api/v1 for SPAs that use one base URL.
+    Route::get('sanctum/csrf-cookie', [CsrfCookieController::class, 'show'])
+        ->middleware('web')
+        ->name('api.v1.sanctum.csrf-cookie');
+
     Route::get('publications/volumes', [PublicationController::class, 'volumes']);
     Route::get('publications', [PublicationController::class, 'index']);
     Route::get('publications/{publication}', [PublicationController::class, 'show']);

@@ -6,7 +6,7 @@ namespace App\Http\Controllers;
  * @OA\Info(
  *     title="Academic Journal API",
  *     version="1.0.0",
- *     description="REST API for the academic journal management system: submissions, peer review, editorial workflow, and publications.\n\n**Authentication:** Protected routes use Laravel Sanctum in **stateful** mode (session cookie `laravel_session`). **`Authorization: Bearer` tokens are not used** by this backend. Obtain CSRF via `GET /sanctum/csrf-cookie`, login with cookies, then send header `X-XSRF-TOKEN` (must match the `XSRF-TOKEN` cookie) on unsafe requests.\n\n**Errors:** Validation → **422** (`message`, `errors`). Unauthenticated → **401** `{\"message\":\"Unauthenticated.\"}`. Forbidden → **403** `{\"message\":\"Access denied.\"}` or role middleware `{\"message\":\"Access denied for this role.\"}`. Auth endpoints may return **429** when throttled.",
+ *     description="REST API for the academic journal management system: submissions, peer review, editorial workflow, and publications.\n\n**Authentication:** Protected routes use Laravel Sanctum in **stateful** mode (session cookie `laravel_session`). **`Authorization: Bearer` tokens are not used** by this backend.\n\n**CSRF cookie:** Laravel also exposes `GET /sanctum/csrf-cookie` (no `api` prefix). This project additionally aliases **`GET /api/v1/sanctum/csrf-cookie`** so a SPA can use the same API base as other calls. Then `POST /api/v1/auth/login` with cookies, and send header `X-XSRF-TOKEN` (must match the `XSRF-TOKEN` cookie) on unsafe requests.\n\n**Errors:** Validation → **422** (`message`, `errors`). Unauthenticated → **401** `{\"message\":\"Unauthenticated.\"}`. Forbidden → **403** `{\"message\":\"Access denied.\"}` or role middleware `{\"message\":\"Access denied for this role.\"}`. Auth endpoints may return **429** when throttled.",
  *     @OA\Contact(email="admin@journal.local")
  * )
  *
@@ -18,6 +18,14 @@ namespace App\Http\Controllers;
  *     in="cookie",
  *     name="laravel_session",
  *     description="Session cookie issued after successful `POST /auth/login`. Send `X-XSRF-TOKEN` header on POST/PUT/PATCH/DELETE. Cookie-based Sanctum only (no Authorization Bearer in this codebase)."
+ * )
+ *
+ * @OA\Get(
+ *     path="/sanctum/csrf-cookie",
+ *     tags={"Auth"},
+ *     summary="Sanctum CSRF cookie (under API v1)",
+ *     description="Delegates to Laravel Sanctum's cookie endpoint. Call this (or `GET /sanctum/csrf-cookie` at the app root) before logging in when using cookie + `X-XSRF-TOKEN` authentication.",
+ *     @OA\Response(response=204, description="No body; sets `XSRF-TOKEN` cookie (and session cookie when applicable)")
  * )
  *
  * @OA\Schema(
