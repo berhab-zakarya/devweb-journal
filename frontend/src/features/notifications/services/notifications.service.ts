@@ -1,4 +1,5 @@
 import { apiClient } from '@/shared/api/client';
+import { ensureCsrfCookie } from '@/shared/api/csrf';
 import { ENDPOINTS } from '@/shared/api/endpoints.constants';
 import type {
   Notification,
@@ -21,11 +22,13 @@ export const notificationsService = {
   },
 
   markRead: async (id: number): Promise<Notification> => {
+    await ensureCsrfCookie();
     const { data } = await apiClient.patch<{ message: string; data: Notification }>(`${BASE}/${id}/read`);
     return data.data;
   },
 
   markAllRead: async (): Promise<number> => {
+    await ensureCsrfCookie();
     const { data } = await apiClient.post<{ message: string; data: { updated: number } }>(
       `${BASE}/read-all`
     );

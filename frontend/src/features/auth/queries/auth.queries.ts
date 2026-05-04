@@ -8,4 +8,6 @@ export const currentUserQueryOptions = () =>
     queryFn:  authService.me,
     staleTime: 5 * 60_000,
     retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });

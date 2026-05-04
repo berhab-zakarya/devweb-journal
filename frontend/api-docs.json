@@ -191,6 +191,16 @@
                             }
                         }
                     },
+                    "403": {
+                        "description": "Cannot list articles for this account",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
                     "500": {
                         "description": "Server error"
                     }
@@ -1246,7 +1256,8 @@
                                     "name",
                                     "email",
                                     "password",
-                                    "password_confirmation"
+                                    "password_confirmation",
+                                    "role"
                                 ],
                                 "properties": {
                                     "name": {
@@ -1269,6 +1280,14 @@
                                     "password_confirmation": {
                                         "type": "string",
                                         "example": "secret12345"
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "enum": [
+                                            "author",
+                                            "reader"
+                                        ],
+                                        "example": "reader"
                                     }
                                 },
                                 "type": "object"
@@ -1278,7 +1297,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Account created; user receives role `reader`",
+                        "description": "Account created; user receives the selected role (`author` or `reader`)",
                         "content": {
                             "application/json": {
                                 "schema": {

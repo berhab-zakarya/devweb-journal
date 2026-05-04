@@ -1,4 +1,5 @@
 import { apiClient } from '@/shared/api/client';
+import { ensureCsrfCookie } from '@/shared/api/csrf';
 import { ENDPOINTS } from '@/shared/api/endpoints.constants';
 import type { Assignment, AssignmentReview, SubmitReviewPayload } from '../types/Assignment.types';
 
@@ -11,6 +12,7 @@ export const assignmentsService = {
   },
 
   respond: async (id: number, response: 'accepted' | 'decline'): Promise<Assignment> => {
+    await ensureCsrfCookie();
     const { data } = await apiClient.patch<Assignment>(`${BASE}/${id}/respond`, { response });
     return data;
   },
@@ -21,6 +23,7 @@ export const assignmentsService = {
   },
 
   submitReview: async (id: number, payload: SubmitReviewPayload): Promise<AssignmentReview> => {
+    await ensureCsrfCookie();
     const { data } = await apiClient.post<AssignmentReview>(`${BASE}/${id}/review`, payload);
     return data;
   },

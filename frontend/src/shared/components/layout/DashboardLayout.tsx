@@ -11,16 +11,19 @@ import { AppShell } from './AppShell';
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { data: user, isLoading, isError, error } = useCurrentUser();
+  const { data: user, isLoading, isFetching, isError, error } = useCurrentUser();
   const logout = useLogoutMutation();
   const { data: unreadCount = 0 } = useNotificationsUnreadCount(!!user);
 
   useEffect(() => {
-    if (isLoading) return;
+    // Wait until the initial load and any active refetches finish before
+    // making a navigation decision. This avoids redirecting while `/auth/me`
+    // is still resolving.
+    if (isLoading || isFetching) return;
     if (isError && error instanceof AppError && error.isUnauthorized) {
       router.replace('/login');
     }
-  }, [isLoading, isError, error, router]);
+  }, [isLoading, isFetching, isError, error, router]);
 
   if (isLoading && !user) {
     return (
@@ -42,7 +45,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     <AppShell
       user={user ?? null}
       unreadNotifications={unreadCount}
-      onLogout={() => logout.mutate()}
+      onLogout={() => logout.mutate(undefined, { onSettled: () => router.replace('/login') })}
     >
       {children}
     </AppShell>
