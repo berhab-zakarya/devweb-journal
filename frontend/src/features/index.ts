@@ -1,9 +1,0 @@
-export * as articlesFeature from './articles';
-export * as usersFeature from './users';
-export * as authFeature from './auth';
-export * as categoriesFeature from './categories';
-export * as dashboardFeature from './dashboard';
-export * as notificationsFeature from './notifications';
-export * as publicationsFeature from './publications';
-export * as reviewsFeature from './reviews';
-export * as assignmentsFeature from './assignments';
