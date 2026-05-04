@@ -9,6 +9,38 @@ use Spatie\Permission\PermissionRegistrar;
 
 class RolePermissionSeeder extends Seeder
 {
+    /** @return list<string> */
+    public static function readerPermissionNames(): array
+    {
+        return ['notifications.view'];
+    }
+
+    /**
+     * Ensure the default `reader` role exists (e.g. after migrate without db:seed).
+     */
+    public static function ensureReaderRole(): Role
+    {
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
+        foreach (self::readerPermissionNames() as $permissionName) {
+            Permission::query()->firstOrCreate([
+                'name' => $permissionName,
+                'guard_name' => 'web',
+            ]);
+        }
+
+        $role = Role::query()->firstOrCreate([
+            'name' => 'reader',
+            'guard_name' => 'web',
+        ]);
+
+        $role->syncPermissions(self::readerPermissionNames());
+
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
+        return $role;
+    }
+
     /**
      * Run the database seeds.
      */
@@ -67,9 +99,7 @@ class RolePermissionSeeder extends Seeder
                 'articles.delete.own',
                 'notifications.view',
             ],
-            'reader' => [
-                'notifications.view',
-            ],
+            'reader' => self::readerPermissionNames(),
         ];
 
         foreach ($rolesMap as $roleName => $rolePermissions) {
