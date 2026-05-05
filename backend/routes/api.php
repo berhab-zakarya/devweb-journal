@@ -18,8 +18,11 @@ use Laravel\Sanctum\Http\Controllers\CsrfCookieController;
 
 Route::prefix('v1')->group(function () {
     // Same as Laravel's GET /sanctum/csrf-cookie, but under /api/v1 for SPAs that use one base URL.
+    // Do NOT add ->middleware('web') here: statefulApi() in bootstrap/app.php already applies
+    // EnsureFrontendRequestsAreStateful globally to all API routes, which runs StartSession,
+    // EncryptCookies, and ValidateCsrfToken. Adding 'web' would double-start the session and
+    // create a different session context from the one used by subsequent API POST requests.
     Route::get('sanctum/csrf-cookie', [CsrfCookieController::class, 'show'])
-        ->middleware('web')
         ->name('api.v1.sanctum.csrf-cookie');
 
     Route::get('publications/volumes', [PublicationController::class, 'volumes']);

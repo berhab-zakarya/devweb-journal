@@ -297,7 +297,7 @@ class PublicationController extends Controller
             ->select([
                 'volume',
                 'issue',
-                DB::raw('YEAR(published_at) as year'),
+                DB::raw("CAST(strftime('%Y', published_at) AS INTEGER) as year"),
             ])
             ->whereNotNull('volume')
             ->distinct()
