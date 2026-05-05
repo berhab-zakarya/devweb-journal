@@ -59,7 +59,7 @@ Note : `DatabaseSeeder` injecte `RolePermissionSeeder` systematiquement et `Demo
 Verifier dans `.env` :
 
 ```env
-APP_URL=http://127.0.0.1:8000
+APP_URL=http://localhost:8000
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
@@ -70,12 +70,12 @@ QUEUE_CONNECTION=database
 SESSION_DRIVER=database
 
 # SPA (Next.js ou Vite) : origines autorisees pour les requetes avec cookies (CORS).
-# Inclure le meme scheme+host+port que le navigateur (ne pas melanger localhost et 127.0.0.1).
-CORS_ALLOWED_ORIGINS=http://127.0.0.1:3000,http://localhost:3000,http://127.0.0.1:5173,http://localhost:5173
+# Inclure le meme scheme+host+port que le navigateur (ne pas melanger les hosts).
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
 
 # Domaines stateful Sanctum (host:port du SPA uniquement, sans scheme).
 # Ne pas y mettre le port de l API Laravel (ex. pas :8000) — seulement le front (Next/Vite).
-SANCTUM_STATEFUL_DOMAINS=127.0.0.1:3000,localhost:3000,127.0.0.1:5173,localhost:5173
+SANCTUM_STATEFUL_DOMAINS=localhost:3000,localhost:5173
 
 # En local multi-ports, laisser vide evite les cookies bloques entre localhost et 127.0.0.1.
 SESSION_DOMAIN=
@@ -86,7 +86,7 @@ Explication : lancer l API et le worker queue dans deux terminaux separes.
 
 ```powershell
 # Terminal 1: API Laravel
-php artisan serve --host=127.0.0.1 --port=8000
+php artisan serve --host=localhost --port=8000
 
 # Terminal 2: worker queue
 php artisan queue:work --sleep=3 --tries=3
@@ -119,10 +119,10 @@ php artisan test
 - Erreur SQL : verifier MySQL XAMPP actif et valeurs DB dans `.env`.
 - Table `user_notifications` introuvable : lancer `php artisan migrate` (migration `ensure_user_notifications_table_exists` ou renommage `notifications` → `user_notifications`).
 - Erreur 419 Sanctum :
-   1. Utiliser le meme host partout (tout en `localhost` ou tout en `127.0.0.1`, ne pas melanger).
+   1. Utiliser le meme host partout (tout en `localhost`, ne pas melanger).
    2. Appeler `GET /api/v1/sanctum/csrf-cookie` (ou `GET /sanctum/csrf-cookie`) avant les requetes `POST`/`PUT`/`PATCH`/`DELETE` ; le front Axios envoie `X-XSRF-TOKEN` automatiquement si le cookie est present.
    3. Envoyer les requetes avec credentials (`withCredentials: true`).
-   4. `CORS_ALLOWED_ORIGINS` doit inclure **exactement** l origine du navigateur (ex. `http://127.0.0.1:3000` **et** `http://localhost:3000` si vous testez les deux).
+   4. `CORS_ALLOWED_ORIGINS` doit inclure **exactement** l origine du navigateur (ex. `http://localhost:3000`).
    5. `SANCTUM_STATEFUL_DOMAINS` : uniquement les **fronts** (`localhost:3000`, etc.), pas `localhost:8000`.
    6. `SESSION_DOMAIN` : en local, laisser vide (`SESSION_DOMAIN=`) si vous alternez `localhost` et `127.0.0.1`.
    7. Swagger / Postman : les routes sous session + CSRF exigent le cookie de session **et** l en-tete `X-XSRF-TOKEN` ; preferer le SPA ou appeler d abord `GET .../sanctum/csrf-cookie` avec la meme session.
