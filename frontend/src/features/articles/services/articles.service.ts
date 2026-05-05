@@ -1,5 +1,4 @@
 import { apiClient } from '@/shared/api/client';
-import { ensureCsrfCookie } from '@/shared/api/csrf';
 import { ENDPOINTS } from '@/shared/api/endpoints.constants';
 import type {
   Article,
@@ -38,7 +37,6 @@ export const articlesService = {
   },
 
   create: async (payload: CreateArticlePayload): Promise<Article> => {
-    await ensureCsrfCookie();
     const form = new FormData();
     form.append('title', payload.title);
     form.append('abstract', payload.abstract);
@@ -50,13 +48,11 @@ export const articlesService = {
   },
 
   update: async (id: number, payload: UpdateArticlePayload): Promise<Article> => {
-    await ensureCsrfCookie();
     const { data } = await apiClient.put<{ message: string; data: Article }>(`${BASE}/${id}`, payload);
     return data.data;
   },
 
   delete: async (id: number): Promise<void> => {
-    await ensureCsrfCookie();
     await apiClient.delete(`${BASE}/${id}`);
   },
 
@@ -74,7 +70,6 @@ export const articlesService = {
   },
 
   createVersion: async (articleId: number, payload: CreateVersionPayload): Promise<CreateVersionResponse> => {
-    await ensureCsrfCookie();
     const form = new FormData();
     form.append('pdf', payload.pdf);
     if (payload.change_summary?.trim()) {
@@ -101,7 +96,6 @@ export const articlesService = {
   },
 
   assignReviewers: async (articleId: number, payload: AssignReviewersPayload): Promise<ArticleAssignment[]> => {
-    await ensureCsrfCookie();
     const { data } = await apiClient.post<{ message: string; data: ArticleAssignment[] }>(
       `${BASE}/${articleId}/assignments`,
       payload
@@ -125,12 +119,10 @@ export const articlesService = {
   },
 
   deleteAssignment: async (assignmentId: number): Promise<void> => {
-    await ensureCsrfCookie();
     await apiClient.delete(`${ASSIGN}/${assignmentId}`);
   },
 
   respondAssignment: async (assignmentId: number, payload: RespondAssignmentPayload): Promise<ArticleAssignment> => {
-    await ensureCsrfCookie();
     const { data } = await apiClient.patch<{ message: string; data: ArticleAssignment }>(
       `${ASSIGN}/${assignmentId}/respond`,
       payload
@@ -150,7 +142,6 @@ export const articlesService = {
   },
 
   submitReview: async (assignmentId: number, payload: SubmitReviewPayload): Promise<ArticleReview> => {
-    await ensureCsrfCookie();
     const { data } = await apiClient.post<{ message: string; data: ArticleReview }>(
       `${ASSIGN}/${assignmentId}/review`,
       payload
@@ -165,7 +156,6 @@ export const articlesService = {
   },
 
   createDecision: async (articleId: number, payload: CreateDecisionPayload): Promise<EditorialDecision> => {
-    await ensureCsrfCookie();
     const { data } = await apiClient.post<{ message: string; data: EditorialDecision }>(
       `${BASE}/${articleId}/decision`,
       payload
@@ -178,7 +168,6 @@ export const articlesService = {
     articleId: number,
     payload: { published_at?: string | null; doi?: string | null; volume?: string | null; issue?: string | null }
   ): Promise<{ id: number; article_id: number; article_version_id: number; published_at: string; doi: string | null; volume: string | null; issue: string | null; created_at: string; updated_at: string }> => {
-    await ensureCsrfCookie();
     const { data } = await apiClient.post<{
       message: string;
       data: { id: number; article_id: number; article_version_id: number; published_at: string; doi: string | null; volume: string | null; issue: string | null; created_at: string; updated_at: string };

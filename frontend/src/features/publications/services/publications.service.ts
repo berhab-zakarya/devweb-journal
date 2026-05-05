@@ -1,5 +1,4 @@
 import { apiClient } from '@/shared/api/client';
-import { ensureCsrfCookie } from '@/shared/api/csrf';
 import { ENDPOINTS } from '@/shared/api/endpoints.constants';
 import type {
   PublicationDetail,
@@ -49,7 +48,6 @@ export const publicationsService = {
     created_at: string;
     updated_at: string;
   }> => {
-    await ensureCsrfCookie();
     const { data } = await apiClient.post<{
       message: string;
       data: {

@@ -1,5 +1,4 @@
 import { apiClient } from '@/shared/api/client';
-import { ensureCsrfCookie } from '@/shared/api/csrf';
 import { ENDPOINTS } from '@/shared/api/endpoints.constants';
 import type {
   User,
@@ -25,24 +24,20 @@ export const usersService = {
   },
 
   create: async (payload: CreateUserPayload): Promise<User> => {
-    await ensureCsrfCookie();
     const { data } = await apiClient.post<{ message: string; data: User }>(BASE, payload);
     return data.data;
   },
 
   update: async (id: number, payload: UpdateUserPayload): Promise<User> => {
-    await ensureCsrfCookie();
     const { data } = await apiClient.put<{ message: string; data: User }>(`${BASE}/${id}`, payload);
     return data.data;
   },
 
   delete: async (id: number): Promise<void> => {
-    await ensureCsrfCookie();
     await apiClient.delete(`${BASE}/${id}`);
   },
 
   assignRole: async (id: number, payload: AssignRolePayload): Promise<User> => {
-    await ensureCsrfCookie();
     const { data } = await apiClient.post<{ message: string; data: User }>(`${BASE}/${id}/assign-role`, payload);
     return data.data;
   },
