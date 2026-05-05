@@ -4,6 +4,8 @@ export const articlesKeys = {
   all: ['articles'] as const,
   lists: () => [...articlesKeys.all, 'list'] as const,
   list: (filters?: ArticleFilters) => [...articlesKeys.lists(), { filters }] as const,
+  listInfinite: (filters?: Omit<ArticleFilters, 'page'>) =>
+    [...articlesKeys.lists(), 'infinite', { filters }] as const,
   details: () => [...articlesKeys.all, 'detail'] as const,
   detail: (id: number) => [...articlesKeys.details(), id] as const,
   versions: (articleId: number) => [...articlesKeys.all, 'versions', articleId] as const,

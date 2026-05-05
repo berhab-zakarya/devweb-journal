@@ -8,6 +8,7 @@ export * from './FormField';
 export * from './Input';
 export * from './Label';
 export * from './LoadingState';
+export * from './Modal';
 export * from './PageHeader';
 export * from './Pagination';
 export * from './RoleBadge';

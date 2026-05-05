@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ChevronLeft, Users, Plus, Trash2 } from 'lucide-react';
+import { ChevronLeft, Users } from 'lucide-react';
 import {
   PageHeader,
   Card,
@@ -17,15 +17,18 @@ import {
   Select,
   Textarea,
   Button,
-  AssignmentStatusBadge,
 } from '@/shared/components/ui';
 import { getLaravelFieldErrors, getErrorMessage } from '@/shared/utils/errors';
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 import { useArticle } from '../hooks/useArticle';
 import { useArticleAssignments } from '../hooks/useArticleAssignments';
 import { useArticleDecision } from '../hooks/useArticleDecision';
-import { useCreateDecisionMutation, useAssignReviewersMutation, useDeleteAssignmentMutation } from '../mutations/articles.mutations';
-import { articlesService } from '../services/articles.service';
-import type { DecisionType, ReviewerSearchResult } from '../types/Article.types';
+import { useCreateDecisionMutation, useDeleteAssignmentMutation } from '../mutations/articles.mutations';
+import type { DecisionType } from '../types/Article.types';
+import { AdminFinalDecisionPanel } from './AdminFinalDecisionPanel';
+import { ArticleReviewsPanel } from './ArticleReviewsPanel';
+import { AssignReviewersForm } from './AssignReviewersForm';
+import { ReviewerAssignmentsPanel } from './ReviewerAssignmentsPanel';
 
 const decisionSchema = z.object({
   decision: z.enum(['accepted', 'rejected', 'revision_required'], {
@@ -35,11 +38,6 @@ const decisionSchema = z.object({
 });
 type DecisionFormData = z.infer<typeof decisionSchema>;
 
-const assignSchema = z.object({
-  due_date: z.string().min(1, 'Due date is required'),
-});
-type AssignFormData = z.infer<typeof assignSchema>;
-
 const DECISION_OPTIONS: { value: DecisionType; label: string }[] = [
   { value: 'accepted',          label: 'Accept' },
   { value: 'rejected',          label: 'Reject' },
@@ -48,58 +46,20 @@ const DECISION_OPTIONS: { value: DecisionType; label: string }[] = [
 
 export function EditorialDecisionPage({ id }: Readonly<{ id: number }>) {
   const router = useRouter();
+  const { data: currentUser } = useCurrentUser();
+  const roles = currentUser?.roles ?? [];
+  const isAdmin = roles.includes('admin');
+  const isEditor = roles.includes('editor');
+
   const articleQuery = useArticle(id);
   const assignmentsQuery = useArticleAssignments(id);
   const decisionQuery = useArticleDecision(id);
   const createDecision = useCreateDecisionMutation(id);
-  const assignReviewers = useAssignReviewersMutation(id);
   const deleteAssignment = useDeleteAssignmentMutation(id);
 
-  // Reviewer search
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<ReviewerSearchResult[]>([]);
-  const [selectedReviewers, setSelectedReviewers] = useState<ReviewerSearchResult[]>([]);
-  const [searching, setSearching] = useState(false);
-
   const [decisionError, setDecisionError] = useState('');
-  const [assignError, setAssignError] = useState('');
 
   const decisionForm = useForm<DecisionFormData>({ resolver: zodResolver(decisionSchema) });
-  const assignForm = useForm<AssignFormData>({ resolver: zodResolver(assignSchema) });
-
-  async function handleSearch() {
-    if (!searchQuery.trim()) return;
-    setSearching(true);
-    try {
-      const results = await articlesService.searchReviewers(id, searchQuery, 10);
-      setSearchResults(results);
-    } finally {
-      setSearching(false);
-    }
-  }
-
-  function toggleReviewer(r: ReviewerSearchResult) {
-    setSelectedReviewers((prev) =>
-      prev.some((x) => x.id === r.id) ? prev.filter((x) => x.id !== r.id) : [...prev, r]
-    );
-  }
-
-  const onAssignSubmit = (data: AssignFormData) => {
-    if (selectedReviewers.length === 0) { setAssignError('Select at least one reviewer'); return; }
-    setAssignError('');
-    assignReviewers.mutate(
-      { reviewer_ids: selectedReviewers.map((r) => r.id), due_date: data.due_date },
-      {
-        onSuccess: () => {
-          setSelectedReviewers([]);
-          setSearchResults([]);
-          setSearchQuery('');
-          assignForm.reset();
-        },
-        onError: (error) => setAssignError(getErrorMessage(error)),
-      }
-    );
-  };
 
   const onDecisionSubmit = (data: DecisionFormData) => {
     setDecisionError('');
@@ -147,105 +107,13 @@ export function EditorialDecisionPage({ id }: Readonly<{ id: number }>) {
             </h2>
           </CardHeader>
 
-          {/* Current assignments */}
-          {assignmentsQuery.isLoading && <LoadingState variant="list" rows={2} />}
-          {assignments.length > 0 && (
-            <ul className="mb-4 divide-y divide-subtle">
-              {assignments.map((a) => (
-                <li key={a.id} className="py-3 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-primary">{a.reviewer?.name ?? `Reviewer #${a.reviewer_id}`}</p>
-                    {a.due_date && <p className="text-xs text-muted">Due: {new Date(a.due_date).toLocaleDateString()}</p>}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <AssignmentStatusBadge status={a.status} />
-                    <button
-                      type="button"
-                      onClick={() => deleteAssignment.mutate(a.id)}
-                      className="p-1.5 rounded text-muted hover:text-danger hover:bg-red-50 transition-colors"
-                      aria-label="Remove assignment"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+          <ReviewerAssignmentsPanel
+            assignments={assignments}
+            loading={assignmentsQuery.isLoading}
+            onRemove={(assignmentId) => deleteAssignment.mutate(assignmentId)}
+          />
 
-          {/* Reviewer search + assign form */}
-          <form onSubmit={assignForm.handleSubmit(onAssignSubmit)} noValidate className="space-y-3">
-            {assignError && (
-              <div role="alert" className="px-3 py-2 rounded-md bg-red-50 border border-red-200 text-sm text-danger">
-                {assignError}
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleSearch())}
-                placeholder="Search reviewers by name or email…"
-                className="flex-1 h-10 px-3 text-sm border border-strong rounded focus:outline-none focus:ring-2 focus:ring-brand-500 bg-surface text-primary"
-              />
-              <Button type="button" variant="secondary" size="sm" onClick={handleSearch} loading={searching}>
-                Search
-              </Button>
-            </div>
-
-            {searchResults.length > 0 && (
-              <ul className="border border-subtle rounded-lg divide-y divide-subtle max-h-48 overflow-y-auto">
-                {searchResults.map((r) => {
-                  const selected = selectedReviewers.some((x) => x.id === r.id);
-                  return (
-                    <li key={r.id}>
-                      <button
-                        type="button"
-                        onClick={() => toggleReviewer(r)}
-                        className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between transition-colors ${
-                          selected ? 'bg-brand-50 text-brand-700' : 'hover:bg-muted text-primary'
-                        }`}
-                      >
-                        <span>
-                          <span className="font-medium">{r.name}</span>
-                          <span className="text-muted ml-2">{r.email}</span>
-                        </span>
-                        {selected && <Plus className="w-4 h-4 rotate-45 shrink-0" />}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-
-            {selectedReviewers.length > 0 && (
-              <p className="text-sm text-secondary">
-                Selected: {selectedReviewers.map((r) => r.name).join(', ')}
-              </p>
-            )}
-
-            <div className="flex items-end gap-3">
-              <FormField id="due_date" label="Due Date" required error={assignForm.formState.errors.due_date?.message} className="flex-1">
-                <input
-                  id="due_date"
-                  type="date"
-                  className="w-full h-10 px-3 text-sm border border-strong rounded focus:outline-none focus:ring-2 focus:ring-brand-500 bg-surface text-primary"
-                  {...assignForm.register('due_date')}
-                />
-              </FormField>
-              <Button
-                type="submit"
-                variant="primary"
-                size="sm"
-                loading={assignReviewers.isPending}
-                className="mb-0.5"
-              >
-                Assign
-              </Button>
-            </div>
-          </form>
+          <AssignReviewersForm articleId={id} />
         </Card>
 
         {/* Editorial Decision Form */}
@@ -308,6 +176,19 @@ export function EditorialDecisionPage({ id }: Readonly<{ id: number }>) {
             </form>
           )}
         </Card>
+
+        {(isEditor || isAdmin) && (
+          <Card>
+            <CardHeader>
+              <h2 className="text-lg font-semibold text-primary">Peer reviews</h2>
+            </CardHeader>
+            <div className="mt-2">
+              <ArticleReviewsPanel articleId={id} />
+            </div>
+          </Card>
+        )}
+
+        {isAdmin && <AdminFinalDecisionPanel articleId={id} decision={decision} />}
       </div>
     </div>
   );

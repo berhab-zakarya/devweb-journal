@@ -3,6 +3,7 @@ import {
   FileText,
   ClipboardCheck,
   BookOpen,
+  Library,
   Tag,
   Users,
   Bell,
@@ -55,6 +56,12 @@ const NAV_ITEMS: NavItem[] = [
     href:  '/journal',
     label: 'Publications',
     icon:  <BookOpen className="w-5 h-5" />,
+  },
+  {
+    href:  '/publications',
+    label: 'Publish queue',
+    icon:  <Library className="w-5 h-5" />,
+    roles: ['admin', 'editor'],
   },
   {
     href:  '/categories',

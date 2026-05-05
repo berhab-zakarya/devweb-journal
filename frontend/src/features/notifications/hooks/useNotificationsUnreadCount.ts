@@ -9,3 +9,6 @@ export function useNotificationsUnreadCount(enabled = true) {
     enabled,
   });
 }
+
+/** @alias Plan / docs name */
+export { useNotificationsUnreadCount as useUnreadNotificationCount };

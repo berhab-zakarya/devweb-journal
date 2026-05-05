@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Download, Users, FileText, ChevronLeft } from 'lucide-react';
+import { Users, ChevronLeft } from 'lucide-react';
 import {
   PageHeader,
   Card,
@@ -10,7 +10,6 @@ import {
   LoadingState,
   ErrorState,
   EmptyState,
-  Button,
   ArticleStatusBadge,
   AssignmentStatusBadge,
 } from '@/shared/components/ui';
@@ -18,17 +17,9 @@ import { useArticle } from '../hooks/useArticle';
 import { useArticleVersions } from '../hooks/useArticleVersions';
 import { useArticleAssignments } from '../hooks/useArticleAssignments';
 import { useArticleDecision } from '../hooks/useArticleDecision';
-import { articlesService } from '../services/articles.service';
 import type { EditorialDecision } from '../types/Article.types';
-
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
+import { ArticleActionBar } from './ArticleActionBar';
+import { ArticleWorkflowTimeline } from './ArticleWorkflowTimeline';
 
 function DecisionBadge({ decision }: Readonly<{ decision: EditorialDecision['decision'] }>) {
   const map = {
@@ -61,11 +52,6 @@ export function ArticleDetailsPage({ id }: Readonly<{ id: number }>) {
   const assignments = assignmentsQuery.data ?? [];
   const decision = decisionQuery.data;
 
-  async function handleDownload() {
-    const blob = await articlesService.download(id);
-    downloadBlob(blob, `article-${id}.pdf`);
-  }
-
   return (
     <div>
       <div className="mb-4">
@@ -76,28 +62,12 @@ export function ArticleDetailsPage({ id }: Readonly<{ id: number }>) {
 
       <PageHeader
         title={article.title}
-        action={
-          <div className="flex items-center gap-2">
-            <Button variant="secondary" size="sm" leftIcon={<Download className="w-4 h-4" />} onClick={handleDownload}>
-              Download PDF
-            </Button>
-            <Link
-              href={`/articles/${id}/versions`}
-              className="inline-flex items-center gap-1.5 h-9 px-3 text-sm rounded border border-strong bg-surface text-secondary hover:bg-muted transition-colors"
-            >
-              <FileText className="w-4 h-4" /> Versions
-            </Link>
-            <Link
-              href={`/articles/${id}/decision`}
-              className="inline-flex items-center gap-1.5 h-9 px-3 text-sm rounded bg-brand-600 text-white font-semibold hover:bg-brand-700 transition-colors"
-            >
-              Editorial Decision
-            </Link>
-          </div>
-        }
+        action={<ArticleActionBar articleId={id} article={article} assignments={assignments} />}
       />
 
       <div className="space-y-6">
+        <ArticleWorkflowTimeline article={article} assignments={assignments} versionCount={versions.length} />
+
         {/* Metadata */}
         <Card>
           <CardHeader><h2 className="text-lg font-semibold text-primary">Metadata</h2></CardHeader>

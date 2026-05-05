@@ -2,11 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bell } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { notificationsListQueryOptions } from '@/features/notifications/queries/notifications.queries';
+import { notificationsKeys } from '@/features/notifications/queries/notifications.keys';
 import { useMarkReadMutation } from '@/features/notifications/mutations/notifications.mutations';
+import { NotificationDropdownList } from '@/features/notifications/components/NotificationDropdownList';
 import type { Notification } from '@/features/notifications/types/Notification.types';
 
 export interface NotificationButtonProps {
@@ -16,15 +18,17 @@ export interface NotificationButtonProps {
 
 export function NotificationButton({ unreadCount = 0, className }: NotificationButtonProps) {
   const [open, setOpen] = useState(false);
+  const [onlyUnread, setOnlyUnread] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const markRead = useMarkReadMutation();
+  const queryClient = useQueryClient();
 
   const { data: listData, isFetching } = useQuery({
-    ...notificationsListQueryOptions({ page: 1 }),
+    ...notificationsListQueryOptions({ page: 1, only_unread: onlyUnread }),
     enabled: open,
   });
 
-  const recent = listData?.data?.data?.slice(0, 8) ?? [];
+  const recent = listData?.data?.data?.slice(0, 12) ?? [];
 
   const handleClickOutside = useCallback((event: MouseEvent) => {
     if (!rootRef.current?.contains(event.target as Node)) {
@@ -39,6 +43,17 @@ export function NotificationButton({ unreadCount = 0, className }: NotificationB
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open, handleClickOutside]);
+
+  function handleItemClick(n: Notification) {
+    if (!n.read_at) {
+      markRead.mutate(n.id, {
+        onSettled: () => {
+          queryClient.invalidateQueries({ queryKey: notificationsKeys.unreadCount() });
+        },
+      });
+    }
+    setOpen(false);
+  }
 
   return (
     <div ref={rootRef} className={cn('relative', className)}>
@@ -80,35 +95,13 @@ export function NotificationButton({ unreadCount = 0, className }: NotificationB
             </Link>
           </div>
 
-          <div className="max-h-80 overflow-y-auto">
-            {isFetching && (
-              <p className="px-3 py-4 text-sm text-muted text-center">Loading…</p>
-            )}
-            {!isFetching && recent.length === 0 && (
-              <p className="px-3 py-4 text-sm text-muted text-center">No notifications yet.</p>
-            )}
-            {!isFetching &&
-              recent.map((n: Notification) => (
-                <button
-                  key={n.id}
-                  type="button"
-                  role="menuitem"
-                  className={cn(
-                    'w-full text-left px-3 py-2.5 border-b border-subtle/60 last:border-0 hover:bg-muted/60 transition-colors',
-                    !n.read_at && 'bg-brand-50/40'
-                  )}
-                  onClick={() => {
-                    if (!n.read_at) {
-                      markRead.mutate(n.id);
-                    }
-                    setOpen(false);
-                  }}
-                >
-                  <p className="text-sm font-medium text-primary line-clamp-1">{n.title}</p>
-                  <p className="text-xs text-muted line-clamp-2 mt-0.5">{n.body}</p>
-                </button>
-              ))}
-          </div>
+          <NotificationDropdownList
+            items={recent}
+            loading={isFetching}
+            onlyUnread={onlyUnread}
+            onFilterChange={setOnlyUnread}
+            onItemClick={handleItemClick}
+          />
         </div>
       )}
     </div>
