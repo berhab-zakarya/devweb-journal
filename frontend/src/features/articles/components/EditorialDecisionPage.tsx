@@ -122,7 +122,7 @@ export function EditorialDecisionPage({ id }: Readonly<{ id: number }>) {
             <h2 className="text-lg font-semibold text-primary">Record Decision</h2>
           </CardHeader>
 
-          {decision ? (
+          {decision?.latest ? (
             <div className="mt-2 space-y-2">
               <p className="text-sm text-muted">A decision has already been recorded for this article.</p>
               <p className="text-sm text-secondary">

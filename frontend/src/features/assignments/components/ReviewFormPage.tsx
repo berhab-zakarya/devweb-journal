@@ -8,15 +8,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft } from 'lucide-react';
-import {
-  PageHeader,
-  Card,
-  FormField,
-  Input,
-  Textarea,
-  Button,
-  LoadingState,
-} from '@/shared/components/ui';
+import { PageHeader, Card, LoadingState } from '@/shared/components/ui';
+import { ReviewForm } from '@/features/reviews/components/ReviewForm';
 import { getLaravelFieldErrors, getErrorMessage } from '@/shared/utils/errors';
 import { assignmentReviewQueryOptions } from '../queries/assignments.queries';
 import { useSubmitReviewMutation } from '../mutations/assignments.mutations';
@@ -97,55 +90,14 @@ export function ReviewFormPage({ assignmentId }: { assignmentId: number }) {
         ) : (
           <Card>
             <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
-              {generalError && (
-                <div role="alert" className="px-3 py-2.5 rounded-md bg-red-50 border border-red-200 text-sm text-danger">
-                  {generalError}
-                </div>
-              )}
-              {existingReview?.is_draft && (
-                <div aria-live="polite" className="px-3 py-2.5 rounded-md bg-amber-50 border border-amber-200 text-sm text-amber-700">
-                  You have a saved draft. Submit when ready.
-                </div>
-              )}
-
-              <FormField id="recommendation" label="Recommendation" required error={errors.recommendation?.message}>
-                <Input
-                  id="recommendation"
-                  type="text"
-                  placeholder="e.g. Accept, Major Revision, Reject"
-                  error={!!errors.recommendation}
-                  {...register('recommendation')}
-                />
-              </FormField>
-
-              <FormField id="comments" label="Review Comments" required error={errors.comments?.message}
-                hint="Provide detailed feedback for the authors">
-                <Textarea
-                  id="comments"
-                  rows={8}
-                  placeholder="Your review comments…"
-                  error={!!errors.comments}
-                  {...register('comments')}
-                />
-              </FormField>
-
-              <div className="flex items-center justify-end gap-3">
-                <label className="flex items-center gap-2 text-sm text-secondary cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 rounded border-strong text-brand-600 focus:ring-brand-500"
-                    {...register('is_draft')}
-                  />
-                  Save as draft
-                </label>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  loading={isSubmitting || submitReview.isPending}
-                >
-                  Submit Review
-                </Button>
-              </div>
+              <ReviewForm
+                register={register}
+                errors={errors}
+                generalError={generalError}
+                draftHint={!!existingReview?.is_draft}
+                isSubmitting={isSubmitting}
+                submitPending={submitReview.isPending}
+              />
             </form>
           </Card>
         )}

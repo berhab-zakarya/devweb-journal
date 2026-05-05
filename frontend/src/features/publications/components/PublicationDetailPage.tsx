@@ -1,30 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { Download, ChevronLeft, BookOpen } from 'lucide-react';
-import { LoadingState, ErrorState, Button } from '@/shared/components/ui';
+import { ChevronLeft, BookOpen } from 'lucide-react';
+import { LoadingState, ErrorState } from '@/shared/components/ui';
 import { usePublication } from '../hooks/usePublication';
-import { publicationsService } from '../services/publications.service';
-
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
+import { PublicationDownloadButton } from './PublicationDownloadButton';
 
 export function PublicationDetailPage({ id }: { id: number }) {
   const { data: pub, isLoading, isError, refetch } = usePublication(id);
 
   if (isLoading) return <LoadingState rows={5} />;
   if (isError) return <ErrorState message="Could not load publication." onRetry={() => refetch()} />;
-
-  async function handleDownload() {
-    const blob = await publicationsService.download(id);
-    downloadBlob(blob, `publication-${id}.pdf`);
-  }
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-10">
@@ -52,9 +38,7 @@ export function PublicationDetailPage({ id }: { id: number }) {
             </p>
           </div>
         </div>
-        <Button variant="secondary" size="sm" leftIcon={<Download className="w-4 h-4" />} onClick={handleDownload}>
-          Download PDF
-        </Button>
+        <PublicationDownloadButton publicationId={id} />
       </div>
 
       <h1 className="text-2xl font-bold text-primary leading-snug mb-3">

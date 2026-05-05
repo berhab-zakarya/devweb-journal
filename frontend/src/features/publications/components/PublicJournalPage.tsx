@@ -1,24 +1,14 @@
 'use client';
 
-import type { ChangeEvent } from 'react';
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { BookOpen, Search } from 'lucide-react';
-import {
-  EmptyState,
-  LoadingState,
-  ErrorState,
-  SearchInput,
-  Pagination,
-  Card,
-  Input,
-  Select,
-  FormField,
-} from '@/shared/components/ui';
+import { EmptyState, LoadingState, ErrorState, Pagination } from '@/shared/components/ui';
 import { usePublications } from '../hooks/usePublications';
 import { publicationsVolumesQueryOptions } from '../queries/publications.queries';
 import type { PublicationListItem, Volume } from '../types/Publication.types';
+import { PublicationCard } from './PublicationCard';
+import { PublicationFilters } from './PublicationFilters';
 
 function groupByYearAndVolume(items: PublicationListItem[]): { label: string; items: PublicationListItem[] }[] {
   const map = new Map<string, PublicationListItem[]>();
@@ -57,6 +47,7 @@ export function PublicJournalPage() {
   const [author, setAuthor] = useState('');
   const [year, setYear] = useState<number | ''>('');
   const [volume, setVolume] = useState('');
+  const [issue, setIssue] = useState('');
   const [page, setPage] = useState(1);
 
   const { data: volumes = [] } = useQuery(publicationsVolumesQueryOptions());
@@ -77,17 +68,24 @@ export function PublicJournalPage() {
       return Array.from(new Set(vols.map((v) => v.volume).filter(Boolean))) as string[];
     }
     return Array.from(
-      new Set(
-        vols.filter((v) => v.year === year).map((v) => v.volume).filter(Boolean)
-      )
+      new Set(vols.filter((v) => v.year === year).map((v) => v.volume).filter(Boolean))
     ) as string[];
   }, [volumes, year]);
+
+  const issueOptionsForFilters = useMemo(() => {
+    const vols = volumes as Volume[];
+    let rows = vols;
+    if (year !== '') rows = rows.filter((v) => v.year === year);
+    if (volume) rows = rows.filter((v) => String(v.volume ?? '') === volume);
+    return Array.from(new Set(rows.map((v) => v.issue).filter(Boolean))) as string[];
+  }, [volumes, year, volume]);
 
   const { data, isLoading, isError, refetch } = usePublications({
     search: search || undefined,
     author: author.trim() || undefined,
     year: year === '' ? undefined : year,
     volume: volume || undefined,
+    issue: issue || undefined,
     page,
   });
 
@@ -108,64 +106,53 @@ export function PublicJournalPage() {
         <p className="text-base text-muted mt-2">Browse peer-reviewed articles published by our editorial team</p>
       </div>
 
-      <div className="mb-8 space-y-4 max-w-2xl mx-auto">
-        <SearchInput
-          value={search}
-          onChange={(v) => { setSearch(v); setPage(1); }}
-          placeholder="Search title, abstract, keywords, or author…"
-        />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <FormField id="filter-author" label="Author name">
-            <Input
-              id="filter-author"
-              value={author}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => { setAuthor(e.target.value); setPage(1); }}
-              placeholder="Filter by author"
-            />
-          </FormField>
-          <FormField id="filter-year" label="Year">
-            <Select
-              id="filter-year"
-              value={year === '' ? '' : String(year)}
-              onChange={(e: ChangeEvent<HTMLSelectElement>) => {
-                const v = e.target.value;
-                setYear(v === '' ? '' : Number(v));
-                setVolume('');
-                setPage(1);
-              }}
-            >
-              <option value="">All years</option>
-              {yearOptions.map((y: number) => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </Select>
-          </FormField>
-          <FormField id="filter-volume" label="Volume">
-            <Select
-              id="filter-volume"
-              value={volume}
-              onChange={(e: ChangeEvent<HTMLSelectElement>) => { setVolume(e.target.value); setPage(1); }}
-            >
-              <option value="">All volumes</option>
-              {volumeOptionsForYear.map((vol: string) => (
-                <option key={vol} value={vol}>{vol}</option>
-              ))}
-            </Select>
-          </FormField>
-        </div>
-      </div>
+      <PublicationFilters
+        search={search}
+        author={author}
+        year={year}
+        yearOptions={yearOptions}
+        volume={volume}
+        issue={issue}
+        volumeOptions={volumeOptionsForYear}
+        issueOptions={issueOptionsForFilters}
+        onSearchChange={(v) => {
+          setSearch(v);
+          setPage(1);
+        }}
+        onAuthorChange={(v) => {
+          setAuthor(v);
+          setPage(1);
+        }}
+        onYearChange={(y) => {
+          setYear(y);
+          setVolume('');
+          setIssue('');
+          setPage(1);
+        }}
+        onVolumeChange={(v) => {
+          setVolume(v);
+          setIssue('');
+          setPage(1);
+        }}
+        onIssueChange={(iss) => {
+          setIssue(iss);
+          setPage(1);
+        }}
+      />
 
       {isLoading && <LoadingState variant="list" rows={5} />}
 
-      {isError && (
-        <ErrorState message="Could not load publications." onRetry={() => refetch()} />
-      )}
+      {isError && <ErrorState message="Could not load publications." onRetry={() => refetch()} />}
 
       {!isLoading && !isError && publications.length === 0 && (
         <EmptyState
           icon={<Search className="w-6 h-6" />}
-          title={search || author || year !== '' || volume ? 'No results found' : 'No publications yet'}
-          description={search || author || year !== '' || volume ? 'Try adjusting filters or search.' : 'Check back later for new publications.'}
+          title={search || author || year !== '' || volume || issue ? 'No results found' : 'No publications yet'}
+          description={
+            search || author || year !== '' || volume || issue
+              ? 'Try adjusting filters or search.'
+              : 'Check back later for new publications.'
+          }
           className="py-16"
         />
       )}
@@ -180,61 +167,7 @@ export function PublicJournalPage() {
                 </h2>
                 <div className="space-y-4">
                   {section.items.map((pub: PublicationListItem) => (
-                    <Card key={pub.id} className="hover:shadow-panel transition-shadow duration-150">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <Link
-                            href={`/journal/${pub.id}`}
-                            className="text-lg font-semibold text-primary hover:text-brand-600 transition-colors leading-snug"
-                          >
-                            {pub.title ?? `Publication #${pub.id}`}
-                          </Link>
-
-                          {pub.author_name && (
-                            <p className="text-sm text-secondary mt-1">
-                              {pub.author_name}
-                            </p>
-                          )}
-
-                          {pub.abstract && (
-                            <p className="text-sm text-secondary mt-2 line-clamp-2">
-                              {pub.abstract}
-                            </p>
-                          )}
-
-                          <div className="flex flex-wrap items-center gap-3 mt-3">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                              Published
-                            </span>
-                            {pub.category_name && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-brand-50 text-brand-700">
-                                {pub.category_name}
-                              </span>
-                            )}
-                            {pub.doi && (
-                              <span className="text-xs text-muted font-mono">DOI: {pub.doi}</span>
-                            )}
-                            {(pub.volume || pub.issue) && (
-                              <span className="text-xs text-muted">
-                                {pub.volume && `Vol. ${pub.volume}`}
-                                {pub.volume && pub.issue && ' · '}
-                                {pub.issue && `Issue ${pub.issue}`}
-                              </span>
-                            )}
-                            <span className="text-xs text-muted">
-                              {new Date(pub.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                            </span>
-                          </div>
-                        </div>
-
-                        <Link
-                          href={`/journal/${pub.id}`}
-                          className="shrink-0 text-sm text-brand-600 hover:underline font-medium whitespace-nowrap"
-                        >
-                          Read →
-                        </Link>
-                      </div>
-                    </Card>
+                    <PublicationCard key={pub.id} publication={pub} />
                   ))}
                 </div>
               </section>

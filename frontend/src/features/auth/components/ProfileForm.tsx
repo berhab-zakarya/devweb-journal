@@ -16,11 +16,14 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-export interface ProfileFormProps {
+export interface ProfileInfoFormProps {
   user: User;
 }
 
-export function ProfileForm({ user }: ProfileFormProps) {
+/** @alias legacy name */
+export type ProfileFormProps = ProfileInfoFormProps;
+
+export function ProfileInfoForm({ user }: ProfileInfoFormProps) {
   const update = useUpdateProfileMutation();
   const [generalError, setGeneralError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -107,3 +110,5 @@ export function ProfileForm({ user }: ProfileFormProps) {
     </form>
   );
 }
+
+export { ProfileInfoForm as ProfileForm };

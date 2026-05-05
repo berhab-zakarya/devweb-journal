@@ -1,8 +1,10 @@
 'use client';
 
 import { useCurrentUser } from '../hooks/useCurrentUser';
-import { ProfileForm } from './ProfileForm';
+import { ProfileInfoForm } from './ProfileInfoForm';
 import { ChangePasswordForm } from './ChangePasswordForm';
+import { AccountRoleCard } from './AccountRoleCard';
+import { AccountSecurityCard } from './AccountSecurityCard';
 import {
   PageHeader,
   Card,
@@ -48,14 +50,18 @@ export function ProfilePage() {
         {/* Personal Information */}
         <Card>
           <SectionHeader title="Personal Information" className="mb-5" />
-          <ProfileForm user={user} />
+          <ProfileInfoForm user={user} />
         </Card>
+
+        <AccountRoleCard user={user} />
 
         {/* Change Password */}
         <Card>
           <SectionHeader title="Change Password" className="mb-5" />
           <ChangePasswordForm userName={user.name} userEmail={user.email} />
         </Card>
+
+        <AccountSecurityCard />
       </div>
     </div>
   );

@@ -2,6 +2,13 @@ import { queryOptions } from '@tanstack/react-query';
 import { assignmentsService } from '../services/assignments.service';
 import { assignmentsKeys } from './assignments.keys';
 
+export const assignmentsMineQueryOptions = () =>
+  queryOptions({
+    queryKey: assignmentsKeys.mine(),
+    queryFn: () => assignmentsService.listMineForReviewer(),
+    staleTime: 60_000,
+  });
+
 export const assignmentsDetailQueryOptions = (id: number) =>
   queryOptions({
     queryKey: assignmentsKeys.detail(id),

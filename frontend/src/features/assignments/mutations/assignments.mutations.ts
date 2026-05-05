@@ -9,7 +9,9 @@ export function useRespondMutation(assignmentId: number) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (response: 'accepted' | 'decline') => assignmentsService.respond(assignmentId, response),
-    onSuccess: () => qc.invalidateQueries({ queryKey: assignmentsKeys.detail(assignmentId) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: assignmentsKeys.all });
+    },
   });
 }
 
@@ -17,6 +19,8 @@ export function useSubmitReviewMutation(assignmentId: number) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: SubmitReviewPayload) => assignmentsService.submitReview(assignmentId, payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: assignmentsKeys.review(assignmentId) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: assignmentsKeys.all });
+    },
   });
 }

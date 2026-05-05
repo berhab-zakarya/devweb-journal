@@ -7,6 +7,7 @@ export type {
 } from './types/Assignment.types';
 
 export { useAssignment } from './hooks/useAssignment';
+export { useMyAssignments } from './hooks/useMyAssignments';
 
 export {
   useRespondMutation,
@@ -14,6 +15,7 @@ export {
 } from './mutations/assignments.mutations';
 
 export {
+  assignmentsMineQueryOptions,
   assignmentsDetailQueryOptions,
   assignmentReviewQueryOptions,
 } from './queries/assignments.queries';

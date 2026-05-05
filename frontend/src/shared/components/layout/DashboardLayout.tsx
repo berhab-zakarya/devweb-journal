@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 import { useLogoutMutation } from '@/features/auth/mutations/auth.mutations';
-import { useNotificationsUnreadCount } from '@/features/notifications/hooks/useNotificationsUnreadCount';
+import { useUnreadNotificationCount } from '@/features/notifications/hooks/useNotificationsUnreadCount';
 import { AppError } from '@/shared/errors/app.error';
 import { LoadingState } from '@/shared/components/ui';
 import { AppShell } from './AppShell';
@@ -13,7 +13,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { data: user, isLoading, isFetching, isError, error } = useCurrentUser();
   const logout = useLogoutMutation();
-  const { data: unreadCount = 0 } = useNotificationsUnreadCount(!!user);
+  const { data: unreadCount = 0 } = useUnreadNotificationCount(!!user);
 
   useEffect(() => {
     // Wait until the initial load and any active refetches finish before
