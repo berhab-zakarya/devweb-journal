@@ -22,6 +22,10 @@ export interface RegisterPayload {
   role: 'admin' | 'editor' | 'reviewer' | 'author' | 'reader';
 }
 
+export interface AuthWithTokenData extends User {
+  token: string;
+}
+
 /**
  * Backend response wrappers matching Swagger
  */

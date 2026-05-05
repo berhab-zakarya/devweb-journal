@@ -22,6 +22,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => filter_var(env('CORS_SUPPORTS_CREDENTIALS', true), FILTER_VALIDATE_BOOL),
+    'supports_credentials' => false,
 
 ];

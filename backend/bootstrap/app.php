@@ -17,19 +17,6 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->statefulApi();
-
-        // Public auth endpoints are intentionally excluded so initial SPA login
-        // and password recovery can work even when the client has not yet sent
-        // an X-XSRF-TOKEN header.
-        $middleware->validateCsrfTokens(except: [
-            'api/v1/sanctum/csrf-cookie',
-            'api/v1/auth/register',
-            'api/v1/auth/login',
-            'api/v1/auth/forgot-password',
-            'api/v1/auth/reset-password',
-        ]);
-
         // API endpoints must return 401 JSON instead of redirecting to a missing web login route.
         $middleware->redirectGuestsTo(function (Request $request): ?string {
             if ($request->is('api/*')) {

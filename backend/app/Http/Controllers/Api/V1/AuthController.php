@@ -91,6 +91,8 @@ class AuthController extends Controller
             $user->assignRole(RolePermissionSeeder::ensureReaderRole());
         }
 
+        $token = $user->createToken('auth_token')->plainTextToken;
+
         return response()->json([
             'message' => 'Account created successfully.',
             'data' => [
@@ -98,6 +100,7 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'roles' => $user->getRoleNames(),
+                'token' => $token,
             ],
         ], 201);
     }
@@ -149,8 +152,7 @@ class AuthController extends Controller
             ]);
         }
 
-        auth()->login($user);
-        $request->session()->regenerate();
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'message' => 'Login successful.',
@@ -159,6 +161,7 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'roles' => $user->getRoleNames(),
+                'token' => $token,
             ],
         ]);
     }
@@ -184,9 +187,7 @@ class AuthController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
-        auth()->guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        $request->user()->currentAccessToken()->delete();
 
         return response()->json([
             'message' => 'Logged out successfully.',
