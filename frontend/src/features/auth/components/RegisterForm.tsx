@@ -11,15 +11,15 @@ import { Button, FormField, Input, Select } from '@/shared/components/ui';
 
 const schema = z
   .object({
-    name:                  z.string().min(2, 'Name must be at least 2 characters'),
-    email:                 z.string().email('Enter a valid email address'),
-    password:              z.string().min(8, 'Password must be at least 8 characters'),
+    name: z.string().min(2, 'Name must be at least 2 characters'),
+    email: z.string().email('Enter a valid email address'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
     password_confirmation: z.string().min(1, 'Please confirm your password'),
-    role:                  z.enum(['author', 'reader'], { required_error: 'Choose author or reader' }),
+    role: z.enum(['author', 'reader'], { required_error: 'Choose author or reader' }),
   })
   .refine((d) => d.password === d.password_confirmation, {
     message: "Passwords don't match",
-    path:    ['password_confirmation'],
+    path: ['password_confirmation'],
   });
 
 type FormData = z.infer<typeof schema>;
@@ -90,6 +90,10 @@ export function RegisterForm() {
         <Select id="role" error={!!errors.role} {...field('role')}>
           <option value="reader">Reader — browse published work</option>
           <option value="author">Author — submit manuscripts</option>
+          <option value="editor">Editeur </option>
+          <option value="reviewer">Reviewer </option>
+
+
         </Select>
       </FormField>
 
