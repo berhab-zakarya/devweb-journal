@@ -13,7 +13,7 @@ export async function ensureCsrfCookie(): Promise<void> {
   }
 
   const pending = apiClient
-    .get('/sanctum/csrf-cookie')
+    .get('sanctum/csrf-cookie')
     .then(() => undefined)
     .finally(() => {
       if (inflight === pending) {

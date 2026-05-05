@@ -90,10 +90,6 @@ export function RegisterForm() {
         <Select id="role" error={!!errors.role} {...field('role')}>
           <option value="reader">Reader — browse published work</option>
           <option value="author">Author — submit manuscripts</option>
-          <option value="editor">Editeur </option>
-          <option value="reviewer">Reviewer </option>
-
-
         </Select>
       </FormField>
 

@@ -57,7 +57,7 @@ apiClient.interceptors.response.use(
         // Dynamic import avoids circular dependency (csrf.ts imports this client).
         const { resetCsrfCookieCache } = await import('./csrf');
         resetCsrfCookieCache();
-        await apiClient.get('/sanctum/csrf-cookie');
+        await apiClient.get('sanctum/csrf-cookie');
       } catch {
         // ignore; original retry may still fail with 419
       }
