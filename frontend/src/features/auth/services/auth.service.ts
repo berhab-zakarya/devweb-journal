@@ -18,6 +18,9 @@ export const authService = {
   login: async (payload: LoginPayload): Promise<User> => {
     await ensureCsrfCookie();
     const { data } = await apiClient.post<AuthDataResponse<User>>(`${BASE}/login`, payload);
+    // `session()->regenerate()` on the server rotates the CSRF token; refresh the cookie so the
+    // next unsafe request (and Axios `X-XSRF-TOKEN`) match the new session.
+    await ensureCsrfCookie();
     return data.data;
   },
 

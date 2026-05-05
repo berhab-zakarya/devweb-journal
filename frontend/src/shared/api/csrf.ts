@@ -12,14 +12,17 @@ export async function ensureCsrfCookie(): Promise<void> {
     return inflight;
   }
 
-  inflight = apiClient
+  const pending = apiClient
     .get('/sanctum/csrf-cookie')
     .then(() => undefined)
     .finally(() => {
-      inflight = null;
+      if (inflight === pending) {
+        inflight = null;
+      }
     });
 
-  return inflight;
+  inflight = pending;
+  return pending;
 }
 
 /** Call after logout or when the session is invalidated so the next unsafe request fetches CSRF again. */
