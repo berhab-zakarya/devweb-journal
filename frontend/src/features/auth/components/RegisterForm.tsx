@@ -6,8 +6,19 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { useRegisterMutation } from '../mutations/auth.mutations';
+import type { RegisterPayload } from '../types/Auth.types';
 import { getLaravelFieldErrors, getErrorMessage } from '@/shared/utils/errors';
 import { Button, FormField, Input, Select } from '@/shared/components/ui';
+
+const REGISTER_ROLES = ['admin', 'editor', 'reviewer', 'author', 'reader'] as const;
+
+const ROLE_OPTIONS: Array<{ value: (typeof REGISTER_ROLES)[number]; label: string }> = [
+  { value: 'reader', label: 'Reader - browse published work' },
+  { value: 'author', label: 'Author - submit manuscripts' },
+  { value: 'reviewer', label: 'Reviewer - evaluate assigned submissions' },
+  { value: 'editor', label: 'Editor - manage review and publication decisions' },
+  { value: 'admin', label: 'Admin - full platform access' },
+];
 
 const schema = z
   .object({
@@ -15,7 +26,9 @@ const schema = z
     email: z.string().email('Enter a valid email address'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     password_confirmation: z.string().min(1, 'Please confirm your password'),
-    role: z.enum(['author', 'reader'], { required_error: 'Choose author or reader' }),
+    role: z.enum(REGISTER_ROLES, {
+      required_error: 'Choose a role',
+    }),
   })
   .refine((d) => d.password === d.password_confirmation, {
     message: "Passwords don't match",
@@ -41,7 +54,12 @@ export function RegisterForm() {
 
   const onSubmit = (data: FormData) => {
     setGeneralError('');
-    register.mutate(data, {
+    const payload: RegisterPayload = {
+      ...data,
+      role: data.role as RegisterPayload['role'],
+    };
+
+    register.mutate(payload, {
       onSuccess: () => router.push('/login?registered=1'),
       onError: (error) => {
         const fieldErrors = getLaravelFieldErrors(error);
@@ -88,8 +106,11 @@ export function RegisterForm() {
 
       <FormField id="role" label="I am registering as" required error={errors.role?.message}>
         <Select id="role" error={!!errors.role} {...field('role')}>
-          <option value="reader">Reader — browse published work</option>
-          <option value="author">Author — submit manuscripts</option>
+          {ROLE_OPTIONS.map((role) => (
+            <option key={role.value} value={role.value}>
+              {role.label}
+            </option>
+          ))}
         </Select>
       </FormField>
 
