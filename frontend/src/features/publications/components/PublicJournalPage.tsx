@@ -6,7 +6,7 @@ import { BookOpen, Search } from 'lucide-react';
 import { EmptyState, LoadingState, ErrorState, Pagination } from '@/shared/components/ui';
 import { usePublications } from '../hooks/usePublications';
 import { publicationsVolumesQueryOptions } from '../queries/publications.queries';
-import type { PublicationListItem, Volume } from '../types/Publication.types';
+import type { PublicationListItem } from '../types/Publication.types';
 import { PublicationCard } from './PublicationCard';
 import { PublicationFilters } from './PublicationFilters';
 
@@ -54,7 +54,7 @@ export function PublicJournalPage() {
 
   const yearOptions = useMemo(() => {
     const ys = new Set<number>();
-    for (const v of volumes as Volume[]) {
+    for (const v of volumes) {
       if (typeof v.year === 'number' && v.year > 0) {
         ys.add(v.year);
       }
@@ -63,18 +63,16 @@ export function PublicJournalPage() {
   }, [volumes]);
 
   const volumeOptionsForYear = useMemo(() => {
-    const vols = volumes as Volume[];
     if (year === '') {
-      return Array.from(new Set(vols.map((v) => v.volume).filter(Boolean))) as string[];
+      return Array.from(new Set(volumes.map((v) => v.volume).filter(Boolean))) as string[];
     }
     return Array.from(
-      new Set(vols.filter((v) => v.year === year).map((v) => v.volume).filter(Boolean))
+      new Set(volumes.filter((v) => v.year === year).map((v) => v.volume).filter(Boolean))
     ) as string[];
   }, [volumes, year]);
 
   const issueOptionsForFilters = useMemo(() => {
-    const vols = volumes as Volume[];
-    let rows = vols;
+    let rows = volumes;
     if (year !== '') rows = rows.filter((v) => v.year === year);
     if (volume) rows = rows.filter((v) => String(v.volume ?? '') === volume);
     return Array.from(new Set(rows.map((v) => v.issue).filter(Boolean))) as string[];
@@ -89,21 +87,29 @@ export function PublicJournalPage() {
     page,
   });
 
-  const publications = data?.data?.data ?? [];
-  const total = data?.data?.meta?.total ?? 0;
-  const lastPage = data?.data?.meta?.last_page ?? 1;
-  const perPage = data?.data?.meta?.per_page ?? 12;
+  const publications = data?.items ?? [];
+  const meta = data?.meta;
+  const total = meta?.total ?? publications.length;
+  const lastPage = meta?.last_page ?? 1;
+  const perPage = meta?.per_page ?? (publications.length || 12);
 
   const groupedSections = useMemo(() => groupByYearAndVolume(publications), [publications]);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10">
-      <div className="mb-10 text-center">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-brand-50 mb-4">
-          <BookOpen className="w-7 h-7 text-brand-600" />
+    <div className="w-full min-w-0">
+      {/* Editorial header */}
+      <div className="mb-8 pb-6 border-b border-subtle">
+        <div className="flex items-start gap-4">
+          <div className="w-11 h-11 rounded-xl bg-soft-blue flex items-center justify-center shrink-0 border border-blue-100">
+            <BookOpen className="w-5 h-5 text-brand-600" aria-hidden />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-2xl md:text-3xl font-bold text-primary leading-tight">Journal Publications</h1>
+            <p className="text-sm text-muted mt-1 leading-relaxed max-w-xl">
+              Peer-reviewed research published by the DevWeb Journal editorial board.
+            </p>
+          </div>
         </div>
-        <h1 className="text-3xl font-bold text-primary">DevWeb Journal</h1>
-        <p className="text-base text-muted mt-2">Browse peer-reviewed articles published by our editorial team</p>
       </div>
 
       <PublicationFilters
@@ -159,13 +165,17 @@ export function PublicJournalPage() {
 
       {!isLoading && !isError && publications.length > 0 && (
         <>
-          <div className="space-y-10">
+          <div className="space-y-12">
             {groupedSections.map((section: { label: string; items: PublicationListItem[] }) => (
               <section key={section.label}>
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-3 border-b border-subtle pb-2">
-                  {section.label}
-                </h2>
-                <div className="space-y-4">
+                <div className="flex items-center gap-3 mb-5">
+                  <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">
+                    {section.label}
+                  </h2>
+                  <div className="flex-1 h-px bg-subtle" />
+                  <span className="text-xs text-muted font-medium shrink-0">{section.items.length} article{section.items.length !== 1 ? 's' : ''}</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
                   {section.items.map((pub: PublicationListItem) => (
                     <PublicationCard key={pub.id} publication={pub} />
                   ))}
@@ -174,7 +184,7 @@ export function PublicJournalPage() {
             ))}
           </div>
 
-          {total > perPage && (
+          {meta && total > perPage && (
             <div className="mt-8">
               <Pagination
                 page={page}

@@ -7,11 +7,13 @@ export function useArticlesInfinite(filters?: Omit<ArticleFilters, 'page'>) {
   return useInfiniteQuery({
     queryKey: articlesKeys.listInfinite(filters),
     queryFn: ({ pageParam }) =>
-      articlesService.getAll({ ...filters, page: pageParam as number }),
+      articlesService.getAll({ ...filters, page: pageParam }),
     initialPageParam: 1,
     getNextPageParam: (last) => {
-      const { current_page, last_page } = last.data.meta;
-      return current_page < last_page ? current_page + 1 : undefined;
+      const currentPage = last.meta?.current_page;
+      const lastPage = last.meta?.last_page;
+      if (!currentPage || !lastPage) return undefined;
+      return currentPage < lastPage ? currentPage + 1 : undefined;
     },
     staleTime: 60_000,
   });

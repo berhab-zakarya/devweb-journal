@@ -1,15 +1,19 @@
 import { apiClient } from '@/shared/api/client';
 import { ENDPOINTS } from '@/shared/api/endpoints.constants';
+import { unwrapData } from '@/shared/api/response';
 import { articlesService } from '@/features/articles/services/articles.service';
-import type { Article } from '@/features/articles/types/Article.types';
-import type { ArticleAssignment } from '@/features/articles/types/Article.types';
+import type { Article, ArticleAssignment } from '@/features/articles/types/Article.types';
 import type { Assignment, AssignmentResponse, AssignmentReview, SubmitReviewPayload } from '../types/Assignment.types';
 
 const BASE = ENDPOINTS.ASSIGNMENTS_BASE;
 
 function toAssignment(article: Article, a: ArticleAssignment): Assignment {
-  const response: AssignmentResponse | null =
-    a.status === 'pending' ? null : a.status === 'decline' ? 'decline' : 'accepted';
+  let response: AssignmentResponse | null = null;
+  if (a.status === 'decline') {
+    response = 'decline';
+  } else if (a.status === 'accepted' || a.status === 'complete') {
+    response = 'accepted';
+  }
   return {
     id: a.id,
     article_id: article.id,
@@ -40,8 +44,8 @@ export const assignmentsService = {
     let lastPage = 1;
     do {
       const batch = await articlesService.getAll({ page });
-      lastPage = batch.data.meta.last_page;
-      for (const article of batch.data.data) {
+      lastPage = batch.meta?.last_page ?? page;
+      for (const article of batch.items) {
         const assigns = await articlesService.getAssignments(article.id);
         for (const a of assigns) {
           if (seen.has(a.id)) continue;
@@ -58,22 +62,22 @@ export const assignmentsService = {
   },
 
   getById: async (id: number): Promise<Assignment> => {
-    const { data } = await apiClient.get<Assignment>(`${BASE}/${id}`);
-    return data;
+    const { data } = await apiClient.get(`${BASE}/${id}`);
+    return unwrapData<Assignment>({ data }) as Assignment;
   },
 
   respond: async (id: number, response: 'accepted' | 'decline'): Promise<Assignment> => {
-    const { data } = await apiClient.patch<Assignment>(`${BASE}/${id}/respond`, { response });
-    return data;
+    const { data } = await apiClient.patch(`${BASE}/${id}/respond`, { response });
+    return unwrapData<Assignment>({ data }) as Assignment;
   },
 
   getReview: async (id: number): Promise<AssignmentReview> => {
-    const { data } = await apiClient.get<AssignmentReview>(`${BASE}/${id}/review`);
-    return data;
+    const { data } = await apiClient.get(`${BASE}/${id}/review`);
+    return unwrapData<AssignmentReview>({ data }) as AssignmentReview;
   },
 
   submitReview: async (id: number, payload: SubmitReviewPayload): Promise<AssignmentReview> => {
-    const { data } = await apiClient.post<AssignmentReview>(`${BASE}/${id}/review`, payload);
-    return data;
+    const { data } = await apiClient.post(`${BASE}/${id}/review`, payload);
+    return unwrapData<AssignmentReview>({ data }) as AssignmentReview;
   },
 } as const;

@@ -1,18 +1,20 @@
+import type { NormalizedPaginatedList } from '@/shared/api/response';
+
 export interface PaginatorLinks {
-  first: string | null;
-  last: string | null;
-  prev: string | null;
-  next: string | null;
+  first?: string | null;
+  last?: string | null;
+  prev?: string | null;
+  next?: string | null;
 }
 
 export interface PaginatorMeta {
-  current_page: number;
-  from: number | null;
-  last_page: number;
-  path: string;
-  per_page: number;
-  to: number | null;
-  total: number;
+  current_page?: number;
+  from?: number | null;
+  last_page?: number;
+  path?: string;
+  per_page?: number;
+  to?: number | null;
+  total?: number;
 }
 
 export interface PublicationListItem {
@@ -63,20 +65,12 @@ export interface PublicationFilters {
 }
 
 export interface PaginatedPublications {
-  data: {
-    current_page: number;
-    data: PublicationListItem[];
-    first_page_url: string;
-    last_page_url: string;
-    links: PaginatorLinks;
-    meta: PaginatorMeta;
-    next_page_url: string | null;
-    path: string;
-    per_page: number;
-    prev_page_url: string | null;
-    total: number;
-  };
+  items: PublicationListItem[];
+  meta?: PaginatorMeta;
+  links?: PaginatorLinks;
 }
+
+export type PublicationsListResult = NormalizedPaginatedList<PublicationListItem>;
 
 export interface PublishArticlePayload {
   published_at?: string | null;

@@ -2,7 +2,7 @@ import { cn } from '@/shared/utils/cn';
 
 export function TableContainer({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('bg-surface border border-subtle rounded-lg overflow-hidden', className)}>
+    <div className={cn('bg-surface border border-subtle rounded-xl overflow-hidden', className)}>
       {children}
     </div>
   );
@@ -10,7 +10,7 @@ export function TableContainer({ children, className }: { children: React.ReactN
 
 export function TableFilterBar({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('flex flex-wrap items-center gap-3 px-4 py-3 border-b border-subtle bg-muted/50', className)}>
+    <div className={cn('flex flex-wrap items-center gap-3 px-4 py-3 border-b border-subtle bg-muted/40', className)}>
       {children}
     </div>
   );
@@ -29,7 +29,7 @@ export function TableWrapper({ children }: { children: React.ReactNode }) {
 export function TableHead({ children }: { children: React.ReactNode }) {
   return (
     <thead>
-      <tr className="border-b border-subtle bg-muted/30">
+      <tr className="border-b border-subtle bg-muted/50">
         {children}
       </tr>
     </thead>

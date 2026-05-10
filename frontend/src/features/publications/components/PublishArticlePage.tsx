@@ -95,7 +95,7 @@ export function PublishArticlePage({ articleId }: Readonly<{ articleId: number }
   };
 
   return (
-    <div className="max-w-xl">
+    <div className="w-full min-w-0 max-w-2xl">
       <div className="mb-4">
         <Link
           href={`/articles/${articleId}`}

@@ -16,7 +16,7 @@ export function ErrorState({
   message,
   onRetry,
   className,
-}: ErrorStateProps) {
+}: Readonly<ErrorStateProps>) {
   return (
     <div className={cn('flex flex-col items-center justify-center py-12 text-center', className)}>
       <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4">

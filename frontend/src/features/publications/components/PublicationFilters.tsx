@@ -35,7 +35,7 @@ export function PublicationFilters({
   onIssueChange: (v: string) => void;
 }>) {
   return (
-    <div className="mb-8 space-y-4 max-w-2xl mx-auto">
+    <div className="mb-6 bg-surface border border-subtle rounded-lg p-4 space-y-3">
       <SearchInput
         value={search}
         onChange={onSearchChange}

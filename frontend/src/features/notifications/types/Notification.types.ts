@@ -1,18 +1,20 @@
+import type { NormalizedPaginatedList } from '@/shared/api/response';
+
 export interface PaginatorLinks {
-  first: string | null;
-  last: string | null;
-  prev: string | null;
-  next: string | null;
+  first?: string | null;
+  last?: string | null;
+  prev?: string | null;
+  next?: string | null;
 }
 
 export interface PaginatorMeta {
-  current_page: number;
-  from: number | null;
-  last_page: number;
-  path: string;
-  per_page: number;
-  to: number | null;
-  total: number;
+  current_page?: number;
+  from?: number | null;
+  last_page?: number;
+  path?: string;
+  per_page?: number;
+  to?: number | null;
+  total?: number;
 }
 
 export interface Notification {
@@ -28,12 +30,12 @@ export interface Notification {
 }
 
 export interface PaginatedNotifications {
-  data: {
-    data: Notification[];
-    links: PaginatorLinks;
-    meta: PaginatorMeta;
-  };
+  items: Notification[];
+  meta?: PaginatorMeta;
+  links?: PaginatorLinks;
 }
+
+export type NotificationsListResult = NormalizedPaginatedList<Notification>;
 
 export interface NotificationFilters {
   only_unread?: boolean;

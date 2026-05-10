@@ -38,7 +38,7 @@ const NAV_ITEMS: NavItem[] = [
     href:  '/articles',
     label: 'Articles',
     icon:  <FileText className="w-5 h-5" />,
-    roles: ['admin', 'editor', 'author', 'reviewer'],
+    roles: ['admin', 'editor', 'author'],
   },
   {
     href:  '/assignments',
@@ -96,13 +96,14 @@ export function Sidebar({ userRoles = [], onNavClick, className }: SidebarProps)
   return (
     <aside
       className={cn(
-        'w-64 h-full bg-brand-900 border-r border-white/10 flex flex-col',
+        'w-64 h-full bg-navy-900 border-r border-white/10 flex flex-col',
         className
       )}
     >
       {/* Logo */}
       <div className="px-5 py-5 border-b border-white/10 shrink-0">
-        <span className="text-lg font-bold text-white font-primary">DevWeb Journal</span>
+        <p className="text-base font-bold text-white font-primary leading-none">DevWeb Journal</p>
+        <p className="text-xs text-slate-400 mt-0.5">Editorial System</p>
       </div>
 
       {/* Navigation */}
@@ -118,6 +119,11 @@ export function Sidebar({ userRoles = [], onNavClick, className }: SidebarProps)
           />
         ))}
       </nav>
+
+      {/* Footer brand strip */}
+      <div className="px-5 py-3 border-t border-white/10 shrink-0">
+        <p className="text-xs text-slate-500">Academic Journal Platform</p>
+      </div>
     </aside>
   );
 }

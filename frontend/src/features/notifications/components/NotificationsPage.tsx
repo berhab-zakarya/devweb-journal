@@ -23,10 +23,11 @@ export function NotificationsPage() {
   const markRead = useMarkReadMutation();
   const markAllRead = useMarkAllReadMutation();
 
-  const notifications = data?.data?.data ?? [];
-  const total = data?.data?.meta?.total ?? 0;
-  const lastPage = data?.data?.meta?.last_page ?? 1;
-  const perPage = data?.data?.meta?.per_page ?? 15;
+  const notifications = data?.items ?? [];
+  const meta = data?.meta;
+  const total = meta?.total ?? notifications.length;
+  const lastPage = meta?.last_page ?? 1;
+  const perPage = meta?.per_page ?? (notifications.length || 15);
   const hasUnread = notifications.some((n) => !n.read_at);
 
   return (
@@ -134,7 +135,7 @@ export function NotificationsPage() {
           </ul>
         )}
 
-        {!isLoading && !isError && total > perPage && (
+        {!isLoading && !isError && meta && total > perPage && (
           <div className="px-4 py-3 border-t border-subtle">
             <Pagination
               page={page}

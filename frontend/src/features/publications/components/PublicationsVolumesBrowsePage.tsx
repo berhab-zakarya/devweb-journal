@@ -16,7 +16,7 @@ export function PublicationsVolumesBrowsePage() {
   const rows = (q.data ?? []) as Volume[];
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
+    <div className="w-full min-w-0">
       <Link href="/journal" className="inline-flex items-center gap-1 text-sm text-muted hover:text-secondary mb-6">
         <ChevronLeft className="w-4 h-4" /> Back to journal
       </Link>

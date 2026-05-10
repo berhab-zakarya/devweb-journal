@@ -80,8 +80,10 @@ class ReviewController extends Controller
     {
         $user = $request->user();
 
-        // Check if user can respond to this assignment
-        if (!$user->can('respond', $assignment)) {
+        // Only the reviewer who owns this assignment may submit a review.
+        // Note: can('respond', $assignment) only permits PENDING status (accept/decline flow),
+        // so we check ownership directly here.
+        if ((int) $assignment->reviewer_id !== (int) $user->id) {
             return response()->json(['message' => 'Access denied.'], 403);
         }
 
@@ -197,17 +199,17 @@ class ReviewController extends Controller
     {
         $user = $request->user();
 
+        // Admin/editor can view any review. Reviewer can only view their own assignment's review.
+        if (!$user->hasAnyRole(['admin', 'editor']) && (int) $assignment->reviewer_id !== (int) $user->id) {
+            return response()->json(['message' => 'Access denied.'], 403);
+        }
+
         $review = Review::query()
             ->where('assignment_id', $assignment->id)
             ->first();
 
         if (!$review) {
             return response()->json(['message' => 'Review not found.'], 404);
-        }
-
-        // Check authorization using Review policy
-        if (!$user->can('view', $review)) {
-            return response()->json(['message' => 'Access denied.'], 403);
         }
 
         $review->load(['assignment.reviewer:id,name,email']);

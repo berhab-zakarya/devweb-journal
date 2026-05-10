@@ -7,11 +7,13 @@ export function usePublicationsInfinite(filters?: Omit<PublicationFilters, 'page
   return useInfiniteQuery({
     queryKey: publicationsKeys.listInfinite(filters),
     queryFn: ({ pageParam }) =>
-      publicationsService.getAll({ ...filters, page: pageParam as number }),
+      publicationsService.getAll({ ...filters, page: pageParam }),
     initialPageParam: 1,
     getNextPageParam: (last) => {
-      const { current_page, last_page } = last.data.meta;
-      return current_page < last_page ? current_page + 1 : undefined;
+      const currentPage = last.meta?.current_page;
+      const lastPage = last.meta?.last_page;
+      if (!currentPage || !lastPage) return undefined;
+      return currentPage < lastPage ? currentPage + 1 : undefined;
     },
     staleTime: 5 * 60_000,
   });

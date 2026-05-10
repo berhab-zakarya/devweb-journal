@@ -62,7 +62,7 @@ export function SubmitArticlePage() {
   };
 
   return (
-    <div className="max-w-2xl">
+    <div className="w-full min-w-0 max-w-3xl">
       <PageHeader
         title="Submit Article"
         description="Fill in the details below and upload your manuscript PDF"

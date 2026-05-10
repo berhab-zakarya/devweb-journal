@@ -33,7 +33,7 @@ export function AdminFinalDecisionPanel({
       {decision?.latest && (
         <div className="mb-4 text-sm">
           <p className="font-medium text-primary">Current finale decision</p>
-          <p className="text-secondary mt-1 capitalize">{decision.latest.decision.replace(/_/g, ' ')}</p>
+          <p className="text-secondary mt-1 capitalize">{decision.latest.decision.replaceAll('_', ' ')}</p>
         </div>
       )}
       <DecisionHistoryPanel history={decision?.history ?? []} />

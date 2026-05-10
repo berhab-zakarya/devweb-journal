@@ -2,5 +2,5 @@ import { useUsers } from './useUsers';
 
 export function useUser(id: number) {
   const { data } = useUsers();
-  return data?.data.data.find((u) => u.id === id) ?? null;
+  return data?.items?.find((u) => u.id === id) ?? null;
 }

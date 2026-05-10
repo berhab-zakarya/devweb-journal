@@ -1,20 +1,22 @@
+import type { NormalizedPaginatedList } from '@/shared/api/response';
+
 export type UserRole = 'admin' | 'editor' | 'reviewer' | 'author' | 'reader';
 
 export interface PaginatorLinks {
-  first: string | null;
-  last: string | null;
-  prev: string | null;
-  next: string | null;
+  first?: string | null;
+  last?: string | null;
+  prev?: string | null;
+  next?: string | null;
 }
 
 export interface PaginatorMeta {
-  current_page: number;
-  from: number | null;
-  last_page: number;
-  path: string;
-  per_page: number;
-  to: number | null;
-  total: number;
+  current_page?: number;
+  from?: number | null;
+  last_page?: number;
+  path?: string;
+  per_page?: number;
+  to?: number | null;
+  total?: number;
 }
 
 export interface User {
@@ -42,9 +44,7 @@ export interface PaginatedResponse<T> {
   meta: PaginatorMeta;
 }
 
-export interface PaginatedUsers {
-  data: PaginatedResponse<User>;
-}
+export interface PaginatedUsers extends NormalizedPaginatedList<User> {}
 
 export interface CreateUserPayload {
   name: string;

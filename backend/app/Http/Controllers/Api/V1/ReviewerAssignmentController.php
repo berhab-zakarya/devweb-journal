@@ -58,32 +58,38 @@ class ReviewerAssignmentController extends Controller
         }
 
         $validated = $request->validate([
-            'q' => ['required', 'string', 'min:2', 'max:190'],
-            'limit' => ['nullable', 'integer', 'min:1', 'max:25'],
+            'q'     => ['nullable', 'string', 'max:190'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:50'],
         ]);
 
-        $term = trim((string) $validated['q']);
-        $limit = (int) ($validated['limit'] ?? 10);
-        $escapedTerm = addcslashes($term, '\%_');
-        $containsTerm = '%' . $escapedTerm . '%';
-        $startsWithTerm = $escapedTerm . '%';
+        $term  = trim((string) ($validated['q'] ?? ''));
+        $limit = (int) ($validated['limit'] ?? 25);
 
-        $reviewers = User::query()
+        $query = User::query()
             ->select(['id', 'name', 'email'])
             ->whereHas('roles', function ($roleQuery): void {
                 $roleQuery->where('name', 'reviewer');
             })
-            ->where('email', 'like', $containsTerm)
             ->whereNotIn('id', function ($subQuery) use ($article): void {
                 $subQuery
                     ->select('reviewer_id')
                     ->from('reviewer_assignments')
                     ->where('article_id', $article->id);
             })
-            ->orderByRaw('CASE WHEN email LIKE ? THEN 0 ELSE 1 END', [$startsWithTerm])
-            ->orderBy('email')
-            ->limit($limit)
-            ->get();
+            ->orderBy('name');
+
+        if ($term !== '') {
+            $escapedTerm   = addcslashes($term, '\%_');
+            $containsTerm  = '%' . $escapedTerm . '%';
+            $startsWithTerm = $escapedTerm . '%';
+
+            $query->where(function ($q) use ($containsTerm): void {
+                $q->where('name', 'like', $containsTerm)
+                  ->orWhere('email', 'like', $containsTerm);
+            })->orderByRaw('CASE WHEN name LIKE ? THEN 0 ELSE 1 END', [$startsWithTerm]);
+        }
+
+        $reviewers = $query->limit($limit)->get();
 
         return response()->json(['data' => $reviewers]);
     }
@@ -145,8 +151,9 @@ class ReviewerAssignmentController extends Controller
 
         $editor = $request->user();
         $created = [];
+        $toNotify = [];
 
-        DB::transaction(function () use ($validated, $article, $editor, &$created): void {
+        DB::transaction(function () use ($validated, $article, $editor, &$created, &$toNotify): void {
             foreach ($validated['reviewer_ids'] as $reviewerId) {
                 $reviewer = User::query()->find($reviewerId);
 
@@ -168,19 +175,28 @@ class ReviewerAssignmentController extends Controller
                 );
 
                 if ($assignment->wasRecentlyCreated) {
-                    ReviewerAssignedNotification::notifyReviewer(
-                        $this->notificationService,
-                        $reviewer->id,
-                        $article->id,
-                        (string) $article->title,
-                        $assignment->due_date,
-                        $editor->id,
-                    );
+                    $toNotify[] = [
+                        'reviewer_id' => (int) $reviewer->id,
+                        'due_date'    => $assignment->due_date,
+                    ];
                 }
 
                 $created[] = $assignment;
             }
         });
+
+        // Send notifications AFTER the transaction commits so that a mail-transport
+        // failure cannot roll back the already-persisted assignment rows.
+        foreach ($toNotify as $notif) {
+            ReviewerAssignedNotification::notifyReviewer(
+                $this->notificationService,
+                $notif['reviewer_id'],
+                $article->id,
+                (string) $article->title,
+                $notif['due_date'],
+                $editor->id,
+            );
+        }
 
         return response()->json([
             'message' => 'Assignments created successfully.',

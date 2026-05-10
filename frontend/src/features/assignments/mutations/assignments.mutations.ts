@@ -21,6 +21,7 @@ export function useSubmitReviewMutation(assignmentId: number) {
     mutationFn: (payload: SubmitReviewPayload) => assignmentsService.submitReview(assignmentId, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: assignmentsKeys.all });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }

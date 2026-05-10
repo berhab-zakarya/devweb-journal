@@ -20,7 +20,7 @@ export function ProfilePage() {
     return (
       <div>
         <PageHeader title="Profile" description="Manage your account information" />
-        <div className="space-y-6 max-w-2xl">
+        <div className="space-y-6 w-full min-w-0 max-w-3xl">
           <Card><LoadingState rows={2} /></Card>
           <Card><LoadingState rows={3} /></Card>
         </div>
@@ -46,7 +46,7 @@ export function ProfilePage() {
     <div>
       <PageHeader title="Profile" description="Manage your account information" />
 
-      <div className="space-y-6 max-w-2xl">
+      <div className="space-y-6 w-full min-w-0 max-w-3xl">
         {/* Personal Information */}
         <Card>
           <SectionHeader title="Personal Information" className="mb-5" />

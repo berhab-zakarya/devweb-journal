@@ -62,7 +62,7 @@ export function EditArticlePage({ id }: Readonly<{ id: number }>) {
   };
 
   return (
-    <div className="max-w-2xl">
+    <div className="w-full min-w-0 max-w-3xl">
       <PageHeader
         title="Edit article"
         description="Update metadata for your submission"

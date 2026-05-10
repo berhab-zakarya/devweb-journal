@@ -172,7 +172,7 @@ export function CategoriesPage() {
   };
 
   return (
-    <div className="max-w-2xl">
+    <div className="w-full min-w-0">
       <PageHeader
         title="Categories"
         description="Manage article categories"

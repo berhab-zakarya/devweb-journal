@@ -28,7 +28,7 @@ export function Topbar({
         className
       )}
     >
-      {/* Left: hamburger (mobile) */}
+      {/* Left: hamburger (mobile) + wordmark (desktop) */}
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -39,9 +39,9 @@ export function Topbar({
           <Menu className="w-5 h-5" aria-hidden="true" />
         </button>
 
-        {/* Desktop: logo hint / breadcrumb placeholder */}
-        <span className="hidden md:block text-sm font-semibold text-primary font-primary">
-          DevWeb Journal
+        <span className="hidden md:flex items-center gap-2">
+          <span className="text-sm font-semibold text-primary font-primary">DevWeb Journal</span>
+          <span className="text-xs text-muted bg-muted px-1.5 py-0.5 rounded font-medium border border-subtle">Editorial</span>
         </span>
       </div>
 

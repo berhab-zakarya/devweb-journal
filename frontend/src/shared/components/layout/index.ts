@@ -5,6 +5,7 @@ export * from './MobileSidebar';
 export * from './NavigationItem';
 export * from './NotificationButton';
 export * from './PublicShell';
+export * from './PublicHeader';
 export * from './Sidebar';
 export * from './Topbar';
 export * from './UserMenu';

@@ -10,6 +10,7 @@ use App\Mail\ReviewSubmittedMail;
 use App\Models\User;
 use App\Models\UserNotification;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class NotificationService
@@ -111,9 +112,9 @@ class NotificationService
 
         $recipient = User::find($reviewerId);
         if ($notification && $recipient) {
-            Mail::to($recipient->email)->queue(
+            $this->trySendMail(fn () => Mail::to($recipient->email)->queue(
                 new ReviewerAssignedMail($articleTitle, $dueDate?->format('d/m/Y H:i'))
-            );
+            ));
         }
 
         return $notification;
@@ -141,7 +142,7 @@ class NotificationService
 
         $recipient = User::find($editorId);
         if ($notification && $recipient) {
-            Mail::to($recipient->email)->queue(new ReviewSubmittedMail($articleTitle));
+            $this->trySendMail(fn () => Mail::to($recipient->email)->queue(new ReviewSubmittedMail($articleTitle)));
         }
 
         return $notification;
@@ -167,7 +168,7 @@ class NotificationService
 
         $recipient = User::find($editorId);
         if ($notification && $recipient) {
-            Mail::to($recipient->email)->queue(new AllReviewsSubmittedMail($articleTitle));
+            $this->trySendMail(fn () => Mail::to($recipient->email)->queue(new AllReviewsSubmittedMail($articleTitle)));
         }
 
         return $notification;
@@ -195,7 +196,7 @@ class NotificationService
 
         $recipient = User::find($authorId);
         if ($notification && $recipient) {
-            Mail::to($recipient->email)->queue(new DecisionMadeMail($articleTitle, $decision));
+            $this->trySendMail(fn () => Mail::to($recipient->email)->queue(new DecisionMadeMail($articleTitle, $decision)));
         }
 
         return $notification;
@@ -223,11 +224,26 @@ class NotificationService
 
         $recipient = User::find($authorId);
         if ($notification && $recipient) {
-            Mail::to($recipient->email)->queue(
+            $this->trySendMail(fn () => Mail::to($recipient->email)->queue(
                 new ArticlePublishedMail($articleTitle, $publishedAt->toFormattedDateString())
-            );
+            ));
         }
 
         return $notification;
+    }
+
+    /**
+     * Queue a mail and silently log any transport failure.
+     * Email is always secondary to the primary database operation.
+     */
+    private function trySendMail(callable $send): void
+    {
+        try {
+            $send();
+        } catch (\Throwable $e) {
+            Log::warning('Mail dispatch skipped due to transport error.', [
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

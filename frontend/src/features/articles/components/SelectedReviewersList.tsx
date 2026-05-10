@@ -1,49 +1,35 @@
 'use client';
 
-import { Plus } from 'lucide-react';
+import { X } from 'lucide-react';
 import type { ReviewerSearchResult } from '../types/Article.types';
 
 export function SelectedReviewersList({
   selected,
   onToggle,
-  searchResults,
 }: Readonly<{
   selected: ReviewerSearchResult[];
   onToggle: (r: ReviewerSearchResult) => void;
-  searchResults: ReviewerSearchResult[];
 }>) {
-  return (
-    <>
-      {searchResults.length > 0 && (
-        <ul className="border border-subtle rounded-lg divide-y divide-subtle max-h-48 overflow-y-auto">
-          {searchResults.map((r) => {
-            const isSelected = selected.some((x) => x.id === r.id);
-            return (
-              <li key={r.id}>
-                <button
-                  type="button"
-                  onClick={() => onToggle(r)}
-                  className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between transition-colors ${
-                    isSelected ? 'bg-brand-50 text-brand-700' : 'hover:bg-muted text-primary'
-                  }`}
-                >
-                  <span>
-                    <span className="font-medium">{r.name}</span>
-                    <span className="text-muted ml-2">{r.email}</span>
-                  </span>
-                  {isSelected && <Plus className="w-4 h-4 rotate-45 shrink-0" aria-hidden />}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+  if (selected.length === 0) return null;
 
-      {selected.length > 0 && (
-        <p className="text-sm text-secondary">
-          Selected: {selected.map((r) => r.name).join(', ')}
-        </p>
-      )}
-    </>
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {selected.map((r) => (
+        <span
+          key={r.id}
+          className="inline-flex items-center gap-1 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-medium bg-brand-100 text-brand-700"
+        >
+          {r.name}
+          <button
+            type="button"
+            onClick={() => onToggle(r)}
+            className="flex items-center justify-center w-3.5 h-3.5 rounded-full hover:bg-brand-200 transition-colors"
+            aria-label={`Remove ${r.name}`}
+          >
+            <X className="w-2.5 h-2.5" />
+          </button>
+        </span>
+      ))}
+    </div>
   );
 }

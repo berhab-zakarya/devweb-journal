@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { History, ChevronLeft } from 'lucide-react';
+import { History, ChevronLeft, Lock } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,6 +19,8 @@ import {
   Button,
 } from '@/shared/components/ui';
 import { getLaravelFieldErrors, getErrorMessage } from '@/shared/utils/errors';
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
+import { isReviewer } from '@/shared/auth/permissions';
 import { useArticleVersions } from '../hooks/useArticleVersions';
 import { useCreateVersionMutation } from '../mutations/articles.mutations';
 
@@ -28,7 +30,8 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export function ArticleVersionsPage({ id }: Readonly<{ id: number }>) {
-  const versionsQuery = useArticleVersions(id);
+  const { data: currentUser } = useCurrentUser();
+  const versionsQuery = useArticleVersions(id, { enabled: !isReviewer(currentUser) });
   const createVersion = useCreateVersionMutation(id);
   const versions = versionsQuery.data ?? [];
   const [pdfFile, setPdfFile] = useState<File | null>(null);
@@ -43,6 +46,33 @@ export function ArticleVersionsPage({ id }: Readonly<{ id: number }>) {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
+
+  if (isReviewer(currentUser)) {
+    return (
+      <div>
+        <div className="mb-4">
+          <Link href="/assignments" className="inline-flex items-center gap-1 text-sm text-muted hover:text-secondary">
+            <ChevronLeft className="w-4 h-4" /> Back to Assignments
+          </Link>
+        </div>
+        <div className="flex flex-col items-center gap-4 py-20 text-center">
+          <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
+            <Lock className="w-6 h-6 text-danger" aria-hidden />
+          </div>
+          <div>
+            <h1 className="text-base font-semibold text-primary mb-1">Not Authorized</h1>
+            <p className="text-sm text-muted max-w-sm">
+              Version history is not available to reviewers. Access the manuscript PDF through
+              your assignment workflow.
+            </p>
+          </div>
+          <Link href="/assignments" className="text-sm text-brand-600 hover:underline font-medium">
+            Go to My Assignments
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const onSubmit = (data: FormData) => {
     if (!pdfFile) { setPdfError('PDF file is required'); return; }

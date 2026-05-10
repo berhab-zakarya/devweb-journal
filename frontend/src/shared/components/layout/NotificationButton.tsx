@@ -16,7 +16,7 @@ export interface NotificationButtonProps {
   className?: string;
 }
 
-export function NotificationButton({ unreadCount = 0, className }: NotificationButtonProps) {
+export function NotificationButton({ unreadCount = 0, className }: Readonly<NotificationButtonProps>) {
   const [open, setOpen] = useState(false);
   const [onlyUnread, setOnlyUnread] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -28,7 +28,7 @@ export function NotificationButton({ unreadCount = 0, className }: NotificationB
     enabled: open,
   });
 
-  const recent = listData?.data?.data?.slice(0, 12) ?? [];
+  const recent = listData?.items.slice(0, 12) ?? [];
 
   const handleClickOutside = useCallback((event: MouseEvent) => {
     if (!rootRef.current?.contains(event.target as Node)) {
@@ -71,7 +71,7 @@ export function NotificationButton({ unreadCount = 0, className }: NotificationB
         <Bell className="w-5 h-5" aria-hidden="true" />
         {unreadCount > 0 && (
           <span
-            className="absolute top-1 right-1 min-w-[0.5rem] h-2 px-0.5 rounded-full bg-danger text-[10px] leading-none text-white flex items-center justify-center font-medium"
+            className="absolute top-1 right-1 min-w-2 h-2 px-0.5 rounded-full bg-danger text-[10px] leading-none text-white flex items-center justify-center font-medium"
             aria-hidden="true"
           >
             {unreadCount > 9 ? '9+' : unreadCount}

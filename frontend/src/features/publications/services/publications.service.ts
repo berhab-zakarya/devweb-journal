@@ -1,6 +1,8 @@
 import { apiClient } from '@/shared/api/client';
 import { ENDPOINTS } from '@/shared/api/endpoints.constants';
+import { normalizeLaravelPaginator, normalizeSimpleCollection, unwrapData } from '@/shared/api/response';
 import type {
+  PublicationListItem,
   PublicationDetail,
   PaginatedPublications,
   PublicationFilters,
@@ -13,18 +15,18 @@ const ARTICLES = ENDPOINTS.ARTICLES_BASE;
 
 export const publicationsService = {
   getAll: async (filters?: PublicationFilters): Promise<PaginatedPublications> => {
-    const { data } = await apiClient.get<PaginatedPublications>(BASE, { params: filters });
-    return data;
+    const response = await apiClient.get(BASE, { params: filters });
+    return normalizeLaravelPaginator<PublicationListItem>(response);
   },
 
   getById: async (id: number): Promise<PublicationDetail> => {
-    const { data } = await apiClient.get<{ data: PublicationDetail }>(`${BASE}/${id}`);
-    return data.data;
+    const { data } = await apiClient.get(`${BASE}/${id}`);
+    return unwrapData<PublicationDetail>({ data }) as PublicationDetail;
   },
 
   getVolumes: async (): Promise<Volume[]> => {
-    const { data } = await apiClient.get<{ data: Volume[] }>(`${BASE}/volumes`);
-    return data.data;
+    const { data } = await apiClient.get(`${BASE}/volumes`);
+    return normalizeSimpleCollection<Volume>({ data });
   },
 
   download: async (id: number): Promise<Blob> => {
@@ -48,20 +50,27 @@ export const publicationsService = {
     created_at: string;
     updated_at: string;
   }> => {
-    const { data } = await apiClient.post<{
-      message: string;
-      data: {
-        id: number;
-        article_id: number;
-        article_version_id: number;
-        published_at: string;
-        doi: string | null;
-        volume: string | null;
-        issue: string | null;
-        created_at: string;
-        updated_at: string;
-      };
-    }>(`${ARTICLES}/${articleId}/publish`, payload);
-    return data.data;
+    const { data } = await apiClient.post(`${ARTICLES}/${articleId}/publish`, payload);
+    return unwrapData<{
+      id: number;
+      article_id: number;
+      article_version_id: number;
+      published_at: string;
+      doi: string | null;
+      volume: string | null;
+      issue: string | null;
+      created_at: string;
+      updated_at: string;
+    }>({ data }) as {
+      id: number;
+      article_id: number;
+      article_version_id: number;
+      published_at: string;
+      doi: string | null;
+      volume: string | null;
+      issue: string | null;
+      created_at: string;
+      updated_at: string;
+    };
   },
 } as const;

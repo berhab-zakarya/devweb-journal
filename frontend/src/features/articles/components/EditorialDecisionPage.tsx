@@ -20,6 +20,14 @@ import {
 } from '@/shared/components/ui';
 import { getLaravelFieldErrors, getErrorMessage } from '@/shared/utils/errors';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
+import {
+  canAssignReviewers,
+  canRecordEditorialDecision,
+  canViewArticleDecision,
+  canViewAuthorDecision,
+  canViewPeerReviews,
+  isAdmin,
+} from '@/shared/auth/permissions';
 import { useArticle } from '../hooks/useArticle';
 import { useArticleAssignments } from '../hooks/useArticleAssignments';
 import { useArticleDecision } from '../hooks/useArticleDecision';
@@ -47,9 +55,6 @@ const DECISION_OPTIONS: { value: DecisionType; label: string }[] = [
 export function EditorialDecisionPage({ id }: Readonly<{ id: number }>) {
   const router = useRouter();
   const { data: currentUser } = useCurrentUser();
-  const roles = currentUser?.roles ?? [];
-  const isAdmin = roles.includes('admin');
-  const isEditor = roles.includes('editor');
 
   const articleQuery = useArticle(id);
   const assignmentsQuery = useArticleAssignments(id);
@@ -85,6 +90,82 @@ export function EditorialDecisionPage({ id }: Readonly<{ id: number }>) {
   const assignments = assignmentsQuery.data ?? [];
   const decision = decisionQuery.data;
 
+  const canViewPage = canViewArticleDecision(currentUser, article);
+  const canAssign = canAssignReviewers(currentUser);
+  const canRecordDecision = canRecordEditorialDecision(currentUser);
+  const canSeeReviews = canViewPeerReviews(currentUser);
+  const canSeeAuthorDecision = canViewAuthorDecision(currentUser, article);
+  const adminView = isAdmin(currentUser);
+  let decisionContent: React.ReactNode;
+
+  if (decision?.latest) {
+    decisionContent = (
+      <div className="mt-2 space-y-2">
+        <p className="text-sm text-muted">A decision has already been recorded for this article.</p>
+        <p className="text-sm text-secondary">
+          <span className="font-medium">Decision:</span>{' '}
+          {DECISION_OPTIONS.find((o) => o.value === decision.latest?.decision)?.label ?? decision.latest?.decision}
+        </p>
+        {decision.latest?.comments && (
+          <p className="text-sm text-secondary whitespace-pre-wrap">{decision.latest.comments}</p>
+        )}
+      </div>
+    );
+  } else if (canRecordDecision) {
+    decisionContent = (
+      <form onSubmit={decisionForm.handleSubmit(onDecisionSubmit)} noValidate className="space-y-4 mt-2">
+        {decisionError && (
+          <div role="alert" className="px-3 py-2.5 rounded-md bg-red-50 border border-red-200 text-sm text-danger">
+            {decisionError}
+          </div>
+        )}
+
+        <FormField id="decision" label="Decision" required error={decisionForm.formState.errors.decision?.message}>
+          <Select
+            id="decision"
+            error={!!decisionForm.formState.errors.decision}
+            {...decisionForm.register('decision')}
+          >
+            <option value="">Select a decision…</option>
+            {DECISION_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </Select>
+        </FormField>
+
+        <FormField id="comments" label="Comments" required error={decisionForm.formState.errors.comments?.message}>
+          <Textarea
+            id="comments"
+            rows={4}
+            placeholder="Provide feedback and reasoning for your decision…"
+            error={!!decisionForm.formState.errors.comments}
+            {...decisionForm.register('comments')}
+          />
+        </FormField>
+
+        <div className="flex justify-end">
+          <Button
+            type="submit"
+            variant="primary"
+            loading={decisionForm.formState.isSubmitting || createDecision.isPending}
+          >
+            Submit Decision
+          </Button>
+        </div>
+      </form>
+    );
+  } else {
+    decisionContent = <p className="mt-2 text-sm text-muted">No final editorial decision has been recorded yet.</p>;
+  }
+
+  if (!canViewPage) {
+    return (
+      <ErrorState
+        message="You do not have permission to manage this article workflow."
+      />
+    );
+  }
+
   return (
     <div>
       <div className="mb-4">
@@ -93,91 +174,38 @@ export function EditorialDecisionPage({ id }: Readonly<{ id: number }>) {
         </Link>
       </div>
 
-      <PageHeader
-        title="Editorial Decision"
-        description={article.title}
-      />
+      <PageHeader title="Editorial Decision" description={article.title} />
 
       <div className="space-y-6">
-        {/* Assign Reviewers */}
-        <Card>
-          <CardHeader>
-            <h2 className="text-lg font-semibold text-primary flex items-center gap-2">
-              <Users className="w-5 h-5" /> Assign Reviewers
-            </h2>
-          </CardHeader>
+        {canAssign && (
+          <Card>
+            <CardHeader>
+              <h2 className="text-lg font-semibold text-primary flex items-center gap-2">
+                <Users className="w-5 h-5" /> Assign Reviewers
+              </h2>
+            </CardHeader>
 
-          <ReviewerAssignmentsPanel
-            assignments={assignments}
-            loading={assignmentsQuery.isLoading}
-            onRemove={(assignmentId) => deleteAssignment.mutate(assignmentId)}
-          />
+            <ReviewerAssignmentsPanel
+              assignments={assignments}
+              loading={assignmentsQuery.isLoading}
+              canManage={canAssign}
+              onRemove={(assignmentId) => deleteAssignment.mutate(assignmentId)}
+            />
 
-          <AssignReviewersForm articleId={id} />
-        </Card>
+            <AssignReviewersForm articleId={id} />
+          </Card>
+        )}
 
-        {/* Editorial Decision Form */}
-        <Card>
-          <CardHeader>
-            <h2 className="text-lg font-semibold text-primary">Record Decision</h2>
-          </CardHeader>
+        {(canRecordDecision || canSeeAuthorDecision) && (
+          <Card>
+            <CardHeader>
+              <h2 className="text-lg font-semibold text-primary">Final Editorial Decision</h2>
+            </CardHeader>
+            {decisionContent}
+          </Card>
+        )}
 
-          {decision?.latest ? (
-            <div className="mt-2 space-y-2">
-              <p className="text-sm text-muted">A decision has already been recorded for this article.</p>
-              <p className="text-sm text-secondary">
-                <span className="font-medium">Decision:</span>{' '}
-                {DECISION_OPTIONS.find((o) => o.value === decision.latest?.decision)?.label ?? decision.latest?.decision}
-              </p>
-              {decision.latest?.comments && (
-                <p className="text-sm text-secondary whitespace-pre-wrap">{decision.latest.comments}</p>
-              )}
-            </div>
-          ) : (
-            <form onSubmit={decisionForm.handleSubmit(onDecisionSubmit)} noValidate className="space-y-4 mt-2">
-              {decisionError && (
-                <div role="alert" className="px-3 py-2.5 rounded-md bg-red-50 border border-red-200 text-sm text-danger">
-                  {decisionError}
-                </div>
-              )}
-
-              <FormField id="decision" label="Decision" required error={decisionForm.formState.errors.decision?.message}>
-                <Select
-                  id="decision"
-                  error={!!decisionForm.formState.errors.decision}
-                  {...decisionForm.register('decision')}
-                >
-                  <option value="">Select a decision…</option>
-                  {DECISION_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </Select>
-              </FormField>
-
-              <FormField id="comments" label="Comments" required error={decisionForm.formState.errors.comments?.message}>
-                <Textarea
-                  id="comments"
-                  rows={4}
-                  placeholder="Provide feedback and reasoning for your decision…"
-                  error={!!decisionForm.formState.errors.comments}
-                  {...decisionForm.register('comments')}
-                />
-              </FormField>
-
-              <div className="flex justify-end">
-                <Button
-                  type="submit"
-                  variant="primary"
-                  loading={decisionForm.formState.isSubmitting || createDecision.isPending}
-                >
-                  Submit Decision
-                </Button>
-              </div>
-            </form>
-          )}
-        </Card>
-
-        {(isEditor || isAdmin) && (
+        {canSeeReviews && (
           <Card>
             <CardHeader>
               <h2 className="text-lg font-semibold text-primary">Peer reviews</h2>
@@ -188,7 +216,7 @@ export function EditorialDecisionPage({ id }: Readonly<{ id: number }>) {
           </Card>
         )}
 
-        {isAdmin && <AdminFinalDecisionPanel articleId={id} decision={decision} />}
+        {adminView && <AdminFinalDecisionPanel articleId={id} decision={decision} />}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -20,17 +20,19 @@ type AssignFormData = z.infer<typeof assignSchema>;
 export function AssignReviewersForm({ articleId }: Readonly<{ articleId: number }>) {
   const assignReviewers = useAssignReviewersMutation(articleId);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeQuery, setActiveQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [selectedReviewers, setSelectedReviewers] = useState<ReviewerSearchResult[]>([]);
   const [assignError, setAssignError] = useState('');
 
-  const search = useArticleReviewerSearch(articleId, activeQuery);
+  // 300 ms debounce — keeps the dropdown responsive without hammering the API
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
+  // Empty debouncedQuery loads all available reviewers on mount
+  const search = useArticleReviewerSearch(articleId, debouncedQuery);
   const assignForm = useForm<AssignFormData>({ resolver: zodResolver(assignSchema) });
-
-  function runSearch() {
-    setActiveQuery(searchQuery.trim());
-  }
 
   function toggleReviewer(r: ReviewerSearchResult) {
     setSelectedReviewers((prev) =>
@@ -40,7 +42,7 @@ export function AssignReviewersForm({ articleId }: Readonly<{ articleId: number 
 
   const onAssignSubmit = (data: AssignFormData) => {
     if (selectedReviewers.length === 0) {
-      setAssignError('Select at least one reviewer');
+      setAssignError('Select at least one reviewer.');
       return;
     }
     setAssignError('');
@@ -50,7 +52,7 @@ export function AssignReviewersForm({ articleId }: Readonly<{ articleId: number 
         onSuccess: () => {
           setSelectedReviewers([]);
           setSearchQuery('');
-          setActiveQuery('');
+          setDebouncedQuery('');
           assignForm.reset();
         },
         onError: (error) => setAssignError(getErrorMessage(error)),
@@ -58,7 +60,6 @@ export function AssignReviewersForm({ articleId }: Readonly<{ articleId: number 
     );
   };
 
-  const searching = search.isFetching && activeQuery.length >= 2;
   const searchResults = search.data ?? [];
 
   return (
@@ -69,17 +70,17 @@ export function AssignReviewersForm({ articleId }: Readonly<{ articleId: number 
         </div>
       )}
 
-      <ReviewerSearchBox
-        value={searchQuery}
-        onChange={setSearchQuery}
-        onSearch={runSearch}
-        searching={searching}
-      />
+      {/* Selected reviewer chips */}
+      <SelectedReviewersList selected={selectedReviewers} onToggle={toggleReviewer} />
 
-      <SelectedReviewersList
+      {/* Searchable combobox — shows all reviewers by default, filters as you type */}
+      <ReviewerSearchBox
+        query={searchQuery}
+        onQueryChange={setSearchQuery}
+        results={searchResults}
         selected={selectedReviewers}
         onToggle={toggleReviewer}
-        searchResults={activeQuery.length >= 2 ? searchResults : []}
+        loading={search.isFetching}
       />
 
       <div className="flex items-end gap-3">

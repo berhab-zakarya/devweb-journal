@@ -8,11 +8,13 @@ export function ReviewerAssignmentsPanel({
   assignments,
   loading,
   onRemove,
+  canManage = true,
   removePendingId,
 }: Readonly<{
   assignments: ArticleAssignment[];
   loading: boolean;
   onRemove: (assignmentId: number) => void;
+  canManage?: boolean;
   removePendingId?: number | null;
 }>) {
   if (loading) return <LoadingState variant="list" rows={2} />;
@@ -30,15 +32,17 @@ export function ReviewerAssignmentsPanel({
           </div>
           <div className="flex items-center gap-2">
             <AssignmentStatusBadge status={a.status} />
-            <button
-              type="button"
-              onClick={() => onRemove(a.id)}
-              disabled={removePendingId === a.id}
-              className="p-1.5 rounded text-muted hover:text-danger hover:bg-red-50 transition-colors"
-              aria-label="Remove assignment"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            {canManage && (
+              <button
+                type="button"
+                onClick={() => onRemove(a.id)}
+                disabled={removePendingId === a.id}
+                className="p-1.5 rounded text-muted hover:text-danger hover:bg-red-50 transition-colors"
+                aria-label="Remove assignment"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </li>
       ))}

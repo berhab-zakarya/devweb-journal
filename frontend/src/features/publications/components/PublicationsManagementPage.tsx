@@ -2,7 +2,18 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { PageHeader, LoadingState, ErrorState } from '@/shared/components/ui';
+import {
+  PageHeader,
+  LoadingState,
+  ErrorState,
+  TableContainer,
+  TableWrapper,
+  TableHead,
+  Th,
+  TableBody,
+  Tr,
+  Td,
+} from '@/shared/components/ui';
 import { useArticlesInfinite } from '@/features/articles/hooks/useArticlesInfinite';
 import type { Article } from '@/features/articles/types/Article.types';
 import { usePublicationsInfinite } from '../hooks/usePublicationsInfinite';
@@ -17,7 +28,7 @@ export function PublicationsManagementPage() {
     const pages = articlesQuery.data?.pages ?? [];
     const list: Article[] = [];
     for (const p of pages) {
-      for (const a of p.data.data) {
+      for (const a of p.items) {
         if (a.status === 'accepted' && !a.publication) {
           list.push(a);
         }
@@ -30,7 +41,7 @@ export function PublicationsManagementPage() {
     const pages = pubsQuery.data?.pages ?? [];
     const list: PublicationListItem[] = [];
     for (const p of pages) {
-      list.push(...p.data.data);
+      list.push(...p.items);
     }
     list.sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
     return list;
@@ -83,41 +94,41 @@ export function PublicationsManagementPage() {
         )}
         {!pubsQuery.isLoading && publishedRows.length > 0 && (
           <>
-            <div className="overflow-x-auto border border-subtle rounded-lg">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted">
-                    <th className="px-4 py-2 font-semibold">Title</th>
-                    <th className="px-4 py-2 font-semibold">DOI</th>
-                    <th className="px-4 py-2 font-semibold">Vol.</th>
-                    <th className="px-4 py-2 font-semibold">Iss.</th>
-                    <th className="px-4 py-2 font-semibold">Published</th>
-                    <th className="px-4 py-2 font-semibold" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-subtle">
+            <TableContainer>
+              <TableWrapper>
+                <TableHead>
+                  <Th>Title</Th>
+                  <Th>DOI</Th>
+                  <Th>Vol.</Th>
+                  <Th>Iss.</Th>
+                  <Th>Published</Th>
+                  <Th> </Th>
+                </TableHead>
+                <TableBody>
                   {publishedRows.map((row) => (
-                    <tr key={row.id} className="bg-surface hover:bg-muted/20">
-                      <td className="px-4 py-3 text-primary font-medium max-w-xs truncate">{row.title}</td>
-                      <td className="px-4 py-3 text-secondary whitespace-nowrap">{row.doi ?? '—'}</td>
-                      <td className="px-4 py-3 text-secondary">{row.volume ?? '—'}</td>
-                      <td className="px-4 py-3 text-secondary">{row.issue ?? '—'}</td>
-                      <td className="px-4 py-3 text-secondary whitespace-nowrap">
+                    <Tr key={row.id}>
+                      <Td className="max-w-xs">
+                        <span className="font-medium truncate block">{row.title}</span>
+                      </Td>
+                      <Td className="text-secondary whitespace-nowrap">{row.doi ?? '—'}</Td>
+                      <Td className="text-secondary">{row.volume ?? '—'}</Td>
+                      <Td className="text-secondary">{row.issue ?? '—'}</Td>
+                      <Td className="text-secondary whitespace-nowrap">
                         {new Date(row.published_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-4 py-3 text-right">
+                      </Td>
+                      <Td align="right">
                         <Link
                           href={`/journal/${row.id}`}
-                          className="text-brand-600 hover:underline font-medium"
+                          className="text-brand-600 hover:underline font-medium text-sm"
                         >
                           View
                         </Link>
-                      </td>
-                    </tr>
+                      </Td>
+                    </Tr>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </TableBody>
+              </TableWrapper>
+            </TableContainer>
             {pubsQuery.hasNextPage && (
               <div className="mt-4 flex justify-center">
                 <button

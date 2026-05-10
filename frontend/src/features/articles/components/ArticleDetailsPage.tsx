@@ -13,6 +13,12 @@ import {
   ArticleStatusBadge,
   AssignmentStatusBadge,
 } from '@/shared/components/ui';
+import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
+import {
+  canManageReviewerAssignments,
+  canViewReviewerAssignments,
+  isReviewer,
+} from '@/shared/auth/permissions';
 import { useArticle } from '../hooks/useArticle';
 import { useArticleVersions } from '../hooks/useArticleVersions';
 import { useArticleAssignments } from '../hooks/useArticleAssignments';
@@ -38,8 +44,10 @@ function DecisionBadge({ decision }: Readonly<{ decision: EditorialDecision['dec
 }
 
 export function ArticleDetailsPage({ id }: Readonly<{ id: number }>) {
+  const { data: currentUser } = useCurrentUser();
+  const reviewer = isReviewer(currentUser);
   const articleQuery = useArticle(id);
-  const versionsQuery = useArticleVersions(id);
+  const versionsQuery = useArticleVersions(id, { enabled: !reviewer });
   const assignmentsQuery = useArticleAssignments(id);
   const decisionQuery = useArticleDecision(id);
 
@@ -51,12 +59,14 @@ export function ArticleDetailsPage({ id }: Readonly<{ id: number }>) {
   const versions = versionsQuery.data ?? [];
   const assignments = assignmentsQuery.data ?? [];
   const decision = decisionQuery.data;
+  const canViewAssignments = canViewReviewerAssignments(currentUser);
+  const canManageAssignments = canManageReviewerAssignments(currentUser);
 
   return (
-    <div>
-      <div className="mb-4">
-        <Link href="/articles" className="inline-flex items-center gap-1 text-sm text-muted hover:text-secondary">
-          <ChevronLeft className="w-4 h-4" /> Back to Articles
+    <div className="space-y-0">
+      <div className="mb-5">
+        <Link href="/articles" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-secondary transition-colors font-medium">
+          <ChevronLeft className="w-4 h-4" aria-hidden /> Back to Articles
         </Link>
       </div>
 
@@ -90,7 +100,20 @@ export function ArticleDetailsPage({ id }: Readonly<{ id: number }>) {
             </div>
             <div className="sm:col-span-2">
               <dt className="text-muted font-medium">Keywords</dt>
-              <dd className="mt-1 text-primary">{article.keywords || '—'}</dd>
+              <dd className="mt-1">
+                {article.keywords
+                  ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {article.keywords.split(/[,;]/).map((k) => k.trim()).filter(Boolean).map((kw) => (
+                        <span key={kw} className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-soft-blue text-brand-700 border border-blue-100">
+                          {kw}
+                        </span>
+                      ))}
+                    </div>
+                  )
+                  : <span className="text-muted">—</span>
+                }
+              </dd>
             </div>
           </dl>
         </Card>
@@ -98,7 +121,7 @@ export function ArticleDetailsPage({ id }: Readonly<{ id: number }>) {
         {/* Abstract */}
         <Card>
           <CardHeader><h2 className="text-lg font-semibold text-primary">Abstract</h2></CardHeader>
-          <p className="mt-3 text-sm text-secondary leading-relaxed whitespace-pre-wrap">
+          <p className="mt-3 text-sm text-secondary leading-relaxed whitespace-pre-wrap wrap-break-word max-w-full">
             {article.abstract}
           </p>
         </Card>
@@ -120,46 +143,49 @@ export function ArticleDetailsPage({ id }: Readonly<{ id: number }>) {
           </Card>
         )}
 
-        {/* Reviewer Assignments */}
-        <Card>
-          <SectionHeader
-            title="Reviewer Assignments"
-            count={assignments.length}
-            action={
-              <Link
-                href={`/articles/${id}/decision`}
-                className="text-sm text-brand-600 hover:underline font-medium flex items-center gap-1"
-              >
-                <Users className="w-3.5 h-3.5" /> Manage
-              </Link>
-            }
-          />
-          {assignmentsQuery.isLoading && <LoadingState variant="list" rows={3} />}
-          {!assignmentsQuery.isLoading && assignments.length === 0 && (
-            <EmptyState
-              icon={<Users className="w-5 h-5" />}
-              title="No reviewers assigned"
-              description="Assign reviewers to start the review process."
-              className="py-8"
+        {canViewAssignments && (
+          <Card>
+            <SectionHeader
+              title="Reviewer Assignments"
+              count={assignments.length}
+              action={
+                canManageAssignments ? (
+                  <Link
+                    href={`/articles/${id}/decision`}
+                    className="text-sm text-brand-600 hover:underline font-medium flex items-center gap-1"
+                  >
+                    <Users className="w-3.5 h-3.5" /> Manage
+                  </Link>
+                ) : undefined
+              }
             />
-          )}
-          {assignments.length > 0 && (
-            <ul className="mt-3 divide-y divide-subtle">
-              {assignments.map((a) => (
-                <li key={a.id} className="py-3 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-primary">{a.reviewer?.name ?? `Reviewer #${a.reviewer_id}`}</p>
-                    {a.due_date && <p className="text-xs text-muted">Due: {new Date(a.due_date).toLocaleDateString()}</p>}
-                  </div>
-                  <AssignmentStatusBadge status={a.status} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
+            {assignmentsQuery.isLoading && <LoadingState variant="list" rows={3} />}
+            {!assignmentsQuery.isLoading && assignments.length === 0 && (
+              <EmptyState
+                icon={<Users className="w-5 h-5" />}
+                title="No reviewers assigned"
+                description="Assign reviewers to start the review process."
+                className="py-8"
+              />
+            )}
+            {assignments.length > 0 && (
+              <ul className="mt-3 divide-y divide-subtle">
+                {assignments.map((a) => (
+                  <li key={a.id} className="py-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-primary">{a.reviewer?.name ?? `Reviewer #${a.reviewer_id}`}</p>
+                      {a.due_date && <p className="text-xs text-muted">Due: {new Date(a.due_date).toLocaleDateString()}</p>}
+                    </div>
+                    <AssignmentStatusBadge status={a.status} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        )}
 
-        {/* Versions */}
-        <Card>
+        {/* Versions — hidden for reviewer (no backend access to version history) */}
+        {!reviewer && <Card>
           <SectionHeader
             title="Versions"
             count={versions.length}
@@ -188,7 +214,7 @@ export function ArticleDetailsPage({ id }: Readonly<{ id: number }>) {
               ))}
             </ul>
           )}
-        </Card>
+        </Card>}
       </div>
     </div>
   );

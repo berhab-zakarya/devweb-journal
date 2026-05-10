@@ -100,6 +100,15 @@
   }
 }
 
+/* ─── Navy sidebar tokens ────────────────────────────────────────────────── */
+@theme {
+  --color-navy-950: #0B1220;
+  --color-navy-900: #111827;
+  --color-slate-800: #1E293B;
+  --color-muted-bg:  #F1F5F9;
+  --color-muted-text:#64748B;
+}
+
 /* ─── Base resets ────────────────────────────────────────────────────────── */
 *,
 *::before,
@@ -117,6 +126,38 @@ body {
   background: var(--color-app);
   color: var(--color-primary);
   font-family: var(--font-primary), system-ui, sans-serif;
+  font-feature-settings: 'kern' 1, 'ss01' 1, 'cv11' 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ─── App main area subtle gradient ─────────────────────────────────────── */
+.app-main-bg {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(239, 246, 255, 0.55) 0px,
+      rgba(248, 250, 252, 1)    180px
+    ),
+    var(--color-app);
+}
+
+/* ─── Dashboard hero card ───────────────────────────────────────────────── */
+.dashboard-hero {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid var(--color-subtle);
+  border-radius: 20px;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+}
+
+/* ─── Stat card accent left border helpers ──────────────────────────────── */
+.stat-card-attention {
+  border-left: 4px solid var(--color-warning);
+}
+.stat-card-pending {
+  border-left: 4px solid var(--color-brand-500);
+}
+.stat-card-completed {
+  border-left: 4px solid var(--color-success);
+}
+
